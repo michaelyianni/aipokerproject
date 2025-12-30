@@ -20,6 +20,13 @@ export default class Deck {
             }
         }
     }
+
+    resetAndShuffle() {
+        this.cards = [];
+        this.initializeDeck();
+        this.shuffle();
+    }
+
     shuffle() {
         
         
@@ -31,7 +38,7 @@ export default class Deck {
 
     }
 
-    deal() {
+    dealCard() {
         return this.cards.pop();
     }
 }

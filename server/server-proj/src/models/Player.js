@@ -1,15 +1,19 @@
 import Hand from "./Hand.js";
 
 export default class Player {
-    constructor(name, initialChips = 1000) {
+
+    static nextId = 1;
+
+    // Associate the ID with the player's socket later
+    constructor(name) {
+
+        this.id = "id" + Player.nextId++;
         this.name = name;
         this.hand = new Hand();
         this.chips = 0;
         this.currentBet = 0;
         this.hasFolded = false;
-        this.isTurn = false;
-
-        this.addChips(initialChips);
+        this.hasLeft = false;
     }
 
     addChips(amount) {
@@ -26,8 +30,6 @@ export default class Player {
         this.chips -= amount;
         this.currentBet += amount;
 
-        this.setTurn(false);
-
         return amount;
     }
 
@@ -41,17 +43,18 @@ export default class Player {
         if (this.hasFolded) {
             throw new Error('Cannot place a bet when folded');
         }
-
-        if (!this.isTurn) {
-            throw new Error('Cannot place a bet when it is not your turn');
-        }
     }
 
     fold() {
         this.hasFolded = true;
-
-        this.setTurn(false);
     }
+
+    leave() {
+        this.hasLeft = true;
+        this.hasFolded = true;
+    }
+
+    
 
     receiveCard(card) {
         this.hand.addCard(card);
@@ -61,7 +64,6 @@ export default class Player {
         this.hand.clear();
         this.currentBet = 0;
         this.hasFolded = false;
-        this.isTurn = false;
     }
 
     getHand() {
@@ -82,14 +84,6 @@ export default class Player {
 
     getFoldStatus() {
         return this.hasFolded;
-    }
-
-    getTurnStatus() {
-        return this.isTurn;
-    }
-
-    setTurn(isTurn) {
-        this.isTurn = isTurn;
     }
 
 }

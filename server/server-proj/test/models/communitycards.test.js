@@ -1,7 +1,7 @@
 import test from 'node:test';
 
-import CommunityCards from '../src/models/CommunityCards.js';
-import Card from '../src/models/Card.js';
+import CommunityCards from '../../src/models/CommunityCards.js';
+import Card from '../../src/models/Card.js';
 
 import assert from 'assert';
 

@@ -1,5 +1,5 @@
 import test from 'node:test';
-import Card from '../src/models/Card.js';
+import Card from '../../src/models/Card.js';
 import assert from 'assert';
 
 

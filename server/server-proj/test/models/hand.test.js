@@ -1,7 +1,7 @@
 import test from 'node:test';
 
-import Hand from '../src/models/Hand.js';
-import Card from '../src/models/Card.js';
+import Hand from '../../src/models/Hand.js';
+import Card from '../../src/models/Card.js';
 
 import assert from 'assert';
 
