@@ -47,6 +47,10 @@ export default class CommunityCards {
         return this.cards;
     }
 
+    convertToStringArray() {
+        return this.cards.map(card => `${card.rank}${card.suit.charAt(0).toLowerCase()}`);
+    }
+
     clear() {
         this.cards = [];
     }   

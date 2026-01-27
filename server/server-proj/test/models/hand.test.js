@@ -31,6 +31,10 @@ hand.addCard(card2);
 assert.strictEqual(hand.getCards().length, 2, "Hand should have 2 cards after adding another card");
 assert.strictEqual(hand.getCards()[1], card2, "The second card in hand should be the one that was added");
 
+// Convert to string array
+let stringArray = hand.convertToStringArray(); 
+assert.deepStrictEqual(stringArray, ['Kh', '7c'], "convertToStringArray should return correct string representations");
+
 let errorCaughtMax = false;
 try {
     let card3 = new Card('3', 'Diamonds');

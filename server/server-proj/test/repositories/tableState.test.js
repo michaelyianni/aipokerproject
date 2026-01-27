@@ -53,7 +53,7 @@ let communityCards = tableState.getCommunityCards();
 assert.strictEqual(communityCards.getCards().length, 3, "There should be 3 cards on the flop");
 tableState.dealTurn(new Card('J', 'Spades'));
 assert.strictEqual(communityCards.getCards().length, 4, "There should be 4 cards after the turn");
-tableState.dealRiver(new Card('10', 'Hearts'));
+tableState.dealRiver(new Card('T', 'Hearts'));
 assert.strictEqual(communityCards.getCards().length, 5, "There should be 5 cards after the river");
 
 
@@ -64,6 +64,7 @@ let nextTurnId = tableState.getActivePlayerTurnId();
 assert.notStrictEqual(nextTurnId, initialTurnId, "Active player turn should have advanced to the next player");
 
 // Test betting
+
 tableState.applyBet(player1.id, 100);
 assert.strictEqual(player1.chips, 900, "Player 1 should have 900 chips after betting 100");
 assert.strictEqual(player1.getCurrentBet(), 100, "Player 1's current bet should be 100");

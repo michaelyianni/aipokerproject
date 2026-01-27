@@ -1,4 +1,5 @@
 import Card from './Card.js';
+import { CardRules } from '../constants/cardRules.js';
 
 export default class Deck {
     constructor() {
@@ -8,8 +9,8 @@ export default class Deck {
     }
 
     initializeDeck() {
-        const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-        const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+        const ranks = CardRules.ranks;
+        const suits = CardRules.suits;
 
 
         // TODO - Implement Fisher-Yates shuffle algorithm

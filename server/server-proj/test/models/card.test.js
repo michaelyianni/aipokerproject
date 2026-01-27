@@ -14,8 +14,8 @@ let card2 = new Card('Q', 'Hearts');
 assert.strictEqual(card2.rank, 'Q', "Card rank should be 'Q'");
 assert.strictEqual(card2.suit, 'Hearts', "Card suit should be 'Hearts'");
 
-let card3 = new Card('10', 'Diamonds');
-assert.strictEqual(card3.rank, '10', "Card rank should be '10'");
+let card3 = new Card('T', 'Diamonds');
+assert.strictEqual(card3.rank, 'T', "Card rank should be 'T'");
 assert.strictEqual(card3.suit, 'Diamonds', "Card suit should be 'Diamonds'");
 
 let errorCaught = false;
