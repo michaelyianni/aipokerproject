@@ -11,10 +11,7 @@ console.log("Testing TableStateRepository class...");
 
 let player1 = new Player("Alice");
 let player2 = new Player("Bob");
-let players = {
-    [player1.id]: player1,
-    [player2.id]: player2
-};
+let players = [player1, player2];
 
 let tableState = new TableStateRepository(players);
 
@@ -33,7 +30,7 @@ assert.strictEqual(retrievedPlayer2, player2, "Retrieved Player 2 should match")
 tableState.initialiseTable();
 let dealerId = tableState.getDealer();
 assert.strictEqual(dealerId, player1.id, "Dealer should be player 1");
-let activeTurnId = tableState.getActivePlayerTurnId();
+let activeTurnId = tableState.getCurrentTurnPlayerId();
 assert.strictEqual(activeTurnId, dealerId, "Active turn should be dealer");
 
 // Test active players
@@ -58,16 +55,25 @@ assert.strictEqual(communityCards.getCards().length, 5, "There should be 5 cards
 
 
 // Test advancing active player turn
-let initialTurnId = tableState.getActivePlayerTurnId();
+let initialTurnId = tableState.getCurrentTurnPlayerId();
 tableState.advanceToNextActivePlayer();
-let nextTurnId = tableState.getActivePlayerTurnId();
+let nextTurnId = tableState.getCurrentTurnPlayerId();
 assert.notStrictEqual(nextTurnId, initialTurnId, "Active player turn should have advanced to the next player");
 
 // Test betting
 
-tableState.applyBet(player1.id, 100);
+tableState.playerBet(player1.id, 100);
 assert.strictEqual(player1.chips, 900, "Player 1 should have 900 chips after betting 100");
 assert.strictEqual(player1.getCurrentBet(), 100, "Player 1's current bet should be 100");
+
+// Test advancing street
+let initialStreet = tableState.getCurrentStreet();
+tableState.advanceStreet();
+let nextStreet = tableState.getCurrentStreet();
+assert.notStrictEqual(nextStreet, initialStreet, "Game street should have advanced to the next street");
+// Ensure bets are collected to pot
+assert.strictEqual(tableState.pot.getTotal(), 100, "Pot should be 100 after collecting bets");
+assert.strictEqual(player1.getCurrentBet(), 0, "Player 1's current bet should be reset to 0 after advancing street");
 
 
 // Test removing an active player

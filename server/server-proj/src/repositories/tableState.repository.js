@@ -2,26 +2,27 @@ import CommunityCards from "../models/CommunityCards.js";
 import Deck from "../models/Deck.js";
 import Player from "../models/Player.js";
 import Pot from "../models/Pot.js";
-
-const street = {
-    PRE_FLOP: 'pre-flop',
-    FLOP: 'flop',
-    TURN: 'turn',
-    RIVER: 'river',
-    SHOWDOWN: 'showdown'
-}
+import { PokerStreets } from "../constants/pokerStreets.js";
 
 const streetsInOrder = [
-    street.PRE_FLOP,
-    street.FLOP,
-    street.TURN,
-    street.RIVER,
-    street.SHOWDOWN
+    PokerStreets.PRE_FLOP,
+    PokerStreets.FLOP,
+    PokerStreets.TURN,
+    PokerStreets.RIVER,
+    PokerStreets.SHOWDOWN
 ];
 
 export default class TableStateRepository {
-    constructor(players = {}) {
-        this.players = players;
+    constructor(players = []) {
+        
+        // Create dictionary of players
+        this.players = {};
+        for (let player of Object.values(players)) {
+            this.players[player.id] = player;
+        }
+
+        this.playerOrder = players.map(p => p.id);
+
         this.communityCards = new CommunityCards();
         this.deck = new Deck();
         this.pot = new Pot();
@@ -29,14 +30,18 @@ export default class TableStateRepository {
         this.currentStreetIndex = 0;
         this.currentBet = 0;
         this.activePlayerIds = [];
-        this.activePlayerTurnId = null;
+        this.currentTurnPlayerId = null;
+        this.lastRaiserId = null;
+
+        this.smallBlindAmount = 5;
+        this.bigBlindAmount = 10;
 
         this.dealerId = null;
     }
 
-    initialiseTable() {
+    initialiseTable(initialChips = 1000) {
        
-        this.resetForNewRound();
+        this.resetForNewHand();
 
         // Initialise dealer
         let playerIds = Object.keys(this.players);
@@ -46,9 +51,9 @@ export default class TableStateRepository {
 
         this.setDealer(playerIds[0]);
 
-        this.setActivePlayerTurn(this.dealerId);
+        this.setCurrentTurnPlayer(this.dealerId);
 
-        this.initialiseChipsForPlayers();
+        this.initialiseChipsForPlayers(initialChips);
     }
 
     // newRound() {
@@ -114,7 +119,7 @@ export default class TableStateRepository {
 
     // Betting
 
-    applyBet(playerId, amount) {
+    playerBet(playerId, amount) {
         if (amount < 0) {
             throw new Error('Cannot apply a negative bet');
         }
@@ -122,7 +127,6 @@ export default class TableStateRepository {
         const player = this.getPlayer(playerId);
 
         player.placeBet(amount);
-        this.pot.addChips(amount);
 
         if (player.currentBet > this.currentBet) {
             this.currentBet = player.currentBet;
@@ -173,6 +177,16 @@ export default class TableStateRepository {
         if (this.currentStreetIndex < streetsInOrder.length - 1) {
             this.currentStreetIndex++;
         }
+
+        // Put all player current bets into pot and reset current bet
+
+        this.collectPotAndResetBetsAndFlags();
+
+
+        this.resetCurrentBet();
+
+        this.setLastRaiser(null);
+
     }
 
     #resetStreet() {
@@ -203,22 +217,21 @@ export default class TableStateRepository {
         }
     }
 
-
     // Active Players
 
     getActivePlayerIds() {
         return this.activePlayerIds;
     }
 
-    getActivePlayerTurnId() {
-        return this.activePlayerTurnId;
+    getCurrentTurnPlayerId() {
+        return this.currentTurnPlayerId;
     }
 
-    setActivePlayerTurn(playerId) {
+    setCurrentTurnPlayer(playerId) {
         if (!this.activePlayerIds.includes(playerId)) {
             throw new Error('Player is not active to set turn');
         }
-        this.activePlayerTurnId = playerId;
+        this.currentTurnPlayerId = playerId;
     }
 
     advanceToNextActivePlayer() {
@@ -226,9 +239,17 @@ export default class TableStateRepository {
             throw new Error('No active players to advance to');
         }
 
-        let currentIndex = this.activePlayerIds.indexOf(this.activePlayerTurnId);
+        let currentIndex = this.activePlayerIds.indexOf(this.currentTurnPlayerId);
         let nextIndex = (currentIndex + 1) % this.activePlayerIds.length;
-        this.activePlayerTurnId = this.activePlayerIds[nextIndex];
+        this.currentTurnPlayerId = this.activePlayerIds[nextIndex];
+    }
+
+    setLastRaiser(playerId) {
+        this.lastRaiserId = playerId;
+    }
+
+    getLastRaiserId() {
+        return this.lastRaiserId;
     }
 
     // COVER CASE THAT CURRENT TURN PLAYER IS REMOVED IN GAME ENGINE
@@ -238,7 +259,7 @@ export default class TableStateRepository {
 
 
     #resetActivePlayers() {
-        this.activePlayerIds = Object.keys(this.players);
+        this.activePlayerIds = this.playerOrder;
     }
 
     // Deck and Pot
@@ -251,12 +272,23 @@ export default class TableStateRepository {
         return this.pot;
     }
 
-
+    collectPotAndResetBetsAndFlags() {
+        
+        for (let playerId in this.players) {
+            let player = this.getPlayer(playerId);
+            let bet = player.getCurrentBet();
+            if (bet > 0) {
+                this.pot.addChips(bet);
+                player.currentBet = 0;
+            }
+            player.hasActedThisStreet = false;
+        }    
+    }
 
 
     // Reset Table State for New Round
 
-    resetForNewRound() {
+    resetForNewHand() {
         this.communityCards.clear();
         this.deck.resetAndShuffle();
         this.pot.clear();

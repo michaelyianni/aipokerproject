@@ -12,8 +12,11 @@ export default class Player {
         this.hand = new Hand();
         this.chips = 0;
         this.currentBet = 0;
+        this.totalBet = 0;
         this.hasFolded = false;
         this.hasLeft = false;
+        this.isAllIn = false;
+        this.hasActedThisStreet = false;
     }
 
     addChips(amount) {
@@ -51,7 +54,6 @@ export default class Player {
 
     leave() {
         this.hasLeft = true;
-        this.hasFolded = true;
     }
 
     
