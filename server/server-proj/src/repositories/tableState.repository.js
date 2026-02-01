@@ -14,7 +14,7 @@ const streetsInOrder = [
 
 export default class TableStateRepository {
     constructor(players = []) {
-        
+
         // Create dictionary of players
         this.players = {};
         for (let player of Object.values(players)) {
@@ -25,7 +25,8 @@ export default class TableStateRepository {
 
         this.communityCards = new CommunityCards();
         this.deck = new Deck();
-        this.pot = new Pot();
+        this.pots = [];
+        // this.pot = new Pot();
 
         this.currentStreetIndex = 0;
         this.currentBet = 0;
@@ -40,7 +41,7 @@ export default class TableStateRepository {
     }
 
     initialiseTable(initialChips = 1000) {
-       
+
         this.resetForNewHand();
 
         // Initialise dealer
@@ -126,11 +127,19 @@ export default class TableStateRepository {
 
         const player = this.getPlayer(playerId);
 
-        player.placeBet(amount);
+        const betAmount = Math.min(amount, player.chips);
+
+        if (betAmount === player.chips) {
+            // Player is going all-in
+            player.isAllIn = true;
+        }
+
+        player.placeBet(betAmount);
 
         if (player.currentBet > this.currentBet) {
             this.currentBet = player.currentBet;
         }
+
     }
 
     // Current Bet
@@ -161,7 +170,7 @@ export default class TableStateRepository {
 
     distributeWinnings(winningsMap) {
         for (let playerId in winningsMap) {
-            let amount = winningsMap[playerId]; 
+            let amount = winningsMap[playerId];
             let player = this.getPlayer(playerId);
             player.addChips(amount);
         }
@@ -180,7 +189,7 @@ export default class TableStateRepository {
 
         // Put all player current bets into pot and reset current bet
 
-        this.collectPotAndResetBetsAndFlags();
+        this.resetPlayerBetsAndFlags();
 
 
         this.resetCurrentBet();
@@ -204,7 +213,7 @@ export default class TableStateRepository {
     }
 
     #resetPlayers() {
-        
+
         // Delete left players and reset others
         for (let playerId in this.players) {
             let player = this.getPlayer(playerId);
@@ -226,6 +235,18 @@ export default class TableStateRepository {
     getCurrentTurnPlayerId() {
         return this.currentTurnPlayerId;
     }
+
+    getCanActPlayerIds() {
+        return this.activePlayerIds.filter(playerId => {
+            const player = this.getPlayer(playerId);
+            return !player.hasFolded && !player.isAllIn;
+        });
+    }
+
+    getAllInPlayerIds() {
+        return this.activePlayerIds.filter(id => this.getPlayer(id).isAllIn);
+    }
+
 
     setCurrentTurnPlayer(playerId) {
         if (!this.activePlayerIds.includes(playerId)) {
@@ -272,17 +293,79 @@ export default class TableStateRepository {
         return this.pot;
     }
 
-    collectPotAndResetBetsAndFlags() {
-        
+    recalculatePots() {
+        const allPlayerIds = Object.keys(this.players);
+
+        const contribs = allPlayerIds
+            .map(id => {
+                const p = this.getPlayer(id);
+                return { id, amount: p.totalBetThisHand };
+            })
+            .filter(x => x.amount > 0)
+            .sort((a, b) => a.amount - b.amount);
+
+        if (contribs.length === 0) {
+            this.pots = [];
+            return;
+        }
+
+        const isEligible = (id) => this.activePlayerIds.includes(id);
+
+        let pots = [];
+        let prev = 0;
+
+        let remainingContributorIds = contribs.map(c => c.id);
+
+        for (const c of contribs) {
+            const level = c.amount;
+            const slice = level - prev;
+
+            if (slice > 0) {
+                const contributorsCount = remainingContributorIds.length;
+                const potAmount = slice * contributorsCount;
+
+                const eligiblePlayerIds = remainingContributorIds.filter(isEligible);
+
+                const pot = new Pot(potAmount, eligiblePlayerIds);
+
+                // merge adjacent identical-eligibility pots
+                const last = pots[pots.length - 1];
+                if (last && this.sameEligible(last.eligiblePlayerIds, pot.eligiblePlayerIds)) {
+                    last.addChips(pot.amount);
+                } else {
+                    pots.push(pot);
+                }
+
+                prev = level;
+            }
+
+            remainingContributorIds = remainingContributorIds.filter(pid => pid !== c.id);
+        }
+
+        this.pots = pots;
+    }
+
+    sameEligible(a, b) {
+        if (a.length !== b.length) return false;
+        const aa = [...a].sort();
+        const bb = [...b].sort();
+        for (let i = 0; i < aa.length; i++) {
+            if (aa[i] !== bb[i]) return false;
+        }
+        return true;
+    }
+
+
+
+    resetPlayerBetsAndFlags() {
+
         for (let playerId in this.players) {
             let player = this.getPlayer(playerId);
-            let bet = player.getCurrentBet();
-            if (bet > 0) {
-                this.pot.addChips(bet);
-                player.currentBet = 0;
-            }
+            player.currentBet = 0;
             player.hasActedThisStreet = false;
-        }    
+        }
+
+        this.currentBet = 0;
     }
 
 
@@ -291,7 +374,7 @@ export default class TableStateRepository {
     resetForNewHand() {
         this.communityCards.clear();
         this.deck.resetAndShuffle();
-        this.pot.clear();
+        this.pots = [];
         this.#resetStreet();
         this.resetCurrentBet();
         this.#resetPlayers();

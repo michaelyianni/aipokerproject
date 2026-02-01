@@ -15,6 +15,11 @@ assert.strictEqual(pot.getTotal(), 100, "Pot total should be 100 after adding 10
 pot.addChips(50);
 assert.strictEqual(pot.getTotal(), 150, "Pot total should be 150 after adding another 50");
 
+pot.addEligiblePlayer("player1");
+pot.addEligiblePlayer("player2");
+pot.addEligiblePlayer("player1"); // Duplicate, should not be added again
+assert.deepStrictEqual(pot.eligiblePlayerIds, ["player1", "player2"], "Eligible players should be unique");
+
 pot.clear();
 assert.strictEqual(pot.getTotal(), 0, "Pot total should be 0 after clearing");
 

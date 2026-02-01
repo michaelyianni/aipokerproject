@@ -1,21 +1,28 @@
 export default class Pot {
-    constructor() {
-        this.total = 0;
+    constructor(chips = 0, eligiblePlayerIds = []) {
+        this.amount = chips;
+        this.eligiblePlayerIds = eligiblePlayerIds;
     }
 
     addChips(amount) {
         if (amount < 0) {
             throw new Error('Cannot add negative chips');
         }
-        this.total += amount;
+        this.amount += amount;
+    }
+
+    addEligiblePlayer(playerId) {
+        if (!this.eligiblePlayerIds.includes(playerId)) {
+            this.eligiblePlayerIds.push(playerId);
+        }
     }
 
     getTotal() {
-        return this.total;
+        return this.amount;
     }
 
     clear() {
-        this.total = 0;
+        this.amount = 0;
     }
 
 }

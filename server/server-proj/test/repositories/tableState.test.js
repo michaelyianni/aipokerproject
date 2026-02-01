@@ -63,6 +63,7 @@ assert.notStrictEqual(nextTurnId, initialTurnId, "Active player turn should have
 // Test betting
 
 tableState.playerBet(player1.id, 100);
+tableState.recalculatePots();
 assert.strictEqual(player1.chips, 900, "Player 1 should have 900 chips after betting 100");
 assert.strictEqual(player1.getCurrentBet(), 100, "Player 1's current bet should be 100");
 
@@ -72,7 +73,7 @@ tableState.advanceStreet();
 let nextStreet = tableState.getCurrentStreet();
 assert.notStrictEqual(nextStreet, initialStreet, "Game street should have advanced to the next street");
 // Ensure bets are collected to pot
-assert.strictEqual(tableState.pot.getTotal(), 100, "Pot should be 100 after collecting bets");
+assert.strictEqual(tableState.pots[0].getTotal(), 100, "Pot should be 100 after collecting bets");
 assert.strictEqual(player1.getCurrentBet(), 0, "Player 1's current bet should be reset to 0 after advancing street");
 
 

@@ -22,7 +22,7 @@ export default class GameEngineService {
 
     // Main game loop logic
     startGame() {
-       
+
         // Deal hole cards to players
         this.tableStateRepository.dealCardsToPlayers();
 
@@ -40,29 +40,32 @@ export default class GameEngineService {
 
 
     playerAction(playerId, action, amount = 0) {
-        
+
         // Validate action
         // if (!ActionChecker.isValidAction(playerId, action, amount, this.tableStateRepository)) {
         //     throw new Error('Invalid action');
         // } 
-        
+
         // Handle player actions: fold, call, raise, check
         let player = this.tableStateRepository.getPlayer(playerId);
 
-        switch(action) {
+        switch (action) {
             case GAME_ACTIONS.FOLD:
                 player.fold();
                 this.tableStateRepository.removeActivePlayer(playerId);
+                this.tableStateRepository.recalculatePots();
                 break;
-            
+
             case GAME_ACTIONS.CALL:
                 let callAmount = this.tableStateRepository.getCurrentBet() - player.currentBet;
                 this.tableStateRepository.playerBet(playerId, callAmount);
+                this.tableStateRepository.recalculatePots();
                 break;
 
             case GAME_ACTIONS.RAISE:
                 let raiseAmount = this.tableStateRepository.getCurrentBet() + amount - player.currentBet;
                 this.tableStateRepository.playerBet(playerId, raiseAmount);
+                this.tableStateRepository.recalculatePots();
                 this.tableStateRepository.setLastRaiser(playerId);
                 break;
             case GAME_ACTIONS.CHECK:
@@ -84,12 +87,13 @@ export default class GameEngineService {
         this.setTurnToNextActivePlayer(this.tableStateRepository.getCurrentTurnPlayerId());
 
         // 1) Hand ends if only one player remains
-        if( this.tableStateRepository.getActivePlayerIds().length === 1) {
+        if (this.tableStateRepository.getActivePlayerIds().length === 1) {
             // All players have folded except one, end round
 
-            this.tableStateRepository.collectPotAndResetBetsAndFlags();
+            this.tableStateRepository.recalculatePots();
 
-            this.awardPlayers( [ this.tableStateRepository.getActivePlayerIds()[0] ] );
+            // Award every pot to the last remaining player
+            this.awardAllPotsToSingleWinner(this.tableStateRepository.getActivePlayerIds()[0]);
 
             // End round, prepare for next round
             this.endHandAndPrepareNext();
@@ -99,31 +103,53 @@ export default class GameEngineService {
         // 2) All-in scenario
         // Handle All-ins here
         // if (canActIds.length === 0) {
-            // this.runoutBoardToRiver();
-            // this.advanceToShowdown();
-            // this.determineWinners();
-            // this.endHandAndPrepareNext();
-            // return;
+        // this.runoutBoardToRiver();
+        // this.advanceToShowdown();
+        // this.determineWinners();
+        // this.endHandAndPrepareNext();
+        // return;
         // }
+        const canActIds = this.tableStateRepository.getCanActPlayerIds();
+        const allInIds = this.tableStateRepository.getAllInPlayerIds();
+
+        if (canActIds.length === 1 && allInIds.length >= 1) {
+
+            this.runOutBoardToRiver();
+            this.determineWinners();
+            this.endHandAndPrepareNext();
+            return;
+        }
+
+        if (canActIds.length === 0) {
+            // Everyone remaining is all-in, run out board to river
+            this.runOutBoardToRiver();
+
+            this.determineWinners();
+
+            this.endHandAndPrepareNext();
+            return;
+        }
+
 
         // 3) If betting round complete, advance street
         if (this.isBettingRoundComplete()) {
-            
-            this.tableStateRepository.collectPotAndResetBetsAndFlags();
-    
+
+            this.tableStateRepository.resetPlayerBetsAndFlags();
+
             this.advanceStreet();
 
             // If river completed, determine winners
             if (this.tableStateRepository.getCurrentStreet() === PokerStreets.SHOWDOWN) {
                 this.determineWinners();
                 this.endHandAndPrepareNext();
+                return;
             }
 
             this.setTurnToNextActivePlayer(this.tableStateRepository.getDealer());
             return;
         }
 
-        
+
     }
 
     isBettingRoundComplete() {
@@ -140,9 +166,9 @@ export default class GameEngineService {
             if (p.isAllIn) continue;
 
             if (p.currentBet < currentBet) {
-                
-                console.log(`Betting round not complete: player ${playerId} has not matched current bet`);
-                
+
+                // console.log(`Betting round not complete: player ${playerId} has not matched current bet`);
+
                 return false;
 
             }
@@ -156,7 +182,7 @@ export default class GameEngineService {
                 if (p.hasFolded || p.isAllIn) continue;
 
                 if (!p.hasActedThisStreet) {
-                    console.log(`Betting round not complete: player ${playerId} has not acted this street`);
+                    // console.log(`Betting round not complete: player ${playerId} has not acted this street`);
                     return false;
                 }
             }
@@ -165,7 +191,7 @@ export default class GameEngineService {
 
         // There was aggression: round ends when action returns to last raiser
 
-        console.log('Checking if betting round complete by last raiser return. lastRaiserId:', lastRaiserId, 'currentTurnId:', currentTurnId);
+        // console.log('Checking if betting round complete by last raiser return. lastRaiserId:', lastRaiserId, 'currentTurnId:', currentTurnId);
 
         return currentTurnId === lastRaiserId;
     }
@@ -187,7 +213,7 @@ export default class GameEngineService {
 
 
 
-        this.tableStateRepository.collectPotAndResetBetsAndFlags();
+        this.tableStateRepository.resetPlayerBetsAndFlags();
 
         this.tableStateRepository.resetCurrentBet();
 
@@ -196,65 +222,198 @@ export default class GameEngineService {
 
     setTurnToNextActivePlayer(playerId) {
         var activePlayerIds = this.tableStateRepository.getActivePlayerIds();
-        var playerIds = this.tableStateRepository.playerOrder;
+
+        var order = this.tableStateRepository.playerOrder;
 
         // Get player index in player order
-        let playerIndex = playerIds.indexOf(playerId);
 
-        let currentIndex = (playerIndex + 1) % this.tableStateRepository.playerOrder.length;
-        
+        let currentIndex = order.indexOf(playerId);
+
         // while current player is not active, advance
-        while (!activePlayerIds.includes(playerIds[currentIndex])) {
-            currentIndex = (currentIndex + 1) % playerIds.length;
+        for (let i = 0; i < order.length; i++) {
+            currentIndex = (currentIndex + 1) % order.length;
+
+            const nextPlayerId = order[currentIndex];
+
+            if (!activePlayerIds.includes(nextPlayerId)) {
+                continue;
+            }
+
+            const p = this.tableStateRepository.getPlayer(nextPlayerId);
+
+            if (p.isAllIn) continue;
+
+            console.log('Turn: ', playerId, '->', nextPlayerId);
+
+            this.tableStateRepository.setCurrentTurnPlayer(nextPlayerId);
+
+
+
+            return;
         }
 
-        let firstToActId = playerIds[currentIndex];
-        console.log('Turn: ', playerId, '->', firstToActId);
 
-        this.tableStateRepository.setCurrentTurnPlayer(firstToActId);
+        // Everyone all-in
+        this.tableStateRepository.setCurrentTurnPlayer(null);
 
     }
 
 
     endHandAndPrepareNext() {
 
-    }
+        this.tableStateRepository.resetForNewHand();
 
-    awardPlayers(winnerIds) {
-        let potAmount = this.tableStateRepository.pot.getTotal();
-        let splitAmount = Math.floor(potAmount / winnerIds.length);
-
-        for (let winnerId of winnerIds) {
-            let winner = this.tableStateRepository.getPlayer(winnerId);
-            winner.addChips(splitAmount);
+        // Rotate dealer
+        let playerOrder = this.tableStateRepository.playerOrder;
+        if (playerOrder.length === 0) {
+            throw new Error('No players to assign dealer');
         }
+        let currentDealerIndex = playerOrder.indexOf(this.tableStateRepository.getDealer());
+
+        console.log('Current dealer id:', this.tableStateRepository.getDealer());
+
+        let nextDealerIndex = (currentDealerIndex + 1) % playerOrder.length;
+
+        console.log('Next dealer id:', playerOrder[nextDealerIndex]);
+
+        this.tableStateRepository.setDealer(playerOrder[nextDealerIndex]);
+
+        this.tableStateRepository.setCurrentTurnPlayer(this.tableStateRepository.getDealer());
+
+        this.startGame();
     }
+
+
+    awardAllPotsToSingleWinner(winnerId) {
+        const pots = this.tableStateRepository.pots; // ideally: getPots()
+
+        const total = (pots ?? []).reduce((sum, p) => sum + (p.amount ?? p.total ?? 0), 0);
+
+        if (total <= 0) return; // nothing to award
+
+        const winner = this.tableStateRepository.getPlayer(winnerId);
+        winner.addChips(total);
+    }
+
+
+    awardPots(pots, communityCards) {
+        // payouts aggregated across pots
+        const payouts = {}; // { playerId: chipsWon }
+
+        for (const pot of pots) {
+            const eligibleIds = pot.eligiblePlayerIds;
+
+            // If everyone eligible folded somehow (shouldn't happen if you maintain activeIds properly)
+            if (!eligibleIds || eligibleIds.length === 0) continue;
+
+            // Build FullHands for eligible players only
+            const hands = eligibleIds.map(playerId => {
+                const player = this.tableStateRepository.getPlayer(playerId);
+                return new FullHand(player, player.getHand(), communityCards);
+            });
+
+            // Determine best among this eligible set
+            const bestHands = compareHands(hands); // should return array of FullHands (tie -> multiple)
+
+            const winnerIds = bestHands.map(h => h.player.id);
+
+            // Split this pot among winners
+            const baseShare = Math.floor(pot.amount / winnerIds.length);
+            let remainder = pot.amount - baseShare * winnerIds.length;
+
+            // Give everyone base share
+            for (const id of winnerIds) {
+                payouts[id] = (payouts[id] ?? 0) + baseShare;
+            }
+
+            // Distribute remainder chips (house rule / poker room rule)
+            // Common: give odd chips to winners in seat order starting left of dealer.
+            // Minimal deterministic approach: use your playerOrder rotation from dealer.
+            if (remainder > 0) {
+                const orderedWinners = this.orderBySeatFromDealer(winnerIds);
+                for (let i = 0; i < remainder; i++) {
+                    const id = orderedWinners[i % orderedWinners.length];
+                    payouts[id] = (payouts[id] ?? 0) + 1;
+                }
+            }
+        }
+
+        // Apply payouts
+        for (const [playerId, amount] of Object.entries(payouts)) {
+            this.tableStateRepository.getPlayer(playerId).addChips(amount);
+        }
+
+        return payouts; // handy for logging / broadcasting
+    }
+
+    orderBySeatFromDealer(playerIds) {
+        const order = this.tableStateRepository.playerOrder;
+        const dealerId = this.tableStateRepository.getDealer();
+
+        const dealerIndex = order.indexOf(dealerId);
+        if (dealerIndex === -1) return playerIds; // fallback
+
+        // Build seat order starting left of dealer
+        const seatOrder = [];
+        for (let i = 1; i <= order.length; i++) {
+            seatOrder.push(order[(dealerIndex + i) % order.length]);
+        }
+
+        // Filter seat order down to these players
+        return seatOrder.filter(id => playerIds.includes(id));
+    }
+
+
 
     determineWinners() {
-        let activePlayerIds = this.tableStateRepository.getActivePlayerIds();
-        let communityCards = this.tableStateRepository.getCommunityCards();
+        // let activePlayerIds = this.tableStateRepository.getActivePlayerIds();
+        // let communityCards = this.tableStateRepository.getCommunityCards();
 
-        if( communityCards.getCards().length < 5 ) {
-            throw new Error('Cannot determine winners before river is dealt');
+        // if( communityCards.getCards().length < 5 ) {
+        //     throw new Error('Cannot determine winners before river is dealt');
+        // }
+        // if (activePlayerIds.length === 0) {
+        //     throw new Error('No active players to determine winners from');
+        // }
+
+        // let playerHands = activePlayerIds.map(playerId => {
+        //     let player = this.tableStateRepository.getPlayer(playerId);
+        //     let fullHand = new FullHand(player, player.getHand(), communityCards);
+        //     return fullHand;
+        // });
+
+        // let bestHands = compareHands(playerHands);
+
+        // let winnerIds = bestHands.map(fullHand => fullHand.player.id);
+
+        // this.awardPlayers(winnerIds);
+
+        const activePlayerIds = this.tableStateRepository.getActivePlayerIds();
+        const communityCards = this.tableStateRepository.getCommunityCards();
+
+        if (communityCards.getCards().length < 5) {
+            throw new Error("Cannot determine winners before river is dealt");
         }
         if (activePlayerIds.length === 0) {
-            throw new Error('No active players to determine winners from');
+            throw new Error("No active players to determine winners from");
         }
 
-        let playerHands = activePlayerIds.map(playerId => {
-            let player = this.tableStateRepository.getPlayer(playerId);
-            let fullHand = new FullHand(player, player.getHand(), communityCards);
-            return fullHand;
-        });
+        const pots = this.tableStateRepository.pots; // <-- you need this getter
 
-        let bestHands = compareHands(playerHands);
+        const payouts = this.awardPots(pots, communityCards);
 
-        let winnerIds = bestHands.map(fullHand => fullHand.player.id);
-
-        this.awardPlayers(winnerIds);
+        // Optional: log payouts for debugging
+        console.log("Showdown payouts:", payouts);
     }
 
-        
+
+    runOutBoardToRiver() {
+        let currentStreet = this.tableStateRepository.getCurrentStreet();
+        while (currentStreet !== PokerStreets.SHOWDOWN) {
+            this.advanceStreet();
+            currentStreet = this.tableStateRepository.getCurrentStreet();
+        }
+    }
 }
 
 

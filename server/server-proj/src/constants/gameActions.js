@@ -3,6 +3,5 @@ export const GAME_ACTIONS = {
     CHECK: 'CHECK',
     CALL: 'CALL',
     RAISE: 'RAISE',
-    ALL_IN: 'ALL_IN',
 };
 
