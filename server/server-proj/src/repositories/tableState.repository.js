@@ -38,6 +38,8 @@ export default class TableStateRepository {
         this.bigBlindAmount = 10;
 
         this.dealerId = null;
+        this.bigBlindId = null;
+        this.smallBlindId = null;
     }
 
     initialiseTable(initialChips = 1000) {
@@ -49,12 +51,15 @@ export default class TableStateRepository {
         if (playerIds.length === 0) {
             throw new Error('No players to assign dealer');
         }
+        this.initialiseChipsForPlayers(initialChips);
 
         this.setDealer(playerIds[0]);
 
+        this.setBlindPlayers();
+
         this.setCurrentTurnPlayer(this.dealerId);
 
-        this.initialiseChipsForPlayers(initialChips);
+       
     }
 
     // newRound() {
@@ -80,8 +85,53 @@ export default class TableStateRepository {
         this.dealerId = playerId;
     }
 
+    setBlindPlayers() {
+        if (!this.dealerId) {
+            throw new Error('Dealer must be set before setting blind players');
+        }
+
+        let playerIds = this.playerOrder
+        if (playerIds.length < 2) {
+            throw new Error('Not enough players to set blind players');
+        }
+
+
+        let smallBlindPlayerId, bigBlindPlayerId;
+
+        if(playerIds.length === 2) {
+            // In 2 player game, dealer is small blind and other player is big blind
+            smallBlindPlayerId = this.dealerId;
+            bigBlindPlayerId = playerIds.find(id => id !== this.dealerId);
+
+           
+        }
+        else {
+            // In 3+ player game, player to left of dealer is small blind and next player is big blind
+            let dealerIndex = playerIds.indexOf(this.dealerId);
+            smallBlindPlayerId = playerIds[(dealerIndex + 1) % playerIds.length];
+            bigBlindPlayerId = playerIds[(dealerIndex + 2) % playerIds.length];
+
+        }
+
+        this.smallBlindId = smallBlindPlayerId;
+        this.bigBlindId = bigBlindPlayerId;
+        this.playerBet(smallBlindPlayerId, this.smallBlindAmount);
+        this.playerBet(bigBlindPlayerId, this.bigBlindAmount);
+
+    }
+
+
+
     getDealer() {
         return this.dealerId;
+    }
+
+    getSmallBlind() {
+        return this.smallBlindId;
+    }
+
+    getBigBlind() {
+        return this.bigBlindId;
     }
 
 
@@ -289,13 +339,14 @@ export default class TableStateRepository {
         return this.deck;
     }
 
-    getPot() {
-        return this.pot;
+    getPots() {
+        return this.pots;
     }
 
     recalculatePots() {
         const allPlayerIds = Object.keys(this.players);
 
+        // Generates list of contributors with their total bet this hand, sorted by bet amount ascending
         const contribs = allPlayerIds
             .map(id => {
                 const p = this.getPlayer(id);
@@ -309,11 +360,13 @@ export default class TableStateRepository {
             return;
         }
 
+        // Generates list of potentially eligbile players (active players)
         const isEligible = (id) => this.activePlayerIds.includes(id);
 
         let pots = [];
         let prev = 0;
 
+        // Iterate through contributors from smallest to largest bet, creating pots for each unique bet level
         let remainingContributorIds = contribs.map(c => c.id);
 
         for (const c of contribs) {
@@ -322,7 +375,9 @@ export default class TableStateRepository {
 
             if (slice > 0) {
                 const contributorsCount = remainingContributorIds.length;
-                const potAmount = slice * contributorsCount;
+                const potAmount = slice * contributorsCount;    // Pot amount is the difference in bet level multiplied by the number of contributors at or above this level
+
+                // Eligible players for this pot are those who have contributed at or above this level and are still active
 
                 const eligiblePlayerIds = remainingContributorIds.filter(isEligible);
 

@@ -227,8 +227,8 @@ assert.ok(gameEngine.tableStateRepository.pots && gameEngine.tableStateRepositor
 console.log("[POTS] After pre-flop:", gameEngine.tableStateRepository.pots);
 
 // player 3 RAISE to 50 
-console.log(`[ACTION] On FLOP: P3 (Charlie) -> RAISE to 50`);
-gameEngine.playerAction(player3.id, GAME_ACTIONS.RAISE, 50);
+console.log(`[ACTION] On FLOP: P3 (Charlie) -> BET 50`);
+gameEngine.playerAction(player3.id, GAME_ACTIONS.BET, 50);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
 
 

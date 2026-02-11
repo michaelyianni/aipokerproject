@@ -32,6 +32,10 @@ let dealerId = tableState.getDealer();
 assert.strictEqual(dealerId, player1.id, "Dealer should be player 1");
 let activeTurnId = tableState.getCurrentTurnPlayerId();
 assert.strictEqual(activeTurnId, dealerId, "Active turn should be dealer");
+let smallBlindId = tableState.getSmallBlind();
+assert.strictEqual(smallBlindId, player1.id, "Small blind should be player 1");
+let bigBlindId = tableState.getBigBlind();
+assert.strictEqual(bigBlindId, player2.id, "Big blind should be player 2");
 
 // Test active players
 let activePlayerIds = tableState.getActivePlayerIds();
@@ -64,8 +68,8 @@ assert.notStrictEqual(nextTurnId, initialTurnId, "Active player turn should have
 
 tableState.playerBet(player1.id, 100);
 tableState.recalculatePots();
-assert.strictEqual(player1.chips, 900, "Player 1 should have 900 chips after betting 100");
-assert.strictEqual(player1.getCurrentBet(), 100, "Player 1's current bet should be 100");
+assert.strictEqual(player1.chips, 895, "Player 1 should have 895 chips after betting another 100");
+assert.strictEqual(player1.getCurrentBet(), 105, "Player 1's current bet should be 105 after betting 100");
 
 // Test advancing street
 let initialStreet = tableState.getCurrentStreet();
@@ -73,7 +77,8 @@ tableState.advanceStreet();
 let nextStreet = tableState.getCurrentStreet();
 assert.notStrictEqual(nextStreet, initialStreet, "Game street should have advanced to the next street");
 // Ensure bets are collected to pot
-assert.strictEqual(tableState.pots[0].getTotal(), 100, "Pot should be 100 after collecting bets");
+assert.strictEqual(tableState.pots[0].getTotal(), 20, "Main pot should be 20 after collecting bets");
+assert.strictEqual(tableState.pots[1].getTotal(), 95, "Side pot should be 95 after collecting bets (player 1's 100 bet minus 5 from small blind)");
 assert.strictEqual(player1.getCurrentBet(), 0, "Player 1's current bet should be reset to 0 after advancing street");
 
 

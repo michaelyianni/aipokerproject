@@ -118,14 +118,14 @@ gameEngine.playerAction(player3.id, GAME_ACTIONS.CHECK);
 activeTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(activeTurnId, player1.id, "Active turn should be player 1 after player 3 checks");
 
-// player 1 RAISE
+// player 1 BET
 let player1Raise = 50;
-console.log(`[ACTION] P1 (Alice) -> RAISE ${player1Raise}`);
-console.log(`[BET] Before P1 RAISE | Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
+console.log(`[ACTION] P1 (Alice) -> BET ${player1Raise}`);
+console.log(`[BET] Before P1 BET | Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
 
-gameEngine.playerAction(player1.id, GAME_ACTIONS.RAISE, player1Raise);
+gameEngine.playerAction(player1.id, GAME_ACTIONS.BET, player1Raise);
 
-console.log(`[BET] After P1 RAISE | Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P1 currentBet = ${gameEngine.tableStateRepository.getPlayer(player1.id).currentBet}`);
+console.log(`[BET] After P1 BET | Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P1 currentBet = ${gameEngine.tableStateRepository.getPlayer(player1.id).currentBet}`);
 
 // Check active turn is back to player 3
 activeTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();

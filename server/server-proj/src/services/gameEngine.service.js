@@ -2,6 +2,7 @@ import Card from "../models/Card.js";
 import CommunityCards from "../models/CommunityCards.js";
 import TableStateRepository from "../repositories/tableState.repository.js";
 import FullHand from "../models/FullHand.js";
+import ActionChecker from "../utils/actionChecker.util.js";
 import { evaluateHand, compareHands } from "../utils/handEvaluator.util.js";
 import { GAME_ACTIONS } from "../constants/gameActions.js";
 import { PokerStreets } from "../constants/pokerStreets.js";
@@ -26,14 +27,16 @@ export default class GameEngineService {
         // Deal hole cards to players
         this.tableStateRepository.dealCardsToPlayers();
 
-        // Advance player, bet small blind
-        this.tableStateRepository.advanceToNextActivePlayer();
-        this.tableStateRepository.playerBet(this.tableStateRepository.getCurrentTurnPlayerId(), this.tableStateRepository.smallBlindAmount);
+        // // Advance player, bet small blind
+        // this.tableStateRepository.advanceToNextActivePlayer();
+        // this.tableStateRepository.playerBet(this.tableStateRepository.getCurrentTurnPlayerId(), this.tableStateRepository.smallBlindAmount);
 
-        // Advance player, bet big blind
-        this.tableStateRepository.advanceToNextActivePlayer();
-        this.tableStateRepository.playerBet(this.tableStateRepository.getCurrentTurnPlayerId(), this.tableStateRepository.bigBlindAmount);
-        this.tableStateRepository.advanceToNextActivePlayer();
+        // // Advance player, bet big blind
+        // this.tableStateRepository.advanceToNextActivePlayer();
+        // this.tableStateRepository.playerBet(this.tableStateRepository.getCurrentTurnPlayerId(), this.tableStateRepository.bigBlindAmount);
+        // this.tableStateRepository.advanceToNextActivePlayer();
+
+        this.setTurnToNextActivePlayer(this.tableStateRepository.getBigBlind());
 
         // Awaiting player actions
     }
@@ -41,10 +44,10 @@ export default class GameEngineService {
 
     playerAction(playerId, action, amount = 0) {
 
-        // Validate action
-        // if (!ActionChecker.isValidAction(playerId, action, amount, this.tableStateRepository)) {
-        //     throw new Error('Invalid action');
-        // } 
+        //Validate action
+        if (!ActionChecker.isValidAction(playerId, action, amount, this.tableStateRepository)) {
+            throw new Error('Invalid action');
+        } 
 
         // Handle player actions: fold, call, raise, check
         let player = this.tableStateRepository.getPlayer(playerId);
@@ -53,19 +56,23 @@ export default class GameEngineService {
             case GAME_ACTIONS.FOLD:
                 player.fold();
                 this.tableStateRepository.removeActivePlayer(playerId);
-                this.tableStateRepository.recalculatePots();
+                // this.tableStateRepository.recalculatePots();
                 break;
 
             case GAME_ACTIONS.CALL:
                 let callAmount = this.tableStateRepository.getCurrentBet() - player.currentBet;
                 this.tableStateRepository.playerBet(playerId, callAmount);
-                this.tableStateRepository.recalculatePots();
+                // this.tableStateRepository.recalculatePots();
                 break;
-
+            case GAME_ACTIONS.BET:
+                this.tableStateRepository.playerBet(playerId, amount);
+                // this.tableStateRepository.recalculatePots();
+                this.tableStateRepository.setLastRaiser(playerId);
+                break;
             case GAME_ACTIONS.RAISE:
                 let raiseAmount = this.tableStateRepository.getCurrentBet() + amount - player.currentBet;
                 this.tableStateRepository.playerBet(playerId, raiseAmount);
-                this.tableStateRepository.recalculatePots();
+                // this.tableStateRepository.recalculatePots();
                 this.tableStateRepository.setLastRaiser(playerId);
                 break;
             case GAME_ACTIONS.CHECK:
@@ -133,6 +140,8 @@ export default class GameEngineService {
 
         // 3) If betting round complete, advance street
         if (this.isBettingRoundComplete()) {
+
+            this.tableStateRepository.recalculatePots();
 
             this.tableStateRepository.resetPlayerBetsAndFlags();
 
@@ -278,7 +287,7 @@ export default class GameEngineService {
 
         this.tableStateRepository.setDealer(playerOrder[nextDealerIndex]);
 
-        this.tableStateRepository.setCurrentTurnPlayer(this.tableStateRepository.getDealer());
+        this.tableStateRepository.setBlindPlayers();
 
         this.startGame();
     }
@@ -388,6 +397,8 @@ export default class GameEngineService {
 
         // this.awardPlayers(winnerIds);
 
+        this.tableStateRepository.recalculatePots();
+
         const activePlayerIds = this.tableStateRepository.getActivePlayerIds();
         const communityCards = this.tableStateRepository.getCommunityCards();
 
@@ -398,7 +409,7 @@ export default class GameEngineService {
             throw new Error("No active players to determine winners from");
         }
 
-        const pots = this.tableStateRepository.pots; // <-- you need this getter
+        const pots = this.tableStateRepository.getPots();
 
         const payouts = this.awardPots(pots, communityCards);
 
