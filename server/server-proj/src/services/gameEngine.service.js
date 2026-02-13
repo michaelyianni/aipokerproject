@@ -3,10 +3,9 @@ import CommunityCards from "../models/CommunityCards.js";
 import TableStateRepository from "../repositories/tableState.repository.js";
 import FullHand from "../models/FullHand.js";
 import ActionChecker from "../utils/actionChecker.util.js";
-import { evaluateHand, compareHands } from "../utils/handEvaluator.util.js";
+import { compareHands } from "../utils/handEvaluator.util.js";
 import { GAME_ACTIONS } from "../constants/gameActions.js";
 import { PokerStreets } from "../constants/pokerStreets.js";
-import { table } from "console";
 
 export default class GameEngineService {
     constructor(players = []) {
@@ -15,7 +14,7 @@ export default class GameEngineService {
         this.tableStateRepository.initialiseTable();
 
         // Additional game state initialization can go here
-
+        this.allocateBlinds(this.tableStateRepository.getDealer());
 
         // Start game loop
         this.startGame();
@@ -26,15 +25,6 @@ export default class GameEngineService {
 
         // Deal hole cards to players
         this.tableStateRepository.dealCardsToPlayers();
-
-        // // Advance player, bet small blind
-        // this.tableStateRepository.advanceToNextActivePlayer();
-        // this.tableStateRepository.playerBet(this.tableStateRepository.getCurrentTurnPlayerId(), this.tableStateRepository.smallBlindAmount);
-
-        // // Advance player, bet big blind
-        // this.tableStateRepository.advanceToNextActivePlayer();
-        // this.tableStateRepository.playerBet(this.tableStateRepository.getCurrentTurnPlayerId(), this.tableStateRepository.bigBlindAmount);
-        // this.tableStateRepository.advanceToNextActivePlayer();
 
         this.setTurnToNextActivePlayer(this.tableStateRepository.getBigBlind());
 
@@ -47,7 +37,7 @@ export default class GameEngineService {
         //Validate action
         if (!ActionChecker.isValidAction(playerId, action, amount, this.tableStateRepository)) {
             throw new Error('Invalid action');
-        } 
+        }
 
         // Handle player actions: fold, call, raise, check
         let player = this.tableStateRepository.getPlayer(playerId);
@@ -56,23 +46,18 @@ export default class GameEngineService {
             case GAME_ACTIONS.FOLD:
                 player.fold();
                 this.tableStateRepository.removeActivePlayer(playerId);
-                // this.tableStateRepository.recalculatePots();
                 break;
-
             case GAME_ACTIONS.CALL:
                 let callAmount = this.tableStateRepository.getCurrentBet() - player.currentBet;
                 this.tableStateRepository.playerBet(playerId, callAmount);
-                // this.tableStateRepository.recalculatePots();
                 break;
             case GAME_ACTIONS.BET:
                 this.tableStateRepository.playerBet(playerId, amount);
-                // this.tableStateRepository.recalculatePots();
                 this.tableStateRepository.setLastRaiser(playerId);
                 break;
             case GAME_ACTIONS.RAISE:
                 let raiseAmount = this.tableStateRepository.getCurrentBet() + amount - player.currentBet;
                 this.tableStateRepository.playerBet(playerId, raiseAmount);
-                // this.tableStateRepository.recalculatePots();
                 this.tableStateRepository.setLastRaiser(playerId);
                 break;
             case GAME_ACTIONS.CHECK:
@@ -86,6 +71,38 @@ export default class GameEngineService {
 
         // Post-action updates
         this.postActionUpdates();
+    }
+
+    playerDisconnect(playerId) {
+        // Validate player is in the game
+        const player = this.tableStateRepository.getPlayer(playerId);
+        if (!player) {
+            throw new Error('Player ' + playerId + ' not found in game');
+        }
+
+        // Mark player as disconnected and skip their turns until they reconnect or game ends
+        this.tableStateRepository.markPlayerAsLeft(playerId);
+        this.tableStateRepository.removeActivePlayer(playerId);
+
+        // Check if only one player left - if so, end the game and reset lobby
+        if (this.tableStateRepository.getActivePlayerIds().length === 1) {
+        // Only one other player left, end round and award pots to them
+            this.tableStateRepository.recalculatePots();
+
+            const remainingPlayerId = this.tableStateRepository.getActivePlayerIds()[0];
+            this.awardAllPotsToSingleWinner(remainingPlayerId);
+            this.endHandAndPrepareNext();
+            return;
+        }
+
+        // If its that player's turn, advance turn to next active player
+        if (this.tableStateRepository.getCurrentTurnPlayerId() === playerId) {
+            this.postActionUpdates();   
+        }
+
+
+        
+
     }
 
     postActionUpdates() {
@@ -108,14 +125,6 @@ export default class GameEngineService {
         }
 
         // 2) All-in scenario
-        // Handle All-ins here
-        // if (canActIds.length === 0) {
-        // this.runoutBoardToRiver();
-        // this.advanceToShowdown();
-        // this.determineWinners();
-        // this.endHandAndPrepareNext();
-        // return;
-        // }
         const canActIds = this.tableStateRepository.getCanActPlayerIds();
         const allInIds = this.tableStateRepository.getAllInPlayerIds();
 
@@ -176,7 +185,7 @@ export default class GameEngineService {
 
             if (p.currentBet < currentBet) {
 
-                // console.log(`Betting round not complete: player ${playerId} has not matched current bet`);
+                console.log(`Betting round not complete: player ${playerId} has not matched current bet`);
 
                 return false;
 
@@ -191,7 +200,7 @@ export default class GameEngineService {
                 if (p.hasFolded || p.isAllIn) continue;
 
                 if (!p.hasActedThisStreet) {
-                    // console.log(`Betting round not complete: player ${playerId} has not acted this street`);
+                    console.log(`Betting round not complete: player ${playerId} has not acted this street`);
                     return false;
                 }
             }
@@ -200,7 +209,7 @@ export default class GameEngineService {
 
         // There was aggression: round ends when action returns to last raiser
 
-        // console.log('Checking if betting round complete by last raiser return. lastRaiserId:', lastRaiserId, 'currentTurnId:', currentTurnId);
+        console.log('Checking if betting round complete by last raiser return. lastRaiserId:', lastRaiserId, 'currentTurnId:', currentTurnId);
 
         return currentTurnId === lastRaiserId;
     }
@@ -229,7 +238,7 @@ export default class GameEngineService {
         this.tableStateRepository.setLastRaiser(null);
     }
 
-    setTurnToNextActivePlayer(playerId) {
+    findNextActivePlayer(playerId) {
         var activePlayerIds = this.tableStateRepository.getActivePlayerIds();
 
         var order = this.tableStateRepository.playerOrder;
@@ -252,18 +261,20 @@ export default class GameEngineService {
 
             if (p.isAllIn) continue;
 
-            console.log('Turn: ', playerId, '->', nextPlayerId);
-
-            this.tableStateRepository.setCurrentTurnPlayer(nextPlayerId);
-
-
-
-            return;
+            return nextPlayerId;
         }
+    }
 
+    setTurnToNextActivePlayer(playerId) {
 
-        // Everyone all-in
-        this.tableStateRepository.setCurrentTurnPlayer(null);
+        const nextPlayerId = this.findNextActivePlayer(playerId);
+
+        if (nextPlayerId) {
+            this.tableStateRepository.setCurrentTurnPlayer(nextPlayerId);
+        } else {
+            // No active players found (everyone else folded or all-in), set to null
+            this.tableStateRepository.setCurrentTurnPlayer(null);
+        }
 
     }
 
@@ -272,26 +283,68 @@ export default class GameEngineService {
 
         this.tableStateRepository.resetForNewHand();
 
-        // Rotate dealer
-        let playerOrder = this.tableStateRepository.playerOrder;
-        if (playerOrder.length === 0) {
-            throw new Error('No players to assign dealer');
-        }
-        let currentDealerIndex = playerOrder.indexOf(this.tableStateRepository.getDealer());
+        // Check if enough players to continue
+        if (this.tableStateRepository.getActivePlayerIds().length < 2) {
+            // Not enough players to continue, end game
+            console.log('Not enough players to continue. Game over.');
+            return;
+        }   
 
-        console.log('Current dealer id:', this.tableStateRepository.getDealer());
 
-        let nextDealerIndex = (currentDealerIndex + 1) % playerOrder.length;
+        var dealerId = this.allocateDealerButton();
 
-        console.log('Next dealer id:', playerOrder[nextDealerIndex]);
-
-        this.tableStateRepository.setDealer(playerOrder[nextDealerIndex]);
-
-        this.tableStateRepository.setBlindPlayers();
+        this.allocateBlinds(dealerId);
 
         this.startGame();
     }
 
+    allocateDealerButton() {
+        // Rotate dealer
+        let playerOrder = this.tableStateRepository.playerOrder;
+
+        let currentDealerIndex = playerOrder.indexOf(this.tableStateRepository.getDealer());
+
+        console.log('Current dealer id:', this.tableStateRepository.getDealer());
+
+        const nextDealerId = this.findNextActivePlayer(playerOrder[currentDealerIndex]);
+
+        if (!nextDealerId) {
+            throw new Error('No active players to assign dealer for next hand');
+        }
+
+        console.log('Next dealer id:', nextDealerId);
+
+        this.tableStateRepository.setDealer(nextDealerId);
+
+        return nextDealerId;
+    }
+
+    allocateBlinds(dealerId) {
+        const playerIds = this.tableStateRepository.playerOrder;
+
+        var smallBlindPlayerId;
+        var bigBlindPlayerId;
+
+        if(this.tableStateRepository.getActivePlayerIds().length == 2) {
+            // In 2 player game, dealer is small blind and other player is big blind
+            smallBlindPlayerId = dealerId;
+            bigBlindPlayerId = playerIds.find(id => id !== dealerId);
+
+           
+        }
+        else {
+            // In 3+ player game, player to left of dealer is small blind and next player is big blind
+            
+            smallBlindPlayerId = this.findNextActivePlayer(dealerId);
+            bigBlindPlayerId = this.findNextActivePlayer(smallBlindPlayerId);
+        }
+
+        this.tableStateRepository.setSmallBlind(smallBlindPlayerId);
+        this.tableStateRepository.setBigBlind(bigBlindPlayerId);
+
+        this.tableStateRepository.playerBet(smallBlindPlayerId, this.tableStateRepository.smallBlindAmount);
+        this.tableStateRepository.playerBet(bigBlindPlayerId, this.tableStateRepository.bigBlindAmount);
+    }
 
     awardAllPotsToSingleWinner(winnerId) {
         const pots = this.tableStateRepository.pots; // ideally: getPots()
@@ -375,27 +428,6 @@ export default class GameEngineService {
 
 
     determineWinners() {
-        // let activePlayerIds = this.tableStateRepository.getActivePlayerIds();
-        // let communityCards = this.tableStateRepository.getCommunityCards();
-
-        // if( communityCards.getCards().length < 5 ) {
-        //     throw new Error('Cannot determine winners before river is dealt');
-        // }
-        // if (activePlayerIds.length === 0) {
-        //     throw new Error('No active players to determine winners from');
-        // }
-
-        // let playerHands = activePlayerIds.map(playerId => {
-        //     let player = this.tableStateRepository.getPlayer(playerId);
-        //     let fullHand = new FullHand(player, player.getHand(), communityCards);
-        //     return fullHand;
-        // });
-
-        // let bestHands = compareHands(playerHands);
-
-        // let winnerIds = bestHands.map(fullHand => fullHand.player.id);
-
-        // this.awardPlayers(winnerIds);
 
         this.tableStateRepository.recalculatePots();
 

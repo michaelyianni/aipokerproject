@@ -242,3 +242,6 @@ console.log(`[STREET] New round prepared | Street = ${currentStreet}`);
 assert.strictEqual(currentStreet, PokerStreets.PRE_FLOP, "New round should be prepared with street reset to PRE_FLOP");
 let newDealerId = gameEngine.tableStateRepository.getDealer();
 assert.strictEqual(newDealerId, player2.id, "Dealer should have rotated to player 2 for new round");
+
+
+console.log("All GameEngineService tests passed successfully.");

@@ -189,6 +189,26 @@ console.log(`[STREET] New hand street=${newStreet}`);
 assert.strictEqual(newStreet, PokerStreets.PRE_FLOP, "After showdown, new hand should reset to PRE_FLOP");
 
 
+// Player 2 should not be active
+assert.strictEqual(gameEngine.tableStateRepository.getActivePlayerIds().includes(player2.id), false, "Player2 should not be active after losing all-in and being eliminated");
+
+// Dealer should have rotated to next player (player 3 in this case)
+const newDealerId = gameEngine.tableStateRepository.getDealer();
+assert.strictEqual(newDealerId, player3.id, "Dealer should have rotated to player 3 for new round since player 2 is eliminated");
+
+
+
+
+// Reset GameEngine state for next test (new hand with all-in scenarios)
+// ---------- Setup ----------
+player1 = new Player("Alice");   // will lose
+player2 = new Player("Bob");     // may win short stack, all-in
+player3 = new Player("Charlie"); // will win side pot, may win main pot
+
+players = [player2, player3, player1]; // rotate seating order so player2 is dealer for this hand
+gameEngine = new GameEngineService(players);
+
+
 // Set player 2's chips to 200, and player 1's and 3's to 1000 for next test
 gameEngine.tableStateRepository.getPlayer(player1.id).chips = 1000;
 gameEngine.tableStateRepository.getPlayer(player2.id).chips = 200;

@@ -36,6 +36,13 @@ export default class ActionChecker {
         let currentBet = tableStateRepository.getCurrentBet();
 
         if (currentBet > 0) {
+
+            // Check is only valid for currentBet > 0 if current player is big blind and has not been raised on yet (i.e. current bet is just the big blind amount)
+            let bigBlindId = tableStateRepository.getBigBlind();
+            if (player.id === bigBlindId && currentBet === tableStateRepository.bigBlindAmount) {
+                return true;
+            }
+
             throw new Error('Cannot check when there is a bet on the table. Current bet: ' + currentBet);
         }
 

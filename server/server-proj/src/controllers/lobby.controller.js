@@ -6,7 +6,7 @@ export default class LobbyController {
 
     lobbyJoin(username) {
 
-        this.validateLobbyJoin(username);
+        this.validateLobbyJoin();
 
         if (!username || username.trim() === "") {
             username = "Player" + (this.lobbyRepository.getLobbySize() + 1);
@@ -26,7 +26,7 @@ export default class LobbyController {
 
     }
 
-    validateLobbyJoin(username) {
+    validateLobbyJoin() {
         if (this.lobbyRepository.getLobbySize() >= 6) {
             throw new Error('Lobby is full');
         }

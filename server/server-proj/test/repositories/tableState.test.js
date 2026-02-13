@@ -11,6 +11,7 @@ console.log("Testing TableStateRepository class...");
 
 let player1 = new Player("Alice");
 let player2 = new Player("Bob");
+
 let players = [player1, player2];
 
 let tableState = new TableStateRepository(players);
@@ -29,13 +30,18 @@ assert.strictEqual(retrievedPlayer2, player2, "Retrieved Player 2 should match")
 // Test initialiseTable
 tableState.initialiseTable();
 let dealerId = tableState.getDealer();
-assert.strictEqual(dealerId, player1.id, "Dealer should be player 1");
-let activeTurnId = tableState.getCurrentTurnPlayerId();
-assert.strictEqual(activeTurnId, dealerId, "Active turn should be dealer");
-let smallBlindId = tableState.getSmallBlind();
-assert.strictEqual(smallBlindId, player1.id, "Small blind should be player 1");
-let bigBlindId = tableState.getBigBlind();
-assert.strictEqual(bigBlindId, player2.id, "Big blind should be player 2");
+assert.strictEqual(dealerId, player1.id, "Player 1 should be the dealer initially");
+// Set active player turn to dealer for testing purposes
+tableState.setCurrentTurnPlayer(dealerId);
+// Set blinds
+tableState.setSmallBlind(player1.id);
+tableState.setBigBlind(player2.id);
+// Post blinds
+tableState.playerBet(player1.id, tableState.smallBlindAmount);
+tableState.playerBet(player2.id, tableState.bigBlindAmount);
+assert.strictEqual(player1.chips, 995, "Player 1 should have 995 chips after posting small blind");
+assert.strictEqual(player2.chips, 990, "Player 2 should have 990 chips after posting big blind");
+
 
 // Test active players
 let activePlayerIds = tableState.getActivePlayerIds();

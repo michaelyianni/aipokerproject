@@ -44,6 +44,8 @@ export default class TableStateRepository {
 
     initialiseTable(initialChips = 1000) {
 
+        this.initialiseChipsForPlayers(initialChips);
+        
         this.resetForNewHand();
 
         // Initialise dealer
@@ -51,13 +53,8 @@ export default class TableStateRepository {
         if (playerIds.length === 0) {
             throw new Error('No players to assign dealer');
         }
-        this.initialiseChipsForPlayers(initialChips);
-
+        
         this.setDealer(playerIds[0]);
-
-        this.setBlindPlayers();
-
-        this.setCurrentTurnPlayer(this.dealerId);
 
        
     }
@@ -85,41 +82,48 @@ export default class TableStateRepository {
         this.dealerId = playerId;
     }
 
-    setBlindPlayers() {
-        if (!this.dealerId) {
-            throw new Error('Dealer must be set before setting blind players');
-        }
+    // setBlindPlayers() {
+    //     if (!this.dealerId) {
+    //         throw new Error('Dealer must be set before setting blind players');
+    //     }
 
-        let playerIds = this.playerOrder
-        if (playerIds.length < 2) {
-            throw new Error('Not enough players to set blind players');
-        }
+    //     let playerIds = this.playerOrder
+    //     if (playerIds.length < 2) {
+    //         throw new Error('Not enough players to set blind players');
+    //     }
 
 
-        let smallBlindPlayerId, bigBlindPlayerId;
+    //     let smallBlindPlayerId, bigBlindPlayerId;
 
-        if(playerIds.length === 2) {
-            // In 2 player game, dealer is small blind and other player is big blind
-            smallBlindPlayerId = this.dealerId;
-            bigBlindPlayerId = playerIds.find(id => id !== this.dealerId);
+    //     if(playerIds.length === 2) {
+    //         // In 2 player game, dealer is small blind and other player is big blind
+    //         smallBlindPlayerId = this.dealerId;
+    //         bigBlindPlayerId = playerIds.find(id => id !== this.dealerId);
 
            
-        }
-        else {
-            // In 3+ player game, player to left of dealer is small blind and next player is big blind
-            let dealerIndex = playerIds.indexOf(this.dealerId);
-            smallBlindPlayerId = playerIds[(dealerIndex + 1) % playerIds.length];
-            bigBlindPlayerId = playerIds[(dealerIndex + 2) % playerIds.length];
+    //     }
+    //     else {
+    //         // In 3+ player game, player to left of dealer is small blind and next player is big blind
+    //         let dealerIndex = playerIds.indexOf(this.dealerId);
+    //         smallBlindPlayerId = playerIds[(dealerIndex + 1) % playerIds.length];
+    //         bigBlindPlayerId = playerIds[(dealerIndex + 2) % playerIds.length];
 
-        }
+    //     }
 
-        this.smallBlindId = smallBlindPlayerId;
-        this.bigBlindId = bigBlindPlayerId;
-        this.playerBet(smallBlindPlayerId, this.smallBlindAmount);
-        this.playerBet(bigBlindPlayerId, this.bigBlindAmount);
+    //     this.smallBlindId = smallBlindPlayerId;
+    //     this.bigBlindId = bigBlindPlayerId;
+    //     this.playerBet(smallBlindPlayerId, this.smallBlindAmount);
+    //     this.playerBet(bigBlindPlayerId, this.bigBlindAmount);
 
+    // }
+
+    setSmallBlind(playerId) {
+        this.smallBlindId = playerId;
     }
 
+    setBigBlind(playerId) {
+        this.bigBlindId = playerId;
+    }
 
 
     getDealer() {
@@ -178,6 +182,8 @@ export default class TableStateRepository {
         const player = this.getPlayer(playerId);
 
         const betAmount = Math.min(amount, player.chips);
+
+        console.log(`Player ${playerId} is betting ${betAmount} chips (attempted bet: ${amount}, player chips: ${player.chips})`);
 
         if (betAmount === player.chips) {
             // Player is going all-in
@@ -330,7 +336,24 @@ export default class TableStateRepository {
 
 
     #resetActivePlayers() {
-        this.activePlayerIds = this.playerOrder;
+        // this.activePlayerIds = this.playerOrder;
+
+        // Add players with chips > 0 to active players list in seating order
+        this.activePlayerIds = [];
+        for (let playerId of this.playerOrder) {
+            let player = this.getPlayer(playerId);
+            if (player && player.chips > 0) {
+                this.activePlayerIds.push(playerId);
+            }
+        }
+    }
+
+    markPlayerAsLeft(playerId) {
+        let player = this.getPlayer(playerId);
+        if (player) {
+            player.leave();
+            this.removeActivePlayer(playerId);
+        }
     }
 
     // Deck and Pot
