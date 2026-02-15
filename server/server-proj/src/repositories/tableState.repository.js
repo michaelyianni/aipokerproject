@@ -59,20 +59,6 @@ export default class TableStateRepository {
        
     }
 
-    // newRound() {
-    //     this.resetForNewRound();
-
-    //     // Rotate dealer
-    //     let playerIds = Object.keys(this.players);
-    //     if (playerIds.length === 0) {
-    //         throw new Error('No players to assign dealer');
-    //     }
-    //     let currentDealerIndex = playerIds.indexOf(this.dealerId);
-    //     let nextDealerIndex = (currentDealerIndex + 1) % playerIds.length;
-    //     this.dealerId = playerIds[nextDealerIndex];
-
-    //     this.activePlayerTurnId = this.dealerId;
-    // }
 
     // Dealer
     setDealer(playerId) {
@@ -81,41 +67,6 @@ export default class TableStateRepository {
         }
         this.dealerId = playerId;
     }
-
-    // setBlindPlayers() {
-    //     if (!this.dealerId) {
-    //         throw new Error('Dealer must be set before setting blind players');
-    //     }
-
-    //     let playerIds = this.playerOrder
-    //     if (playerIds.length < 2) {
-    //         throw new Error('Not enough players to set blind players');
-    //     }
-
-
-    //     let smallBlindPlayerId, bigBlindPlayerId;
-
-    //     if(playerIds.length === 2) {
-    //         // In 2 player game, dealer is small blind and other player is big blind
-    //         smallBlindPlayerId = this.dealerId;
-    //         bigBlindPlayerId = playerIds.find(id => id !== this.dealerId);
-
-           
-    //     }
-    //     else {
-    //         // In 3+ player game, player to left of dealer is small blind and next player is big blind
-    //         let dealerIndex = playerIds.indexOf(this.dealerId);
-    //         smallBlindPlayerId = playerIds[(dealerIndex + 1) % playerIds.length];
-    //         bigBlindPlayerId = playerIds[(dealerIndex + 2) % playerIds.length];
-
-    //     }
-
-    //     this.smallBlindId = smallBlindPlayerId;
-    //     this.bigBlindId = bigBlindPlayerId;
-    //     this.playerBet(smallBlindPlayerId, this.smallBlindAmount);
-    //     this.playerBet(bigBlindPlayerId, this.bigBlindAmount);
-
-    // }
 
     setSmallBlind(playerId) {
         this.smallBlindId = playerId;
@@ -458,6 +409,5 @@ export default class TableStateRepository {
         this.#resetPlayers();
         this.#resetActivePlayers();
     }
-
 
 }

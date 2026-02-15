@@ -3,6 +3,7 @@ import CommunityCards from "../models/CommunityCards.js";
 import TableStateRepository from "../repositories/tableState.repository.js";
 import FullHand from "../models/FullHand.js";
 import ActionChecker from "../utils/actionChecker.util.js";
+import GameState from "../client_models/gameState.js";
 import { compareHands } from "../utils/handEvaluator.util.js";
 import { GAME_ACTIONS } from "../constants/gameActions.js";
 import { PokerStreets } from "../constants/pokerStreets.js";
@@ -457,7 +458,11 @@ export default class GameEngineService {
             currentStreet = this.tableStateRepository.getCurrentStreet();
         }
     }
-}
 
+    getGameState() {
+        return new GameState(this.tableStateRepository);
+    }
+
+}
 
 

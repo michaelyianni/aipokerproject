@@ -35,6 +35,12 @@ export function createServer({ corsOrigin = "*" } = {}) {
         });
     }
 
+    function emitGameState() {
+        if (!gameEngineService) return;
+        io.to(LOBBY_ROOM).emit("game:state", 
+            gameEngineService.getGameState());
+    }
+
     io.on("connection", (socket) => {
         
         
@@ -85,8 +91,8 @@ export function createServer({ corsOrigin = "*" } = {}) {
                 // io.to(LOBBY_ROOM).emit("game:state", initialState);
 
                 gameEngineService = new GameEngineService(lobbyRepository.players); 
-
-
+                
+                emitGameState();
 
             } catch (err) {
                 ack?.({ ok: false, error: err.message });
@@ -112,6 +118,7 @@ export function createServer({ corsOrigin = "*" } = {}) {
             try {
                 playerActionController.performAction(playerId, action, amount);
 
+                emitGameState();
 
                 ack?.({ ok: true });
             } catch (err) {
@@ -128,9 +135,8 @@ export function createServer({ corsOrigin = "*" } = {}) {
                     
                     // TODO: Handle mid-game disconnects 
                     
-                        // Check if only one player left - if so, end the game and reset lobby
-                        // If game is ongoing, mark player as disconnected and skip their turns until they reconnect or game ends
-                        // If player was host, assign new host (could be first player to the left in seating order, or first to join lobby, etc)
+                    gameEngineService.playerDisconnect(socket.data.playerId);
+                    emitGameState();
                         
                     
 
