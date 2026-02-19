@@ -1,4 +1,4 @@
-import Player from "./Player.js";
+import Player from "../models/Player.js";
 
 export default class PlayerState {
     constructor(player) {
@@ -9,5 +9,6 @@ export default class PlayerState {
         this.totalBetThisHand = player.totalBetThisHand;
         this.hasFolded = player.hasFolded;
         this.isAllIn = player.isAllIn;
+        this.hasLeft = player.hasLeft;
     }
 }

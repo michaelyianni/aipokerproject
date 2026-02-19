@@ -164,7 +164,13 @@ export default class GameEngineService {
                 return;
             }
 
-            this.setTurnToNextActivePlayer(this.tableStateRepository.getDealer());
+            // if small blind is active, set turn to them, otherwise start with first active player left of dealer
+            const smallBlindId = this.tableStateRepository.getSmallBlind();
+            if (smallBlindId && this.tableStateRepository.getCanActPlayerIds().includes(smallBlindId)) {
+                this.tableStateRepository.setCurrentTurnPlayer(smallBlindId);
+            } else {
+                this.setTurnToNextActivePlayer(smallBlindId);
+            }
             return;
         }
 
@@ -240,7 +246,7 @@ export default class GameEngineService {
     }
 
     findNextActivePlayer(playerId) {
-        var activePlayerIds = this.tableStateRepository.getActivePlayerIds();
+        var activePlayerIds = this.tableStateRepository.getCanActPlayerIds();
 
         var order = this.tableStateRepository.playerOrder;
 

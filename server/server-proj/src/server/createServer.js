@@ -20,7 +20,7 @@ export function createServer({ corsOrigin = "*" } = {}) {
     const lobbyRepository = new LobbyRepository();
     const lobbyController = new LobbyController(lobbyRepository);
 
-    const playerActionController = new PlayerActionController(lobbyRepository);
+    let playerActionController;
     let gameEngineService;
 
     const LOBBY_ROOM = "lobby";
@@ -36,16 +36,41 @@ export function createServer({ corsOrigin = "*" } = {}) {
     }
 
     function emitGameState() {
-        if (!gameEngineService) return;
-        io.to(LOBBY_ROOM).emit("game:state", 
-            gameEngineService.getGameState());
+        if (!gameEngineService) {
+            console.error("[ERROR] emitGameState called but gameEngineService is undefined");
+            return;
+        }
+
+        try {
+            const gameState = gameEngineService.getGameState();
+            console.log("[DEBUG] Game state retrieved:", gameState ? "✓" : "✗");
+
+
+            console.log("[DEBUG] Current street:", gameState?.currentStreet);
+            // console.log("[DEBUG] Game state structure:", Object.keys(gameState || {}));
+
+            // const playerStates = {};
+            // for (const [id, player] of Object.entries(gameState.players || {})) {
+            //     playerStates[id] = {
+            //         hasLeft: player.hasLeft,
+            //         hasFolded: player.hasFolded,
+            //         chips: player.chips
+            //     };
+            // }
+            // console.log("[DEBUG] Player states:", JSON.stringify(playerStates, null, 2));
+
+            io.to(LOBBY_ROOM).emit("game:state", gameState);
+            console.log("[DEBUG] game:state emitted to LOBBY_ROOM");
+        } catch (err) {
+            console.error("[ERROR] Failed to emit game state:", err);
+        }
     }
 
     io.on("connection", (socket) => {
-        
-        
+
+
         // Lobby events
-        
+
         socket.on("lobby:join", ({ username } = {}, ack) => {
             try {
                 const { playerId, isHost, lobby } = lobbyController.lobbyJoin(username);
@@ -75,26 +100,37 @@ export function createServer({ corsOrigin = "*" } = {}) {
             }
         });
 
+
         socket.on("lobby:start", (_, ack) => {
             try {
                 lobbyController.lobbyStart(socket.data.playerId === lobbyRepository.hostPlayerId);
 
+                const lobbyPlayers = Object.values(lobbyRepository.players);
+
+                // Create game engine and controller
+                gameEngineService = new GameEngineService(lobbyPlayers);
+                playerActionController = new PlayerActionController(lobbyRepository, gameEngineService);
+
+                console.log("[DEBUG] Game engine created:", gameEngineService ? "✓" : "✗");
+                console.log("[DEBUG] Player controller created:", playerActionController ? "✓" : "✗");
+
+                // Send acknowledgment
                 ack?.({ ok: true });
 
+                // Broadcast game started
                 io.to(LOBBY_ROOM).emit("game:started", {
                     startedBy: socket.data.playerId,
                 });
 
                 emitLobbyState();
 
-                // TODO: Start game engine here, then emit initial game state:
-                // io.to(LOBBY_ROOM).emit("game:state", initialState);
-
-                gameEngineService = new GameEngineService(lobbyRepository.players); 
-                
+                // Emit initial game state
+                console.log("[DEBUG] About to emit game state...");
                 emitGameState();
+                console.log("[DEBUG] Game state emission completed");
 
             } catch (err) {
+                console.error("[ERROR] Failed to start game:", err);
                 ack?.({ ok: false, error: err.message });
             }
         });
@@ -129,34 +165,27 @@ export function createServer({ corsOrigin = "*" } = {}) {
 
         socket.on("disconnect", () => {
             try {
-                
-                if (lobbyRepository.isGameStarted) {
-                   
-                    
-                    // TODO: Handle mid-game disconnects 
-                    
-                    gameEngineService.playerDisconnect(socket.data.playerId);
-                    emitGameState();
-                        
-                    
-
+                if (lobbyRepository.isGameStarted && playerActionController && gameEngineService) {
+                    // Check if game is still viable
+                    try {
+                        playerActionController.playerDisconnect(socket.data.playerId);
+                        emitGameState();
+                    } catch (disconnectErr) {
+                        // Game might have ended or player already removed
+                        console.log("[INFO] Disconnect handled:", disconnectErr.message);
+                    }
                 }
                 else {
                     const { playerId, username } = socket.data || {};
 
-                    // If this socket never joined the lobby, ignore it
                     if (!playerId) {
                         return;
                     }
 
-                    if (playerId && !lobbyRepository.isGameStarted) {
-                        lobbyRepository.removePlayer(playerId);
-                        emitLobbyState();
-                    }
+                    lobbyRepository.removePlayer(playerId);
+                    emitLobbyState();
 
-                    console.log(
-                        `Player ${username} (${playerId}) disconnected and removed from lobby`
-                    );
+                    console.log(`Player ${username} (${playerId}) disconnected and removed from lobby`);
                 }
             } catch (err) {
                 console.error("Error removing player on disconnect:", err);
@@ -184,5 +213,7 @@ export function createServer({ corsOrigin = "*" } = {}) {
         stop,
         lobbyRepository,
         lobbyController,
+        gameEngineService,
+        playerActionController,
     };
 }

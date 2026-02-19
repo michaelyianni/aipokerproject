@@ -1,8 +1,9 @@
-import TableStateRepository from "../repositories/tableState.repository";
+import TableStateRepository from "../repositories/tableState.repository.js";
+import PlayerState from "./playerState.js";
 
 export default class GameState {
     constructor(tableStateRepository) {
-        this.communityCards = tableStateRepository.communityCards;
+        this.communityCards = tableStateRepository.communityCards.convertToStringArray();
         
         this.populatePlayerStates(tableStateRepository);
 
@@ -12,6 +13,7 @@ export default class GameState {
         this.pots = tableStateRepository.pots;
         this.currentBet = tableStateRepository.currentBet;
         
+        this.currentStreet = tableStateRepository.getCurrentStreet();
 
         this.smallBlindId = tableStateRepository.smallBlindId;
         this.bigBlindId = tableStateRepository.bigBlindId;

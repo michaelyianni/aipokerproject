@@ -45,7 +45,7 @@ export default class TableStateRepository {
     initialiseTable(initialChips = 1000) {
 
         this.initialiseChipsForPlayers(initialChips);
-        
+
         this.resetForNewHand();
 
         // Initialise dealer
@@ -53,10 +53,10 @@ export default class TableStateRepository {
         if (playerIds.length === 0) {
             throw new Error('No players to assign dealer');
         }
-        
+
         this.setDealer(playerIds[0]);
 
-       
+
     }
 
 
@@ -256,6 +256,12 @@ export default class TableStateRepository {
 
 
     setCurrentTurnPlayer(playerId) {
+        // Allow setting to null to indicate no current turn player (e.g. hand is over) - usually in disconnect scenario
+        if (playerId === null || playerId === undefined) {
+            this.currentTurnPlayerId = null;
+            return;
+        }
+
         if (!this.activePlayerIds.includes(playerId)) {
             throw new Error('Player is not active to set turn');
         }
