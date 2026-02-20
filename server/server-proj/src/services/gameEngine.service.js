@@ -10,10 +10,12 @@ import { PokerStreets } from "../constants/pokerStreets.js";
 import Winner from "../models/Winner.js";
 
 export default class GameEngineService {
-    constructor(players = [], onStateChangeCallback = null) {
+    constructor(players = [], onStateChangeCallback = null, testingMode = false) {
         this.tableStateRepository = new TableStateRepository(players);
 
         this.onStateChangeCallback = onStateChangeCallback;
+        this.testingMode = testingMode;
+        this.gameInProgress = true;
 
         this.tableStateRepository.initialiseTable();
 
@@ -37,6 +39,10 @@ export default class GameEngineService {
 
 
     playerAction(playerId, action, amount = 0) {
+
+        if (!this.gameInProgress) { 
+            throw new Error('Game is not in progress');
+        }
 
         //Validate action
         if (!ActionChecker.isValidAction(playerId, action, amount, this.tableStateRepository)) {
@@ -88,7 +94,24 @@ export default class GameEngineService {
         this.tableStateRepository.markPlayerAsLeft(playerId);
         this.tableStateRepository.removeActivePlayer(playerId);
 
-        // Check if only one player left - if so, end the game and reset lobby
+
+        // Check if only one player left connected - if so, game over
+        if (this.tableStateRepository.getConnectedPlayerIds().length === 1) {
+            console.log('Only one player left connected. Game over.');
+            this.gameInProgress = false;
+
+            this.tableStateRepository.recalculatePots();
+
+            const remainingPlayerId = this.tableStateRepository.getConnectedPlayerIds()[0];
+            this.awardAllPotsToSingleWinner(remainingPlayerId);
+            
+            this.tableStateRepository.setStreet(PokerStreets.HAND_COMPLETE); // move to hand complete street for game state clarity
+
+            return;
+        }
+
+
+        // Check if only one player left in the hand - if so, end the game and reset lobby
         if (this.tableStateRepository.getActivePlayerIds().length === 1) {
             // Only one other player left, end round and award pots to them
             this.tableStateRepository.recalculatePots();
@@ -133,11 +156,13 @@ export default class GameEngineService {
         const allInIds = this.tableStateRepository.getAllInPlayerIds();
 
         if (canActIds.length === 1 && allInIds.length >= 1) {
-
-            this.runOutBoardToShowdown();
-            this.determineWinners();
-            this.endHand();
-            return;
+            if(this.isBettingRoundComplete()) {
+                // Only one player can act and at least one player is all-in, run out board to river
+                this.runOutBoardToShowdown();
+                this.determineWinners();
+                this.endHand();
+                return;
+            }
         }
 
         if (canActIds.length === 0) {
@@ -295,12 +320,17 @@ export default class GameEngineService {
 
         this.tableStateRepository.setStreet(PokerStreets.HAND_COMPLETE); // move to hand complete street for game state clarity
 
-        this.emitStateChange();
+        this.emitHandResults();
 
         // Auto-advance to next hand after 5 seconds
-        this.handCompleteTimeout = setTimeout(() => {
-            this.startNextHand();
-        }, 5000); // 5 second delay - adjust as needed
+        if (!this.testingMode) {
+
+            this.handCompleteTimeout = setTimeout(() => {
+                this.startNextHand();
+            }, 5000); // 5 second delay - adjust as needed
+        }
+
+        // In testing, manually call startNextHand() from test after asserting hand results, to have more control over timing
 
     }
 
@@ -310,6 +340,7 @@ export default class GameEngineService {
         // Check if enough players to continue
         if (this.tableStateRepository.getActivePlayerIds().length < 2) {
             console.log('Not enough players to continue. Game over.');
+            this.gameInProgress = false;
             return;
         }
 
@@ -367,9 +398,23 @@ export default class GameEngineService {
     }
 
     awardAllPotsToSingleWinner(winnerId) {
+        
         const pots = this.tableStateRepository.getPots();
 
+        let totalWinnings = 0;
+
+        console.log(`Awarding all pots to single winner ${winnerId}. Pots:`, pots);
+
         pots.forEach(pot => {
+
+
+            if (!pot.eligiblePlayerIds.includes(winnerId)) {
+                // Can happen if last player left was all-in with side pot they weren't eligible for (eligible player disconnected) 
+                console.log(`Winner ${winnerId} is not eligible for pot of amount ${pot.amount} with eligible players ${pot.eligiblePlayerIds}. Skipping this pot.`);
+                return;
+            }
+
+
             totalWinnings += pot.amount;
             this.tableStateRepository.playerCollectWinnings(winnerId, pot);
         });
@@ -429,7 +474,7 @@ export default class GameEngineService {
             this.tableStateRepository.getPlayer(playerId).addChips(amount);
         }
 
-        return payouts; // handy for logging / broadcasting
+        return payouts;
     }
 
     orderBySeatFromDealer(playerIds) {
@@ -471,7 +516,7 @@ export default class GameEngineService {
 
         // Store hand results for game state
         const winners = Object.entries(payouts).map(([playerId, amount]) => new Winner(playerId, amount, "best hand"));
-        this.tableStateRepository.setHandResults(winners);
+        this.tableStateRepository.setHandResults({ winners });
 
         // Optional: log payouts for debugging
         console.log("Showdown payouts:", payouts);
@@ -490,7 +535,7 @@ export default class GameEngineService {
         return new GameState(this.tableStateRepository);
     }
 
-    emitStateChange() {
+    emitHandResults() {
         if (typeof this.onStateChangeCallback === 'function') {
             try {
                 this.onStateChangeCallback();

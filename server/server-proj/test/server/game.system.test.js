@@ -240,7 +240,7 @@ describe("Game System Test (Full Socket Integration)", function () {
         );
 
         // NOW start the game
-        const hostStartAck = await emitAck(alice, "lobby:start");
+        const hostStartAck = await emitAck(alice, "lobby:start", { testingMode: true });
         expect(hostStartAck.ok).to.equal(true);
         console.log(`✓ Host (Alice) started the game`);
 
@@ -569,7 +569,7 @@ describe("Game System Test (Full Socket Integration)", function () {
             if (currentState.currentStreet !== PokerStreets.TURN) break;
         }
 
-        // Should have advanced to RIVER or back to PRE_FLOP (new hand)
+        // Should have advanced to RIVER
         console.log(`\n✓ Street after TURN: ${currentState.currentStreet}`);
         expect([PokerStreets.RIVER, PokerStreets.PRE_FLOP]).to.include(currentState.currentStreet);
 
@@ -600,6 +600,94 @@ describe("Game System Test (Full Socket Integration)", function () {
             expect(aliceState2.players[playerId].chips).to.equal(dianaState2.players[playerId].chips);
         });
         console.log(`✓ All clients have consistent player chip counts`);
+
+
+        // -------------- STEP 8: Verify Game State Correctness ----------
+        console.log("\n--- STEP 8: Verify Game State Correctness ---");
+
+        // Log current game state for manual inspection
+        console.log("\n[RIVER GAME STATE]");
+        console.log(JSON.stringify(finalStates[0], null, 2));
+
+        // Diana (P4) turn, bet 100 on river
+        // Wait for game:state broadcast
+        const dianaRiverPromises = waitForGameStateOnAll(
+            [alice, bob, diana].filter((s) => !s.disconnected),
+            () => true,
+            10000
+        );
+
+
+
+        // Execute action
+        const actionAck = await emitAck(playerSockets[dianaId], "game:action", {
+            playerId: dianaId,
+            action: GAME_ACTIONS.BET,
+            amount: 100,
+        });
+
+        expect(actionAck.ok).to.equal(true);
+
+        // Wait for broadcast
+        const newStates = await dianaRiverPromises;
+        currentState = newStates[0];
+
+        console.log(
+            `  ✓ Action broadcasted | New street: ${currentState.currentStreet} | Next turn: ${currentState.currentTurnPlayerId}`
+        );
+
+        // Alice (P2) goes all-in on river
+
+            // Wait for game:state broadcast
+        const aliceRiverPromises = waitForGameStateOnAll(
+            [alice, bob, diana].filter((s) => !s.disconnected),
+            () => true,
+            10000
+        );
+
+        // Execute action
+        const aliceActionAck = await emitAck(playerSockets[aliceId], "game:action", {
+            playerId: aliceId,
+            action: GAME_ACTIONS.RAISE,
+            amount: currentState.players[aliceId].chips, // All-in
+        });
+
+        expect(aliceActionAck.ok).to.equal(true);
+
+        // Wait for broadcast
+        const aliceNewStates = await aliceRiverPromises;
+        currentState = aliceNewStates[0];
+
+        // Log current game state for manual inspection
+        console.log("\n[RIVER GAME STATE AFTER ALICE ALL-IN]");
+        console.log(JSON.stringify(currentState, null, 2));
+
+        // Diana (P4) calls all-in
+
+        // Wait for game:state broadcast
+        const dianaCallPromises = waitForGameStateOnAll(
+            [alice, bob, diana].filter((s) => !s.disconnected),
+            () => true,
+            10000
+        );
+
+        // Execute action
+        const dianaCallAck = await emitAck(playerSockets[dianaId], "game:action", {
+            playerId: dianaId,
+            action: GAME_ACTIONS.CALL,
+            amount: 0,
+        });
+
+        console.log(`Diana's all-in action ack:`, dianaCallAck);
+
+        expect(dianaCallAck.ok).to.equal(true);
+        // Wait for broadcast
+        const dianaCallStates = await dianaCallPromises;
+        currentState = dianaCallStates[0];
+
+        // Log current game state for manual inspection
+        console.log("\n[RIVER GAME STATE AFTER DIANA CALL]");
+        console.log(JSON.stringify(currentState, null, 2));
 
         // ---------- FINAL VALIDATION ----------
         console.log("\n========== FINAL VALIDATION ==========\n");

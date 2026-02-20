@@ -16,7 +16,7 @@ let player2 = new Player("Bob");
 let player3 = new Player("Charlie");
 let players = [player1, player2, player3];
 
-let gameEngine = new GameEngineService(players);
+let gameEngine = new GameEngineService(players, null, true); // pass testingMode=true to skip auto-advance delay after hand complete
 
 console.log(`[STREET] Initial street: ${gameEngine.tableStateRepository.getCurrentStreet()}`);
 
@@ -235,6 +235,25 @@ let player1FinalChips = gameEngine.tableStateRepository.getPlayer(player1.id).ch
 let player3FinalChips = gameEngine.tableStateRepository.getPlayer(player3.id).chips;
 assert.strictEqual(player1FinalChips > player1CurrentChips, true, "Player 1 should have won the pot");
 assert.strictEqual(player3FinalChips <= player3CurrentChips, true, "Player 3's chips should be less than before after losing the pot");
+
+// Verify that handResults are set correctly in table state repository
+let handResults = gameEngine.tableStateRepository.getHandResults();
+
+console.log("Hand results: ", handResults);
+
+assert.strictEqual(handResults.winners.length, 1, "There should be 1 winner in hand results");
+assert.strictEqual(handResults.winners[0].playerId, player1.id, "Player 1 should be the winner in hand results");
+assert.strictEqual(handResults.winners[0].amount, potFinalAmount, "Winner amount in hand results should equal the final pot amount");
+
+
+// Current street should now be HAND_COMPLETE
+currentStreet = gameEngine.tableStateRepository.getCurrentStreet();
+console.log(`[STREET] After showdown, street=${currentStreet}`);
+assert.strictEqual(currentStreet, PokerStreets.HAND_COMPLETE, "Current street should be HAND_COMPLETE after showdown and pot award");
+
+// Manually start next hand since we're in testing mode
+gameEngine.startNextHand();
+
 
 // New round should be prepared
 currentStreet = gameEngine.tableStateRepository.getCurrentStreet();

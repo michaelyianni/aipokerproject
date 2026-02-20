@@ -16,7 +16,7 @@ let player2 = new Player("Bob");     // short stack, all-in
 let player3 = new Player("Charlie"); // will lose
 
 let players = [player1, player2, player3];
-let gameEngine = new GameEngineService(players);
+let gameEngine = new GameEngineService(players, null, true); // pass testingMode=true to skip auto-advance delay after hand complete
 
 // Force deterministic stacks for the test (overwrite whatever initialiseTable did)
 gameEngine.tableStateRepository.getPlayer(player1.id).chips = 1000;
@@ -183,6 +183,22 @@ assert.ok(p2ChipsAfter <= p2ChipsBefore, "Player2 should not increase chips afte
 // P3 should not gain chips
 assert.ok(p3ChipsAfter <= p3ChipsBefore, "Player3 should not increase chips after losing");
 
+// Game should be in HAND_COMPLETE
+street = gameEngine.tableStateRepository.getCurrentStreet();
+console.log(`[STREET] After showdown, street=${street}`);
+assert.strictEqual(street, PokerStreets.HAND_COMPLETE, "After showdown, street should be HAND_COMPLETE");
+
+// Hand results should be populated with correct winner and pot splits
+const handResults = gameEngine.tableStateRepository.getHandResults();
+console.log(`[HAND RESULTS]`, handResults);
+assert.ok(handResults, "Hand results should be populated after showdown");
+assert.strictEqual(handResults.winners.length, 1, "There should be one winner in hand results");
+assert.strictEqual(handResults.winners[0].playerId, player1.id, "Player1 should be the winner in hand results");
+assert.ok(handResults.winners[0].amount > 0, "Winner should have amount > 0 in hand results");
+
+// Since we are in testing mode, the engine will not auto-advance to next hand until we call startNextHand() manually.
+gameEngine.startNextHand();
+
 // New hand should begin
 const newStreet = gameEngine.tableStateRepository.getCurrentStreet();
 console.log(`[STREET] New hand street=${newStreet}`);
@@ -206,7 +222,7 @@ player2 = new Player("Bob");     // may win short stack, all-in
 player3 = new Player("Charlie"); // will win side pot, may win main pot
 
 players = [player2, player3, player1]; // rotate seating order so player2 is dealer for this hand
-gameEngine = new GameEngineService(players);
+gameEngine = new GameEngineService(players, null, true); // pass testingMode=true to skip auto-advance delay after hand complete
 
 
 // Set player 2's chips to 200, and player 1's and 3's to 1000 for next test
@@ -267,7 +283,11 @@ gameEngine.playerAction(player1.id, GAME_ACTIONS.FOLD);
 // Board should be run out to showdown
 const newStreet2 = gameEngine.tableStateRepository.getCurrentStreet();
 console.log(`[STREET] After run out, street=${gameEngine.tableStateRepository.getCurrentStreet()}`);
-assert.strictEqual(newStreet2, PokerStreets.PRE_FLOP, "After showdown, new hand should reset to PRE_FLOP");
+
+
+// Current street should be HAND_COMPLETE
+assert.strictEqual(newStreet2, PokerStreets.HAND_COMPLETE, "After showdown, new hand should reset to PRE_FLOP");
+
 
 p1ChipsAfter = gameEngine.tableStateRepository.getPlayer(player1.id).chips;
 p2ChipsAfter = gameEngine.tableStateRepository.getPlayer(player2.id).chips;

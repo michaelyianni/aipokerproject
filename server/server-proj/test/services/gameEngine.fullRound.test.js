@@ -20,7 +20,7 @@ let player5 = new Player("Eve");
 let player6 = new Player("Frank");
 
 let players = [player1, player2, player3, player4, player5, player6];
-let gameEngine = new GameEngineService(players);
+let gameEngine = new GameEngineService(players, null, true);
 
 console.log("\n========== ROUND 1: COMPLEX BETTING WITH ALL-INS AND SIDE POTS ==========\n");
 
@@ -315,19 +315,10 @@ gameEngine.playerDisconnect(player3.id);
 
 
 // After P3 disconnects, only P5 is left active (P2 and P6 are all-in)
-// Game should run out to river, end hand, start new hand, and delete disconnected players from table state
 
-if (currentStreet === PokerStreets.SHOWDOWN || currentStreet === PokerStreets.PRE_FLOP) {
-  console.log(`[INFO] Game advanced to ${currentStreet} automatically`);
-}
-
-// ---------- VERIFY HAND COMPLETION ----------
-console.log("\n--- HAND COMPLETION VERIFICATION ---");
-
-// New street should be PRE_FLOP (new hand)
 currentStreet = gameEngine.tableStateRepository.getCurrentStreet();
-console.log(`[STREET] Current street after hand completion: ${currentStreet}`);
-assert.strictEqual(currentStreet, PokerStreets.PRE_FLOP, "Should be PRE_FLOP after hand completes");
+console.log(`\n[STREET] After P3 disconnects, street=${currentStreet}`);
+assert.strictEqual(currentStreet, PokerStreets.HAND_COMPLETE, "Should move to HAND_COMPLETE after all opponents fold/disconnect except one");
 
 // Verify chip changes
 console.log(`\n[RESULT] Chip changes from Round 1:`);
@@ -337,6 +328,19 @@ players.forEach((player, idx) => {
     console.log(`  P${idx + 1} (${player.name}): ${p.chips} chips`);
   }
 });
+
+// Manually start next hand since we're in testing mode
+gameEngine.startNextHand();
+
+// ---------- VERIFY HAND COMPLETION ----------
+console.log("\n--- HAND COMPLETION VERIFICATION ---");
+
+// New street should be PRE_FLOP (new hand)
+currentStreet = gameEngine.tableStateRepository.getCurrentStreet();
+console.log(`[STREET] Current street after hand completion: ${currentStreet}`);
+assert.strictEqual(currentStreet, PokerStreets.PRE_FLOP, "Should be PRE_FLOP after hand completes");
+
+
 
 // Verify eliminated players are not active
 console.log(`\n[INFO] Checking eliminated players...`);

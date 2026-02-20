@@ -66,6 +66,34 @@ export function createServer({ corsOrigin = "*" } = {}) {
         }
     }
 
+    function emitHandResults() {
+        if (!gameEngineService) {
+            console.error("[ERROR] emitHandResults called but gameEngineService is undefined");
+            return;
+        }
+        if (!gameEngineService.tableStateRepository.getHandResults()) {
+            console.error("[ERROR] emitHandResults called but hand results are not available");
+            return;
+        }
+
+        console.log("[DEBUG] Emitting hand results...");
+
+
+        try {
+            const gameState = gameEngineService.getGameState();
+            console.log("[DEBUG] Game state retrieved:", gameState ? "✓" : "✗");
+
+
+            console.log("[DEBUG] Current street:", gameState?.currentStreet);
+
+            io.to(LOBBY_ROOM).emit("game:hand_results", gameState);
+            console.log("[DEBUG] game:hand_results emitted to LOBBY_ROOM");
+        } catch (err) {
+            console.error("[ERROR] Failed to emit game state:", err);
+        }
+    }
+
+
     io.on("connection", (socket) => {
 
 
@@ -101,7 +129,7 @@ export function createServer({ corsOrigin = "*" } = {}) {
         });
 
 
-        socket.on("lobby:start", (_, ack) => {
+        socket.on("lobby:start", ({ testingMode } = {}, ack) => {
             try {
                 lobbyController.lobbyStart(socket.data.playerId === lobbyRepository.hostPlayerId);
 
@@ -110,7 +138,8 @@ export function createServer({ corsOrigin = "*" } = {}) {
                 // Create game engine and controller
                 gameEngineService = new GameEngineService(
                     lobbyPlayers,
-                    () => emitGameState() // callback to emit game state on updates
+                    () => emitHandResults(), // callback to emit hand results on updates
+                    testingMode // pass testingMode flag to game engine
                 );
                 playerActionController = new PlayerActionController(lobbyRepository, gameEngineService);
 
@@ -166,16 +195,39 @@ export function createServer({ corsOrigin = "*" } = {}) {
         });
 
 
-        socket.on("disconnect", () => {
+        socket.on("disconnect", async () => {
             try {
                 if (lobbyRepository.isGameStarted && playerActionController && gameEngineService) {
-                    // Check if game is still viable
+                    // Check if game is not viable
+                    if (!gameEngineService.gameInProgress) {
+                        console.log("[INFO] Player " + socket.data.username + " (" + socket.data.playerId + ") disconnected but game already ended. Just removing from lobby.");
+                        return;
+                    }
+
+
                     try {
                         playerActionController.playerDisconnect(socket.data.playerId);
                         emitGameState();
                     } catch (disconnectErr) {
                         // Game might have ended or player already removed
                         console.log("[INFO] Disconnect handled:", disconnectErr.message);
+                    }
+
+
+                    // Check if game ended due to disconnect
+                    if (!gameEngineService.gameInProgress) {
+                        console.log("[INFO] Game ended due to player disconnect. Resetting lobby.");
+
+                        // Emit final game state with hand results and notify clients that game has ended
+                        emitHandResults();
+
+                        // Disconnect all clients
+                        const sockets = await io.fetchSockets();
+                        for (const s of sockets) {
+                            s.disconnect(true);
+                        }
+
+                        lobbyRepository.reset(); // reset lobby for next game
                     }
                 }
                 else {

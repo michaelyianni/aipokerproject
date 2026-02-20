@@ -21,7 +21,9 @@ export default class LobbyRepository {
 
     removePlayer(playerId) {
         if (!this.players[playerId]) {
-            throw new Error('Player with id ' + playerId + ' does not exist in the lobby');
+            // throw new Error('Player with id ' + playerId + ' does not exist in the lobby');
+            console.log('Attempted to remove player with id ' + playerId + ' but they do not exist in the lobby');
+            return;
         }
         delete this.players[playerId];
 

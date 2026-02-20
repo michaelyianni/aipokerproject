@@ -285,6 +285,10 @@ export default class TableStateRepository {
         return this.activePlayerIds.filter(id => this.getPlayer(id).isAllIn);
     }
 
+    getConnectedPlayerIds() {
+        return this.activePlayerIds.filter(id => !this.getPlayer(id).hasLeft);
+    }
+
 
     setCurrentTurnPlayer(playerId) {
         // Allow setting to null to indicate no current turn player (e.g. hand is over) - usually in disconnect scenario

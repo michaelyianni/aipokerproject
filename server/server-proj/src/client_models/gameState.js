@@ -9,6 +9,7 @@ export default class GameState {
 
         this.playerOrder = tableStateRepository.playerOrder;
         this.currentTurnPlayerId = tableStateRepository.getCurrentTurnPlayerId();
+        this.activePlayerIds = tableStateRepository.getActivePlayerIds();
         
         this.pots = tableStateRepository.pots;
         this.currentBet = tableStateRepository.currentBet;

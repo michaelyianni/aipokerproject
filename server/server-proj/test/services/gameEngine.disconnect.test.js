@@ -18,7 +18,7 @@ let player2 = new Player("Bob");
 let player3 = new Player("Charlie");
 let players = [player1, player2, player3];
 
-let gameEngine = new GameEngineService(players);
+let gameEngine = new GameEngineService(players, null, true); // pass testingMode=true to skip auto-advance delay after hand complete
 
 console.log(`[STREET] Initial street: ${gameEngine.tableStateRepository.getCurrentStreet()}`);
 console.log(`[INFO] Blinds posted. Street=${gameEngine.tableStateRepository.getCurrentStreet()} currentBet=${gameEngine.tableStateRepository.getCurrentBet()}`);
@@ -71,7 +71,7 @@ player2 = new Player("Bob");
 player3 = new Player("Charlie");
 players = [player1, player2, player3];
 
-gameEngine = new GameEngineService(players);
+gameEngine = new GameEngineService(players, null, true); // pass testingMode=true to skip auto-advance delay after hand complete
 
 console.log(`[STREET] Initial street: ${gameEngine.tableStateRepository.getCurrentStreet()}`);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
@@ -110,7 +110,7 @@ player2 = new Player("Bob");
 player3 = new Player("Charlie");
 players = [player1, player2, player3];
 
-gameEngine = new GameEngineService(players);
+gameEngine = new GameEngineService(players, null, true); // pass testingMode=true to skip auto-advance delay after hand complete
 
 console.log(`[STREET] Initial street: ${gameEngine.tableStateRepository.getCurrentStreet()}`);
 
@@ -133,10 +133,13 @@ let p2ChipsAfter = gameEngine.tableStateRepository.getPlayer(player2.id).chips;
 console.log(`[RESULT] P2 chips before: ${p2ChipsBefore}, after: ${p2ChipsAfter}`);
 assert.ok(p2ChipsAfter > p2ChipsBefore, "Player2 should have won pots after others disconnected");
 
-// New hand should have started with PRE_FLOP
-currentStreet = gameEngine.tableStateRepository.getCurrentStreet();
-console.log(`[STREET] After disconnects, street=${currentStreet}`);
-assert.strictEqual(currentStreet, PokerStreets.PRE_FLOP, "Should reset to PRE_FLOP for new hand");
+// Game should be in HAND_COMPLETE since player2 wins by default
+let street = gameEngine.tableStateRepository.getCurrentStreet();
+console.log(`[STREET] After disconnects, street=${street}`);
+assert.strictEqual(street, PokerStreets.HAND_COMPLETE, "Game should be in HAND_COMPLETE after all opponents disconnect");
+
+// Game should be marked as not in progress since hand is complete and only 1 player left
+assert.strictEqual(gameEngine.gameInProgress, false, "Game should not be in progress after hand complete with 1 player left");
 
 console.log("✅ Test 3 passed: Multiple disconnects leaving 1 player handled correctly");
 
