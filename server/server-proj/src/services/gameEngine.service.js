@@ -7,10 +7,13 @@ import GameState from "../client_models/gameState.js";
 import { compareHands } from "../utils/handEvaluator.util.js";
 import { GAME_ACTIONS } from "../constants/gameActions.js";
 import { PokerStreets } from "../constants/pokerStreets.js";
+import Winner from "../models/Winner.js";
 
 export default class GameEngineService {
-    constructor(players = []) {
+    constructor(players = [], onStateChangeCallback = null) {
         this.tableStateRepository = new TableStateRepository(players);
+
+        this.onStateChangeCallback = onStateChangeCallback;
 
         this.tableStateRepository.initialiseTable();
 
@@ -87,22 +90,22 @@ export default class GameEngineService {
 
         // Check if only one player left - if so, end the game and reset lobby
         if (this.tableStateRepository.getActivePlayerIds().length === 1) {
-        // Only one other player left, end round and award pots to them
+            // Only one other player left, end round and award pots to them
             this.tableStateRepository.recalculatePots();
 
             const remainingPlayerId = this.tableStateRepository.getActivePlayerIds()[0];
             this.awardAllPotsToSingleWinner(remainingPlayerId);
-            this.endHandAndPrepareNext();
+            this.endHand();
             return;
         }
 
         // If its that player's turn, advance turn to next active player
         if (this.tableStateRepository.getCurrentTurnPlayerId() === playerId) {
-            this.postActionUpdates();   
+            this.postActionUpdates();
         }
 
 
-        
+
 
     }
 
@@ -121,7 +124,7 @@ export default class GameEngineService {
             this.awardAllPotsToSingleWinner(this.tableStateRepository.getActivePlayerIds()[0]);
 
             // End round, prepare for next round
-            this.endHandAndPrepareNext();
+            this.endHand();
             return;
         }
 
@@ -131,19 +134,19 @@ export default class GameEngineService {
 
         if (canActIds.length === 1 && allInIds.length >= 1) {
 
-            this.runOutBoardToRiver();
+            this.runOutBoardToShowdown();
             this.determineWinners();
-            this.endHandAndPrepareNext();
+            this.endHand();
             return;
         }
 
         if (canActIds.length === 0) {
             // Everyone remaining is all-in, run out board to river
-            this.runOutBoardToRiver();
+            this.runOutBoardToShowdown();
 
             this.determineWinners();
 
-            this.endHandAndPrepareNext();
+            this.endHand();
             return;
         }
 
@@ -160,7 +163,7 @@ export default class GameEngineService {
             // If river completed, determine winners
             if (this.tableStateRepository.getCurrentStreet() === PokerStreets.SHOWDOWN) {
                 this.determineWinners();
-                this.endHandAndPrepareNext();
+                this.endHand();
                 return;
             }
 
@@ -286,22 +289,32 @@ export default class GameEngineService {
     }
 
 
-    endHandAndPrepareNext() {
+    endHand() {
 
+
+
+        this.tableStateRepository.setStreet(PokerStreets.HAND_COMPLETE); // move to hand complete street for game state clarity
+
+        this.emitStateChange();
+
+        // Auto-advance to next hand after 5 seconds
+        this.handCompleteTimeout = setTimeout(() => {
+            this.startNextHand();
+        }, 5000); // 5 second delay - adjust as needed
+
+    }
+
+    startNextHand() {
         this.tableStateRepository.resetForNewHand();
 
         // Check if enough players to continue
         if (this.tableStateRepository.getActivePlayerIds().length < 2) {
-            // Not enough players to continue, end game
             console.log('Not enough players to continue. Game over.');
             return;
-        }   
-
+        }
 
         var dealerId = this.allocateDealerButton();
-
         this.allocateBlinds(dealerId);
-
         this.startGame();
     }
 
@@ -332,16 +345,16 @@ export default class GameEngineService {
         var smallBlindPlayerId;
         var bigBlindPlayerId;
 
-        if(this.tableStateRepository.getActivePlayerIds().length == 2) {
+        if (this.tableStateRepository.getActivePlayerIds().length == 2) {
             // In 2 player game, dealer is small blind and other player is big blind
             smallBlindPlayerId = dealerId;
             bigBlindPlayerId = playerIds.find(id => id !== dealerId);
 
-           
+
         }
         else {
             // In 3+ player game, player to left of dealer is small blind and next player is big blind
-            
+
             smallBlindPlayerId = this.findNextActivePlayer(dealerId);
             bigBlindPlayerId = this.findNextActivePlayer(smallBlindPlayerId);
         }
@@ -354,14 +367,18 @@ export default class GameEngineService {
     }
 
     awardAllPotsToSingleWinner(winnerId) {
-        const pots = this.tableStateRepository.pots; // ideally: getPots()
+        const pots = this.tableStateRepository.getPots();
 
-        const total = (pots ?? []).reduce((sum, p) => sum + (p.amount ?? p.total ?? 0), 0);
+        pots.forEach(pot => {
+            totalWinnings += pot.amount;
+            this.tableStateRepository.playerCollectWinnings(winnerId, pot);
+        });
 
-        if (total <= 0) return; // nothing to award
 
-        const winner = this.tableStateRepository.getPlayer(winnerId);
-        winner.addChips(total);
+        // Store hand results
+        const winner = new Winner(winnerId, totalWinnings, null, "last player standing");
+
+        this.tableStateRepository.setHandResults([winner]);
     }
 
 
@@ -452,12 +469,16 @@ export default class GameEngineService {
 
         const payouts = this.awardPots(pots, communityCards);
 
+        // Store hand results for game state
+        const winners = Object.entries(payouts).map(([playerId, amount]) => new Winner(playerId, amount, "best hand"));
+        this.tableStateRepository.setHandResults(winners);
+
         // Optional: log payouts for debugging
         console.log("Showdown payouts:", payouts);
     }
 
 
-    runOutBoardToRiver() {
+    runOutBoardToShowdown() {
         let currentStreet = this.tableStateRepository.getCurrentStreet();
         while (currentStreet !== PokerStreets.SHOWDOWN) {
             this.advanceStreet();
@@ -467,6 +488,16 @@ export default class GameEngineService {
 
     getGameState() {
         return new GameState(this.tableStateRepository);
+    }
+
+    emitStateChange() {
+        if (typeof this.onStateChangeCallback === 'function') {
+            try {
+                this.onStateChangeCallback();
+            } catch (err) {
+                console.error('[GameEngine] Error in onStateChange callback:', err);
+            }
+        }
     }
 
 }

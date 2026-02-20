@@ -108,7 +108,10 @@ export function createServer({ corsOrigin = "*" } = {}) {
                 const lobbyPlayers = Object.values(lobbyRepository.players);
 
                 // Create game engine and controller
-                gameEngineService = new GameEngineService(lobbyPlayers);
+                gameEngineService = new GameEngineService(
+                    lobbyPlayers,
+                    () => emitGameState() // callback to emit game state on updates
+                );
                 playerActionController = new PlayerActionController(lobbyRepository, gameEngineService);
 
                 console.log("[DEBUG] Game engine created:", gameEngineService ? "✓" : "✗");

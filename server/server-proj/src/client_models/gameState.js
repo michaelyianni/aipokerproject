@@ -18,6 +18,8 @@ export default class GameState {
         this.smallBlindId = tableStateRepository.smallBlindId;
         this.bigBlindId = tableStateRepository.bigBlindId;
         this.dealerId = tableStateRepository.dealerId;
+
+        this.handResults = tableStateRepository.getHandResults();
     }
 
     populatePlayerStates(tableStateRepository) {

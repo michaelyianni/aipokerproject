@@ -9,7 +9,8 @@ const streetsInOrder = [
     PokerStreets.FLOP,
     PokerStreets.TURN,
     PokerStreets.RIVER,
-    PokerStreets.SHOWDOWN
+    PokerStreets.SHOWDOWN,
+    PokerStreets.HAND_COMPLETE
 ];
 
 export default class TableStateRepository {
@@ -40,6 +41,8 @@ export default class TableStateRepository {
         this.dealerId = null;
         this.bigBlindId = null;
         this.smallBlindId = null;
+
+        this.lastHandResults = null;
     }
 
     initialiseTable(initialChips = 1000) {
@@ -59,6 +62,15 @@ export default class TableStateRepository {
 
     }
 
+    // Hand results
+
+    setHandResults(winners) {
+        this.lastHandResults = winners;
+    }
+
+    getHandResults() {
+        return this.lastHandResults;
+    }
 
     // Dealer
     setDealer(playerId) {
@@ -175,6 +187,17 @@ export default class TableStateRepository {
         }
     }
 
+    playerCollectWinnings(playerId, pot) {
+        const player = this.getPlayer(playerId);
+        if (pot.eligiblePlayerIds.includes(playerId)) { // sanity check - should only be awarding to eligible players for this pot
+
+            player.addChips(pot.amount);
+        }
+        else {
+            throw new Error(`Attempting to award pot winnings to ineligible player ${playerId}`);
+        }
+    }
+
     distributeWinnings(winningsMap) {
         for (let playerId in winningsMap) {
             let amount = winningsMap[playerId];
@@ -203,6 +226,14 @@ export default class TableStateRepository {
 
         this.setLastRaiser(null);
 
+    }
+
+    setStreet(street) {
+        const index = streetsInOrder.indexOf(street);
+        if (index === -1) {
+            throw new Error('Invalid street: ' + street);
+        }
+        this.currentStreetIndex = index;
     }
 
     #resetStreet() {
@@ -414,6 +445,7 @@ export default class TableStateRepository {
         this.resetCurrentBet();
         this.#resetPlayers();
         this.#resetActivePlayers();
+        this.lastHandResults = null;
     }
 
 }

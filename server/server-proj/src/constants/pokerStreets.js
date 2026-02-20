@@ -3,5 +3,6 @@ export const PokerStreets = {
     FLOP: 'flop',
     TURN: 'turn',
     RIVER: 'river',
-    SHOWDOWN: 'showdown'
+    SHOWDOWN: 'showdown',
+    HAND_COMPLETE: 'hand_complete'
 }
