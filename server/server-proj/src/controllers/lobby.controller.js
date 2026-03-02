@@ -16,11 +16,14 @@ export default class LobbyController {
         const playerId = this.lobbyRepository.addPlayer(username);
 
         const isHost = lobbySizeBefore === 0;
+        if (isHost) {
+            this.lobbyRepository.setHostPlayer(playerId);
+        }
 
         return {
             playerId,
             isHost,
-            lobby: { ...this.lobbyRepository.players },
+            lobby: { ...this.lobbyRepository.getLobbyState() },
         };
         
 

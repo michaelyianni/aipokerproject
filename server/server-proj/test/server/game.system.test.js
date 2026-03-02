@@ -6,7 +6,7 @@ import { GAME_ACTIONS } from "../../src/constants/gameActions.js";
 import { PokerStreets } from "../../src/constants/pokerStreets.js";
 
 function lobbySizeFromMap(lobbyMap) {
-    return Object.keys(lobbyMap || {}).length;
+    return Object.keys(lobbyMap.players || {}).length;
 }
 
 function connect(url) {

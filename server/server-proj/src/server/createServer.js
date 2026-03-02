@@ -30,8 +30,7 @@ export function createServer({ corsOrigin = "*" } = {}) {
 
     function emitLobbyState() {
         io.to(LOBBY_ROOM).emit("lobby:update", {
-            isGameStarted: lobbyRepository.isGameStarted,
-            lobby: lobbyRepository.players,
+            lobby: lobbyRepository.getLobbyState(),
         });
     }
 
@@ -240,7 +239,7 @@ export function createServer({ corsOrigin = "*" } = {}) {
                     lobbyRepository.removePlayer(playerId);
                     emitLobbyState();
 
-                    console.log(`Player ${username} (${playerId}) disconnected and removed from lobby`);
+                    console.log(`Player ${username} (${playerId}) disconnected and removed from lobby. Host playerId: ${lobbyRepository.hostPlayerId}`);
                 }
             } catch (err) {
                 console.error("Error removing player on disconnect:", err);

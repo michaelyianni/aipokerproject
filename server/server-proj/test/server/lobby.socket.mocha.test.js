@@ -4,7 +4,9 @@ import { io as ioClient } from "socket.io-client";
 import { createServer } from "../../src/server/createServer.js";
 
 function lobbySizeFromMap(lobbyMap) {
-  return Object.keys(lobbyMap || {}).length;
+  console.log("[DEBUG] lobby =", lobbyMap);
+
+  return Object.keys(lobbyMap.players || {}).length;
 }
 
 function connect(url) {
@@ -164,7 +166,7 @@ describe("Lobby Socket.IO (Mocha/Chai)", function () {
       {
         confirmEvent: "lobby:update",
         confirmPredicate: (u) =>
-          u.isGameStarted === false && lobbySizeFromMap(u.lobby) === 1,
+          u.lobby.isGameStarted === false && lobbySizeFromMap(u.lobby) === 1,
       }
     );
 
@@ -175,7 +177,6 @@ describe("Lobby Socket.IO (Mocha/Chai)", function () {
     expect(joinAck.lobby).to.be.an("object");
     expect(lobbySizeFromMap(joinAck.lobby)).to.equal(1);
 
-    expect(update).to.have.property("isGameStarted", false);
     expect(update.lobby).to.be.an("object");
     expect(lobbySizeFromMap(update.lobby)).to.equal(1);
   });

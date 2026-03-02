@@ -27,13 +27,13 @@ export default class LobbyRepository {
         }
         delete this.players[playerId];
 
-        // if(this.hostPlayerId === playerId) {
-        //     this.hostPlayerId = null;
-        //     const remainingPlayerIds = Object.keys(this.players);
-        //     if (remainingPlayerIds.length > 0) {
-        //         this.setHostPlayer(remainingPlayerIds[0]);
-        //     }
-        // }
+        if(this.hostPlayerId === playerId) {
+            this.hostPlayerId = null;
+            const remainingPlayerIds = Object.keys(this.players);
+            if (remainingPlayerIds.length > 0) {
+                this.setHostPlayer(remainingPlayerIds[0]);
+            }
+        }
 
         if (this.getLobbySize() === 0) {
             this.reset();
@@ -66,6 +66,17 @@ export default class LobbyRepository {
         this.players = {};
         this.isGameStarted = false;
         this.hostPlayerId = null;
+    }
+
+    getLobbyState() {
+        return {
+            players: Object.values(this.players).map(player => ({
+                id: player.id,
+                username: player.name,
+            })),
+            isGameStarted: this.isGameStarted,
+            hostPlayerId: this.hostPlayerId,
+        };
     }
 
 }
