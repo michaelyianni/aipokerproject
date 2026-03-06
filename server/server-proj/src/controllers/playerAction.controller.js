@@ -37,7 +37,7 @@ export default class PlayerActionController {
             throw new Error('Player ' + playerId + ' not found in lobby');
         }
 
-        this.gameEngineService.playerDisconnect(playerId);
+        return this.gameEngineService.playerDisconnect(playerId);
         // Check if only one player left - if so, end the game and reset lobby
         // If game is ongoing, mark player as disconnected and skip their turns until they reconnect or game ends
         // If player was host, assign new host (could be first player to the left in seating order, or first to join lobby, etc)

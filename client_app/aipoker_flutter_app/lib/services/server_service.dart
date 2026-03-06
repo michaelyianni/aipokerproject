@@ -5,11 +5,13 @@ import '../models/lobby_state.dart';
 
 String serverUrl = 'http://10.0.2.2:3000'; // Localhost for Android emulator
 
-class LobbyService {
+class ServerService {
   IO.Socket? _socket;
   StreamController<LobbyState>? _lobbyStateController;
   StreamController<String>? _errorController;
   StreamController<void>? _gameStartedController;
+  StreamController<void>? _gameStateController;
+  StreamController<void>? _handResultsController;
 
   bool _isDisposed = false; // ✅ Add this flag
 
@@ -17,6 +19,8 @@ class LobbyService {
   Stream<LobbyState> get lobbyStateStream => _lobbyStateController!.stream;
   Stream<String> get errorStream => _errorController!.stream;
   Stream<void> get gameStartedStream => _gameStartedController!.stream;
+  Stream<void> get gameStateStream => _gameStateController!.stream;
+  Stream<void> get handResultsStream => _handResultsController!.stream;
 
   String? _currentPlayerId;
   String? get currentPlayerId => _currentPlayerId;
@@ -24,7 +28,7 @@ class LobbyService {
   bool _isHost = false;
   bool get isHost => _isHost;
 
-  LobbyService() {
+  ServerService() {
     _initializeControllers();
   }
 
@@ -33,6 +37,8 @@ class LobbyService {
     _lobbyStateController = StreamController<LobbyState>.broadcast();
     _errorController = StreamController<String>.broadcast();
     _gameStartedController = StreamController<void>.broadcast();
+    _gameStateController = StreamController<void>.broadcast();
+    _handResultsController = StreamController<void>.broadcast();
     _isDisposed = false; // ✅ Reset flag
   }
 
@@ -41,7 +47,7 @@ class LobbyService {
     if (!_isDisposed && _errorController != null && !_errorController!.isClosed) {
       _errorController!.add(error);
     } else {
-      debugPrint('[LobbyService] Skipped adding error (disposed): $error');
+      debugPrint('[ServerService] Skipped adding error (disposed): $error');
     }
   }
 
@@ -49,7 +55,7 @@ class LobbyService {
     if (!_isDisposed && _lobbyStateController != null && !_lobbyStateController!.isClosed) {
       _lobbyStateController!.add(state);
     } else {
-      debugPrint('[LobbyService] Skipped adding lobby state (disposed)');
+      debugPrint('[ServerService] Skipped adding lobby state (disposed)');
     }
   }
 
@@ -57,7 +63,23 @@ class LobbyService {
     if (!_isDisposed && _gameStartedController != null && !_gameStartedController!.isClosed) {
       _gameStartedController!.add(null);
     } else {
-      debugPrint('[LobbyService] Skipped adding game started (disposed)');
+      debugPrint('[ServerService] Skipped adding game started (disposed)');
+    }
+  }
+
+  void _safeAddGameState() {
+    if (!_isDisposed && _gameStateController != null && !_gameStateController!.isClosed) {
+      _gameStateController!.add(null);
+    } else {
+      debugPrint('[ServerService] Skipped adding game state (disposed)');
+    }
+  }
+
+  void _safeAddHandResults() {
+    if (!_isDisposed && _handResultsController != null && !_handResultsController!.isClosed) {
+      _handResultsController!.add(null);
+    } else {
+      debugPrint('[ServerService] Skipped adding hand results (disposed)');
     }
   }
 
@@ -65,7 +87,7 @@ class LobbyService {
   Future<LobbyConnectionResult> connectToLobby(String username) async {
     try {
       debugPrint(
-        '[LobbyService] Connecting to: $serverUrl with username: $username',
+        '[ServerService] Connecting to: $serverUrl with username: $username',
       );
 
       // Create a completer to wait for connection
@@ -85,7 +107,7 @@ class LobbyService {
 
       // Listen for connection success
       _socket!.onConnect((_) {
-        debugPrint('[LobbyService] Socket connected');
+        debugPrint('[ServerService] Socket connected');
         if (!connectionCompleter.isCompleted) {
           connectionCompleter.complete();
         }
@@ -93,7 +115,7 @@ class LobbyService {
 
       // Listen for connection errors
       _socket!.onConnectError((error) {
-        debugPrint('[LobbyService] Connection error: $error');
+        debugPrint('[ServerService] Connection error: $error');
         if (!connectionCompleter.isCompleted) {
           connectionCompleter.completeError(error);
         }
@@ -108,19 +130,19 @@ class LobbyService {
         onTimeout: () => throw TimeoutException('Connection timeout'),
       );
 
-      debugPrint('[LobbyService] Socket connected, joining lobby...');
+      debugPrint('[ServerService] Socket connected, joining lobby...');
 
       // Join lobby and wait for acknowledgment
       final result = await _joinLobby(username);
 
       if (result.success) {
-        debugPrint('[LobbyService] Successfully joined lobby. Result: Player ID: ${result.playerId}, Host: ${result.isHost}, Initial Players: ${result.initialState?.playerCount ?? 0}');
+        debugPrint('[ServerService] Successfully joined lobby. Result: Player ID: ${result.playerId}, Host: ${result.isHost}, Initial Players: ${result.initialState?.playerCount ?? 0}');
         return result;
       } else {
         throw Exception(result.error ?? 'Failed to join lobby');
       }
     } catch (e) {
-      debugPrint('[LobbyService] Connection error: $e');
+      debugPrint('[ServerService] Connection error: $e');
       _cleanupSocket();
       return LobbyConnectionResult.failure(e.toString());
     }
@@ -135,7 +157,7 @@ class LobbyService {
       {'username': username},
       ack: (response) {
         try {
-          debugPrint('[LobbyService] Join response: $response');
+          debugPrint('[ServerService] Join response: $response');
 
           if (response['ok'] == true) {
             _currentPlayerId = response['playerId'];
@@ -146,7 +168,7 @@ class LobbyService {
             final initialState = LobbyState.fromJson(lobbyData);
 
             debugPrint(
-              '[LobbyService] Player ID: $_currentPlayerId, IsHost: $_isHost, Initial Players: ${initialState.playerCount}',
+              '[ServerService] Player ID: $_currentPlayerId, IsHost: $_isHost, Initial Players: ${initialState.playerCount}',
             );
 
             completer.complete(
@@ -162,7 +184,7 @@ class LobbyService {
             );
           }
         } catch (e) {
-          debugPrint('[LobbyService] Error parsing join response: $e');
+          debugPrint('[ServerService] Error parsing join response: $e');
           completer.complete(LobbyConnectionResult.failure(e.toString()));
         }
       },
@@ -178,54 +200,59 @@ class LobbyService {
   void _setupSocketListeners() {
     // Connection events
     _socket!.onConnect((_) {
-      debugPrint('[LobbyService] Socket.IO connected');
+      debugPrint('[ServerService] Socket.IO connected');
     });
 
     _socket!.onDisconnect((_) {
-      debugPrint('[LobbyService] Socket.IO disconnected');
-      _safeAddError('Disconnected from server'); // ✅
+      debugPrint('[ServerService] Socket.IO disconnected');
+      // _safeAddError('Disconnected from server'); // ✅
     });
 
     _socket!.onConnectError((error) {
-      debugPrint('[LobbyService] Socket.IO connect error: $error');
+      debugPrint('[ServerService] Socket.IO connect error: $error');
       _safeAddError('Connection error: $error'); // ✅
     });
 
     _socket!.onError((error) {
-      debugPrint('[LobbyService] Socket.IO error: $error');
+      debugPrint('[ServerService] Socket.IO error: $error');
       _safeAddError('Socket error: $error'); // ✅
     });
 
     // Lobby state updates
     _socket!.on('lobby:update', (data) {
       try {
-        debugPrint('[LobbyService] Received lobby:update');
+        debugPrint('[ServerService] Received lobby:update');
         final lobbyData = data['lobby'];
         final updatedState = LobbyState.fromJson(lobbyData);
         _safeAddLobbyState(updatedState); // ✅
       } catch (e) {
-        debugPrint('[LobbyService] Error parsing lobby update: $e');
+        debugPrint('[ServerService] Error parsing lobby update: $e');
         _safeAddError('Error parsing lobby update: $e'); // ✅
       }
     });
 
     // Game started event
     _socket!.on('game:started', (data) {
-      debugPrint('[LobbyService] Game started by: ${data['startedBy']}');
+      debugPrint('[ServerService] Game started by: ${data['startedBy']}');
       _safeAddGameStarted(); // ✅
     });
 
     // You can add more event listeners here for game events later
     _socket!.on('game:state', (data) {
-      debugPrint('[LobbyService] Received game state update');
-      // TODO: Handle game state updates
+      debugPrint('[ServerService] Received game state update');
+      _safeAddGameState(); // ✅ Just notify listeners for now
+    });
+
+    _socket!.on('game:hand_results', (data) {
+      debugPrint('[ServerService] Received hand results update');
+      _safeAddHandResults(); // ✅ Just notify listeners for now
     });
   }
 
   // Send start game command (host only)
   Future<bool> startGame({bool testingMode = false}) async {
     if (!_isHost) {
-      debugPrint('[LobbyService] Cannot start game - not host');
+      debugPrint('[ServerService] Cannot start game - not host');
       return false;
     }
 
@@ -237,11 +264,11 @@ class LobbyService {
         {'testingMode': testingMode},
         ack: (response) {
           if (response['ok'] == true) {
-            debugPrint('[LobbyService] Game start acknowledged');
+            debugPrint('[ServerService] Game start acknowledged');
             completer.complete(true);
           } else {
             debugPrint(
-              '[LobbyService] Game start failed: ${response['error']}',
+              '[ServerService] Game start failed: ${response['error']}',
             );
             _safeAddError(response['error'] ?? 'Failed to start game'); // ✅
             completer.complete(false);
@@ -257,7 +284,7 @@ class LobbyService {
         },
       );
     } catch (e) {
-      debugPrint('[LobbyService] Error starting game: $e');
+      debugPrint('[ServerService] Error starting game: $e');
       _safeAddError('Error starting game: $e'); // ✅
       return false;
     }
@@ -281,7 +308,7 @@ class LobbyService {
               completer.complete(null);
             }
           } catch (e) {
-            debugPrint('[LobbyService] Error parsing lobby state: $e');
+            debugPrint('[ServerService] Error parsing lobby state: $e');
             completer.complete(null);
           }
         },
@@ -292,13 +319,13 @@ class LobbyService {
         onTimeout: () => null,
       );
     } catch (e) {
-      debugPrint('[LobbyService] Error getting lobby state: $e');
+      debugPrint('[ServerService] Error getting lobby state: $e');
       return null;
     }
   }
 
   void _cleanupSocket() {
-    debugPrint('[LobbyService] Cleaning up socket...');
+    debugPrint('[ServerService] Cleaning up socket...');
     _socket?.clearListeners();
     _socket?.disconnect();
     _socket?.dispose();
@@ -309,17 +336,19 @@ class LobbyService {
 
   // Disconnect (leave lobby)
   void disconnect() {
-    debugPrint('[LobbyService] Disconnecting...');
+    debugPrint('[ServerService] Disconnecting...');
     _cleanupSocket();
   }
 
   void dispose() {
-    debugPrint('[LobbyService] Disposing service...');
+    debugPrint('[ServerService] Disposing service...');
     _isDisposed = true; // ✅ Set flag BEFORE cleanup
     disconnect();
     _lobbyStateController?.close();
     _errorController?.close();
     _gameStartedController?.close();
+    _gameStateController?.close();
+    _handResultsController?.close();
   }
 }
 

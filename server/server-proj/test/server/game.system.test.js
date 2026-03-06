@@ -130,7 +130,7 @@ describe("Game System Test (Full Socket Integration)", function () {
     }
 
     before(async () => {
-        srv = createServer({ corsOrigin: "*" });
+        srv = createServer({ corsOrigin: "*", testingMode: true });
         const port = await srv.start(0);
         url = `http://localhost:${port}`;
     });

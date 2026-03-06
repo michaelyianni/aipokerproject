@@ -8,7 +8,7 @@ import LobbyController from "../controllers/lobby.controller.js";
 import PlayerActionController from "../controllers/playerAction.controller.js";
 import GameEngineService from "../services/gameEngine.service.js";
 
-export function createServer({ corsOrigin = "*" } = {}) {
+export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
     const app = express();
     const httpServer = http.createServer(app);
 
@@ -128,11 +128,13 @@ export function createServer({ corsOrigin = "*" } = {}) {
         });
 
 
-        socket.on("lobby:start", ({ testingMode } = {}, ack) => {
+        socket.on("lobby:start", (_, ack) => {
             try {
                 lobbyController.lobbyStart(socket.data.playerId === lobbyRepository.hostPlayerId);
 
                 const lobbyPlayers = Object.values(lobbyRepository.players);
+
+                console.log("[DEBUG] Starting game with players:", lobbyPlayers.map(p => p.name).join(", "));
 
                 // Create game engine and controller
                 gameEngineService = new GameEngineService(
@@ -181,9 +183,9 @@ export function createServer({ corsOrigin = "*" } = {}) {
 
         // Game events
 
-        socket.on("game:action", ({ playerId, action, amount } = {}, ack) => {
+        socket.on("game:action", async ({ playerId, action, amount } = {}, ack) => {
             try {
-                playerActionController.performAction(playerId, action, amount);
+                await playerActionController.performAction(playerId, action, amount);
 
                 emitGameState();
 
@@ -205,7 +207,7 @@ export function createServer({ corsOrigin = "*" } = {}) {
 
 
                     try {
-                        playerActionController.playerDisconnect(socket.data.playerId);
+                        await playerActionController.playerDisconnect(socket.data.playerId);
                         emitGameState();
                     } catch (disconnectErr) {
                         // Game might have ended or player already removed
@@ -216,9 +218,6 @@ export function createServer({ corsOrigin = "*" } = {}) {
                     // Check if game ended due to disconnect
                     if (!gameEngineService.gameInProgress) {
                         console.log("[INFO] Game ended due to player disconnect. Resetting lobby.");
-
-                        // Emit final game state with hand results and notify clients that game has ended
-                        emitHandResults();
 
                         // Disconnect all clients
                         const sockets = await io.fetchSockets();

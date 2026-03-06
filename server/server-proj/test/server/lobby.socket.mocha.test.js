@@ -132,7 +132,7 @@ describe("Lobby Socket.IO (Mocha/Chai)", function () {
   }
 
   before(async () => {
-    srv = createServer({ corsOrigin: "*" });
+    srv = createServer({ corsOrigin: "*", testingMode: true });
     const port = await srv.start(0);
     url = `http://localhost:${port}`;
   });
@@ -263,6 +263,8 @@ describe("Lobby Socket.IO (Mocha/Chai)", function () {
   it("joining after game started is rejected", async () => {
     const host = await connectTracked();
 
+
+    // Host joins
     const { ack: hostJoin } = await emitAck(host, "lobby:join", { username: "Host" }, {
       confirmEvent: "lobby:update",
       confirmPredicate: (u) => lobbySizeFromMap(u.lobby) === 1,
@@ -271,6 +273,18 @@ describe("Lobby Socket.IO (Mocha/Chai)", function () {
     expect(hostJoin.ok).to.equal(true);
     expect(hostJoin.isHost).to.equal(true);
 
+    const guest = await connectTracked();
+
+    // Guest joins
+    const { ack: guestJoin } = await emitAck(guest, "lobby:join", { username: "Guest" }, {
+      confirmEvent: "lobby:update",
+      confirmPredicate: (u) => lobbySizeFromMap(u.lobby) === 2,
+    });
+
+    expect(guestJoin.ok).to.equal(true);
+    expect(guestJoin.isHost).to.equal(false);
+
+    // Host starts game
     const startAck = await emitAck(host, "lobby:start");
     expect(startAck.ok).to.equal(true);
 

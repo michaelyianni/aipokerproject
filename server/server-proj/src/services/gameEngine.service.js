@@ -11,6 +11,11 @@ import Winner from "../models/Winner.js";
 
 export default class GameEngineService {
     constructor(players = [], onStateChangeCallback = null, testingMode = false) {
+        
+        if (testingMode) {
+            console.log('[GameEngine] Initializing in testing mode');
+        }
+        
         this.tableStateRepository = new TableStateRepository(players);
 
         this.onStateChangeCallback = onStateChangeCallback;
@@ -40,7 +45,7 @@ export default class GameEngineService {
 
     playerAction(playerId, action, amount = 0) {
 
-        if (!this.gameInProgress) { 
+        if (!this.gameInProgress) {
             throw new Error('Game is not in progress');
         }
 
@@ -80,7 +85,7 @@ export default class GameEngineService {
         player.hasActedThisStreet = true;
 
         // Post-action updates
-        this.postActionUpdates();
+        return this.postActionUpdates();
     }
 
     playerDisconnect(playerId) {
@@ -104,10 +109,10 @@ export default class GameEngineService {
 
             const remainingPlayerId = this.tableStateRepository.getConnectedPlayerIds()[0];
             this.awardAllPotsToSingleWinner(remainingPlayerId);
-            
-            this.tableStateRepository.setStreet(PokerStreets.HAND_COMPLETE); // move to hand complete street for game state clarity
 
-            return;
+            return this.endHand();
+
+
         }
 
 
@@ -118,17 +123,16 @@ export default class GameEngineService {
 
             const remainingPlayerId = this.tableStateRepository.getActivePlayerIds()[0];
             this.awardAllPotsToSingleWinner(remainingPlayerId);
-            this.endHand();
-            return;
+            return this.endHand();
         }
 
         // If its that player's turn, advance turn to next active player
         if (this.tableStateRepository.getCurrentTurnPlayerId() === playerId) {
-            this.postActionUpdates();
+            return this.postActionUpdates();
         }
 
 
-
+        return Promise.resolve();
 
     }
 
@@ -147,8 +151,7 @@ export default class GameEngineService {
             this.awardAllPotsToSingleWinner(this.tableStateRepository.getActivePlayerIds()[0]);
 
             // End round, prepare for next round
-            this.endHand();
-            return;
+            return this.endHand();
         }
 
         // 2) All-in scenario
@@ -156,12 +159,11 @@ export default class GameEngineService {
         const allInIds = this.tableStateRepository.getAllInPlayerIds();
 
         if (canActIds.length === 1 && allInIds.length >= 1) {
-            if(this.isBettingRoundComplete()) {
+            if (this.isBettingRoundComplete()) {
                 // Only one player can act and at least one player is all-in, run out board to river
                 this.runOutBoardToShowdown();
                 this.determineWinners();
-                this.endHand();
-                return;
+                return this.endHand();
             }
         }
 
@@ -171,8 +173,7 @@ export default class GameEngineService {
 
             this.determineWinners();
 
-            this.endHand();
-            return;
+            return this.endHand();
         }
 
 
@@ -188,8 +189,7 @@ export default class GameEngineService {
             // If river completed, determine winners
             if (this.tableStateRepository.getCurrentStreet() === PokerStreets.SHOWDOWN) {
                 this.determineWinners();
-                this.endHand();
-                return;
+                return this.endHand();
             }
 
             // if small blind is active, set turn to them, otherwise start with first active player left of dealer
@@ -313,7 +313,6 @@ export default class GameEngineService {
 
     }
 
-
     endHand() {
 
 
@@ -322,13 +321,17 @@ export default class GameEngineService {
 
         this.emitHandResults();
 
-        // Auto-advance to next hand after 5 seconds
+        // Return a Promise that resolves after 5 seconds
         if (!this.testingMode) {
-
-            this.handCompleteTimeout = setTimeout(() => {
-                this.startNextHand();
-            }, 5000); // 5 second delay - adjust as needed
+            return new Promise((resolve) => {
+                this.handCompleteTimeout = setTimeout(() => {
+                    this.startNextHand();
+                    resolve();
+                }, 5000);
+            });
         }
+
+        return Promise.resolve(); // For testing mode, resolve immediately
 
         // In testing, manually call startNextHand() from test after asserting hand results, to have more control over timing
 
@@ -398,7 +401,7 @@ export default class GameEngineService {
     }
 
     awardAllPotsToSingleWinner(winnerId) {
-        
+
         const pots = this.tableStateRepository.getPots();
 
         let totalWinnings = 0;

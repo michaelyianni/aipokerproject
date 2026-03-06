@@ -1,9 +1,14 @@
 import 'package:flutter/foundation.dart';
-import '../services/lobby_service.dart';
+import '../services/server_service.dart';
 import '../models/lobby_state.dart';
+import 'dart:async';
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/user_model.dart';
 
 class LobbyViewModel extends ChangeNotifier {
-  final LobbyService _lobbyService;
+  final ServerService _lobbyService;
+  final WidgetRef _ref;
   
   LobbyState? _lobbyState;
   String? _currentPlayerId;
@@ -11,6 +16,10 @@ class LobbyViewModel extends ChangeNotifier {
   String? _errorMessage;
   bool _isLoading = false;
   bool _shouldNavigateToGame = false;
+  String? _username;
+
+  StreamSubscription<LobbyState>? _lobbyStateSubscription;
+  StreamSubscription<String>? _errorSubscription;
 
   // Getters
   LobbyState? get lobbyState => _lobbyState;
@@ -23,13 +32,21 @@ class LobbyViewModel extends ChangeNotifier {
   List<Player> get players => _lobbyState?.playerList ?? [];
   int get playerCount => players.length;
 
-  LobbyViewModel(this._lobbyService) {
+  String get username => _username ?? 'Unknown';
+  set username(String value) {
+    _username = value;
+  }
+
+  Stream<void> get gameStartedStream => _lobbyService.gameStartedStream;
+  
+
+  LobbyViewModel(this._lobbyService, this._ref) {
     _listenToServiceStreams();
   }
 
   void _listenToServiceStreams() {
     // Listen for lobby state updates
-    _lobbyService.lobbyStateStream.listen(
+    _lobbyStateSubscription = _lobbyService.lobbyStateStream.listen(
       (state) {
         debugPrint('[ViewModel] Received lobby state update');
         _updateLobbyState(state);
@@ -43,23 +60,23 @@ class LobbyViewModel extends ChangeNotifier {
     );
 
     // Listen for errors
-    _lobbyService.errorStream.listen((error) {
+    _errorSubscription = _lobbyService.errorStream.listen((error) {
       debugPrint('[ViewModel] Received error: $error');
       _errorMessage = error;
       notifyListeners();
     });
 
     // Listen for game started event
-    _lobbyService.gameStartedStream.listen((_) {
-      debugPrint('[ViewModel] Game started, triggering navigation');
-      _shouldNavigateToGame = true;
-      notifyListeners();
-    });
+    // _lobbyService.gameStartedStream.listen((_) {
+    //   debugPrint('[ViewModel] Game started, triggering navigation');
+    //   _shouldNavigateToGame = true;
+    //   notifyListeners();
+    // });
   }
 
   // Connect to lobby
-  Future<bool> connectToLobby(String username) async {
-    debugPrint('[ViewModel] Connecting to lobby with username: $username');
+  Future<bool> connectToLobby() async {
+    debugPrint('[ViewModel] Connecting to lobby with username: $_username');
     
     _isLoading = true;
     _errorMessage = null;
@@ -74,6 +91,9 @@ class LobbyViewModel extends ChangeNotifier {
       _updateLobbyState(result.initialState);
 
       _currentPlayerId = result.playerId;
+
+      _ref.read(userProvider.notifier).setPlayerId(_currentPlayerId!);
+
       // _isHost = result.isHost; // Host status will be determined when we receive the lobby state update
       _isLoading = false;
       notifyListeners();
@@ -140,7 +160,10 @@ class LobbyViewModel extends ChangeNotifier {
   @override
   void dispose() {
     debugPrint('[ViewModel] Disposing');
-    _lobbyService.dispose();
+
+    _lobbyStateSubscription?.cancel();
+    _errorSubscription?.cancel();
+
     super.dispose();
   }
 }

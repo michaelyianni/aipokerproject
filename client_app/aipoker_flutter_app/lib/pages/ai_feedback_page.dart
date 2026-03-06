@@ -38,7 +38,7 @@ class _AIFeedbackPageState extends State<AIFeedbackPage> {
                       debugPrint('Back to Main Menu Pressed');
                     }
 
-                    GoRouter.of(context).go('/');
+                    GoRouter.of(context).go('/main-menu');
                   },
                   child: Text("Go Back"),
                 ),

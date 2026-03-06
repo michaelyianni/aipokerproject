@@ -47,6 +47,10 @@ export default class LobbyController {
         if (!isHost) {
             throw new Error('Only the host can start the game');
         }
+
+        if (this.lobbyRepository.getLobbySize() < 2) {
+            throw new Error('At least 2 players are required to start the game');
+        }
         
         this.lobbyRepository.isGameStarted = true;
 
