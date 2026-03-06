@@ -12,4 +12,8 @@ class CommunityCards {
   Map<String, dynamic> toJson() {
     return {'cards': cards};
   }
+
+  factory CommunityCards.empty() {
+    return const CommunityCards(cards: []);
+  }
 }

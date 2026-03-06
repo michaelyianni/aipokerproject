@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'package:aipoker_flutter_app/models/game_state.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:flutter/foundation.dart';
 import '../models/lobby_state.dart';
+import '../mocks/mock_game_data.dart'; // For testing without server
 
 String serverUrl = 'http://10.0.2.2:3000'; // Localhost for Android emulator
 
@@ -10,7 +12,7 @@ class ServerService {
   StreamController<LobbyState>? _lobbyStateController;
   StreamController<String>? _errorController;
   StreamController<void>? _gameStartedController;
-  StreamController<void>? _gameStateController;
+  StreamController<GameState>? _gameStateController;
   StreamController<void>? _handResultsController;
 
   bool _isDisposed = false; // ✅ Add this flag
@@ -19,7 +21,7 @@ class ServerService {
   Stream<LobbyState> get lobbyStateStream => _lobbyStateController!.stream;
   Stream<String> get errorStream => _errorController!.stream;
   Stream<void> get gameStartedStream => _gameStartedController!.stream;
-  Stream<void> get gameStateStream => _gameStateController!.stream;
+  Stream<GameState> get gameStateStream => _gameStateController!.stream;
   Stream<void> get handResultsStream => _handResultsController!.stream;
 
   String? _currentPlayerId;
@@ -37,7 +39,7 @@ class ServerService {
     _lobbyStateController = StreamController<LobbyState>.broadcast();
     _errorController = StreamController<String>.broadcast();
     _gameStartedController = StreamController<void>.broadcast();
-    _gameStateController = StreamController<void>.broadcast();
+    _gameStateController = StreamController<GameState>.broadcast();
     _handResultsController = StreamController<void>.broadcast();
     _isDisposed = false; // ✅ Reset flag
   }
@@ -67,9 +69,9 @@ class ServerService {
     }
   }
 
-  void _safeAddGameState() {
+  void _safeAddGameState(GameState state) {
     if (!_isDisposed && _gameStateController != null && !_gameStateController!.isClosed) {
-      _gameStateController!.add(null);
+      _gameStateController!.add(state);
     } else {
       debugPrint('[ServerService] Skipped adding game state (disposed)');
     }
@@ -240,7 +242,13 @@ class ServerService {
     // You can add more event listeners here for game events later
     _socket!.on('game:state', (data) {
       debugPrint('[ServerService] Received game state update');
-      _safeAddGameState(); // ✅ Just notify listeners for now
+
+    // Use mock data for now
+    // TODO: Remove this and use real data when server is implemented
+      Map<String, dynamic> mockGameState = MockGameData.getBigTableScenario();
+      final updatedState = GameState.fromJson(mockGameState, MockGameData.getTestPlayerIdBigTable());
+      // final updatedState = GameState.fromJson(data, _currentPlayerId!);
+      _safeAddGameState(updatedState); 
     });
 
     _socket!.on('game:hand_results', (data) {

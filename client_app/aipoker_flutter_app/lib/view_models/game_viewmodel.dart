@@ -3,21 +3,21 @@ import 'package:flutter/material.dart';
 import '../services/server_service.dart';
 import 'dart:async';
 import 'package:go_router/go_router.dart';
-// import '../models/game_state.dart';  // You'll need to create this
+import '../models/game_state.dart';  // You'll need to create this
 
 class GameViewModel extends ChangeNotifier {
   final ServerService _serverService;
   
-  // GameState? _gameState;
+  GameState? _gameState;
   String? _errorMessage;
-  bool _isLoading = false;
+  bool _isLoading = true;
 
-  StreamSubscription<void>? _gameStateSubscription; // TODO: Change to correct type when GameState is defined
+  StreamSubscription<GameState>? _gameStateSubscription;
   StreamSubscription<void>? _handResultsSubscription; // TODO: Change to correct type when HandResults is defined
   StreamSubscription<String>? _errorSubscription;
 
   // Getters
-  //GameState? get gameState => _gameState;
+  GameState? get gameState => _gameState;
   String? get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
 
@@ -30,7 +30,8 @@ class GameViewModel extends ChangeNotifier {
     _gameStateSubscription = _serverService.gameStateStream.listen(
       (state) {
         debugPrint('[GameViewModel] Received game state update');
-        // _gameState = state;
+        _gameState = state;
+        _isLoading = false;
         notifyListeners();
       },
       onError: (error) {

@@ -157,10 +157,20 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
 
                 emitLobbyState();
 
-                // Emit initial game state
-                console.log("[DEBUG] About to emit game state...");
-                emitGameState();
-                console.log("[DEBUG] Game state emission completed");
+                // Wait 3 seconds before emitting game state
+
+                if (testingMode) {
+                    console.log("[TEST MODE] Skipping 3 second delay before emitting initial game state");
+                    emitGameState();
+                    return;
+                }
+
+                console.log("[DEBUG] Waiting 2 seconds before emitting initial game state...");
+                setTimeout(() => {
+                    console.log("[DEBUG] About to emit game state...");
+                    emitGameState();
+                    console.log("[DEBUG] Game state emission completed");
+                }, 2000); // 2 seconds
 
             } catch (err) {
                 console.error("[ERROR] Failed to start game:", err);
