@@ -73,12 +73,16 @@ class GameViewModel extends ChangeNotifier {
     await performAction('fold');
   }
 
-  Future<void> call() async {
-    await performAction('call/check');
+  Future<void> checkCall() async {
+    await performAction('check/call');
   }
 
-  Future<void> raise(int amount) async {
+  Future<void> betRaise(int amount) async {
     await performAction('bet/raise', data: {'amount': amount});
+  }
+
+  Future<void> allIn() async {
+    await performAction('all-in');
   }
 
 

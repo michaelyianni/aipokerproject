@@ -245,8 +245,8 @@ class ServerService {
 
     // Use mock data for now
     // TODO: Remove this and use real data when server is implemented
-      Map<String, dynamic> mockGameState = MockGameData.getBigTableScenario();
-      final updatedState = GameState.fromJson(mockGameState, MockGameData.getTestPlayerIdBigTable());
+      Map<String, dynamic> mockGameState = MockGameData.getFlopScenario();
+      final updatedState = GameState.fromJson(mockGameState, MockGameData.getTestPlayerIdFlop());
       // final updatedState = GameState.fromJson(data, _currentPlayerId!);
       _safeAddGameState(updatedState); 
     });

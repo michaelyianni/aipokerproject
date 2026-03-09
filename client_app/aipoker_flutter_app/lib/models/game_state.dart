@@ -11,7 +11,8 @@ class GameState {
   // thisPlayer
   final Player thisPlayer; // The player object for the current user
   // seatAssignments
-  final List<String> seatAssignments; // Array of player IDs in seating order
+  final Map<int, String>
+  seatAssignments; // Array of player IDs in seating order
   // currentTurnPlayerId
   final String currentTurnPlayerId;
   // pots
@@ -97,8 +98,7 @@ class GameState {
   }
   */
 
-  // Hard-code json string for now, will replace with real server data later
-
+    // Hard-code json string for now, will replace with real server data later
 
     // Parse players
     final playersJson = json['players'] as Map<String, dynamic>? ?? {};
@@ -159,12 +159,15 @@ class GameState {
   }
 
   // Helper method to reorder seats so thisPlayerId is first
-  static List<String> _reorderSeats(
+  static Map<int, String> _reorderSeats(
     List<String> playerOrder,
     String thisPlayerId,
   ) {
     if (playerOrder.isEmpty || !playerOrder.contains(thisPlayerId)) {
-      return playerOrder;
+      debugPrint(
+        'Warning: playerOrder is empty or does not contain thisPlayerId. Returning original order.',
+      );
+      return playerOrder.asMap();
     }
 
     final thisPlayerIndex = playerOrder.indexOf(thisPlayerId);
@@ -172,9 +175,32 @@ class GameState {
     // Rotate the list so thisPlayerId is first
     // e.g., ["id49", "id50", "id51", "id52"] with thisPlayerId = "id51"
     // becomes ["id51", "id52", "id49", "id50"]
-    return [
+    final reordered = [
       ...playerOrder.sublist(thisPlayerIndex),
       ...playerOrder.sublist(0, thisPlayerIndex),
     ];
+
+    // Remove thisPlayerId from the list
+    final reorderedWithoutThisPlayer = reordered
+        .where((id) => id != thisPlayerId)
+        .toList();
+
+    final int maxSeats = 5; // Assuming max 5 players at the table (not including thisPlayer)
+
+    // Map players at end to end of seat assignments, players at start to start of seat assignments
+    final seatAssignments = <int, String>{};
+    for (int i = 0; i < reorderedWithoutThisPlayer.length / 2; i++) {
+      seatAssignments[i] = reorderedWithoutThisPlayer[i];
+
+      if (i != reorderedWithoutThisPlayer.length - 1 - i) {
+        seatAssignments[maxSeats - 1 - i] =
+            reorderedWithoutThisPlayer[reorderedWithoutThisPlayer.length - 1 - i];
+      }
+    }
+
+    debugPrint('Original player order: $playerOrder');
+    debugPrint('Reordered seat assignments: $seatAssignments');
+
+    return seatAssignments;
   }
 }

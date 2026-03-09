@@ -12,6 +12,10 @@ import '../models/game_models/comm_cards_model.dart';
 import '../models/game_models/pot_model.dart';
 import '../widgets/general/back_button.dart';
 import '../widgets/game/chip_amount_widget.dart';
+import '../widgets/game/player_widget.dart';
+import '../widgets/game/pots_widget.dart';
+import '../widgets/game/poker_action_buttons.dart';
+import '../widgets/game/user_chip_amount_widget.dart';
 
 class GamePage extends ConsumerStatefulWidget {
   const GamePage({super.key});
@@ -40,7 +44,7 @@ class _GamePageState extends ConsumerState<GamePage> {
       listenable: _viewModel,
       builder: (context, _) {
         debugPrint(
-          '[GamePage] REBUILDING - Game state: ${_viewModel.gameState}', //, Community Cards: ${_viewModel.communityCards}, Pot: ${_viewModel.pot}, Players: ${_viewModel.players.length}',
+          '[GamePage] REBUILDING - Game state: ${_viewModel.gameState}, Community Cards: ${_viewModel.gameState?.communityCards.cards}, Players: ${_viewModel.gameState?.players.length}',
         );
 
         // Show loading indicator while connecting
@@ -54,101 +58,202 @@ class _GamePageState extends ConsumerState<GamePage> {
         return Scaffold(
           // Background hex color: #42943C
           backgroundColor: Color.fromRGBO(66, 148, 60, 1.0),
-          body: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Padding for top of screen
-              SizedBox(height: 20),
-              // Community section
-              Column(
-                children: [
-                  // Community cards
-                  CommunityCardsWidget(
-                    communityCards:
-                        _viewModel.gameState?.communityCards ??
-                        CommunityCards.empty(),
-                  ),
+          body: Container(
+            padding: EdgeInsets.symmetric(horizontal: 5, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Community section
+                Column(
+                  children: [
+                    // Community cards
+                    CommunityCardsWidget(
+                      communityCards:
+                          _viewModel.gameState?.communityCards ??
+                          CommunityCards.empty(),
+                    ),
 
-                  // Back Button and Current Bet
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: Row(
+                    // Back Button and Current Bet
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // Back Button
+                          CustomBackButton(
+                            onPressed: () => _viewModel.onBackPressed(context),
+                            color: Colors.white,
+                          ),
+
+                          // Current Bet widget
+                          ChipAmountWidget(
+                            text: "Current Bet",
+                            amount: _viewModel.gameState?.currentBet ?? 0,
+                            assetPath: 'assets/icons/chip-128-red.png',
+                          ),
+
+                          SizedBox(
+                            width: 48,
+                          ), // Spacing - same size as icon button to keep Current Bet centered
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Players' section
+                Column(
+                  children: [
+                    // Top player
+                    Center(
+                      // Player widget
+                      child: buildPlayerWidget(2),
+                    ),
+                    SizedBox(height: 10),
+
+                    // Row of players, pot, and more players
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Back Button
-                        CustomBackButton(
-                          onPressed: () => _viewModel.onBackPressed(context),
-                          color: Colors.white,
+                        // Player widgets
+                        Column(
+                          children: [
+                            // Player widget
+                            buildPlayerWidget(1),
+                            SizedBox(height: 8),
+                            buildPlayerWidget(0),
+                          ],
                         ),
+                        // Pot widget
+                        PotsWidget(pots: _viewModel.gameState?.pots ?? []),
 
-                        // Current Bet widget
-                        ChipAmountWidget(
-                          amount: _viewModel.gameState?.currentBet ?? 0,
-                          assetPath: 'assets/icons/chip-128-red.png',
+                        // Player widgets
+                        Column(
+                          children: [
+                            // Player widget
+                            buildPlayerWidget(3),
+                            SizedBox(height: 8),
+                            buildPlayerWidget(4),
+                          ],
                         ),
-
-                        SizedBox(width: 48), // Spacing - same size as icon button to keep Current Bet centered
                       ],
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
 
-              // Players' section
-              Column(
-                children: [
-                  // Top player
-                  Center(
-                    // Player widget
-                  ),
-
-                  // Row of players, pot, and more players
-                  Row(
+                // This player section - only visible to current player, shows more details and action buttons
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.max,
                     children: [
-                      // Player widgets
+                      // Player Status section
                       Column(
                         children: [
-                          // Player widget
-                          // Player widget
+                          // Turn status label
+                          if (_viewModel.gameState?.currentTurnPlayerId ==
+                              _viewModel.gameState?.thisPlayer.playerId)
+                            Text(
+                              "Your Turn",
+                              style: TextStyle(
+                                color: Colors.yellow,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          else
+                            Text(
+                              "Waiting for other players...",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+
+                          // Total chips, cards, and current bet
+                          Row(
+                            children: [
+                              // Total chips widget
+                              UserChipAmountWidget(
+                                text: "Total",
+                                amount: _viewModel.gameState?.thisPlayer.chips ?? 0,
+                                assetPath: "assets/icons/chip-128-blue.png",
+                              ),
+
+                              // Cards widget
+
+                              // Current bet widget
+                              UserChipAmountWidget(
+                                text: "Bet",
+                                amount: _viewModel.gameState?.thisPlayer.currentBet ?? 0,
+                                assetPath: "assets/icons/chip-128-red.png",
+                              ),
+
+                            ],
+                          ),
                         ],
                       ),
-                      // Pot widget
 
-                      // Player widgets
-                      Column(
-                        children: [
-                          // Player widget
-                          // Player widget
-                        ],
+                      // Player action buttons widget
+                      PokerActionButtons(
+                        onFold: _onFold,
+                        onCheckCall: _onCheckCall,
+                        onBetRaise: _onBetRaise,
+                        onAllIn: _onAllIn,
                       ),
                     ],
                   ),
-                ],
-              ),
-
-              // Player Status section
-              Column(
-                children: [
-                  // Turn status label
-
-                  // Total chips, cards, and current bet
-                  Row(
-                    children: [
-                      // Total chips widget
-
-                      // Cards widget
-
-                      // Current bet widget
-                    ],
-                  ),
-                ],
-              ),
-
-              // Player action buttons widget
-            ],
+                ),
+              ],
+            ),
           ),
         );
       },
+    );
+  }
+
+  void _onFold() {
+    debugPrint('[GamePage] Fold button pressed');
+    _viewModel.fold();
+  }
+
+  void _onCheckCall() {
+    debugPrint('[GamePage] Check/Call button pressed');
+    _viewModel.checkCall();
+  }
+
+  void _onBetRaise(int amount) {
+    debugPrint('[GamePage] Bet/Raise button pressed');
+    _viewModel.betRaise(amount);
+  }
+
+  void _onAllIn() {
+    debugPrint('[GamePage] All-in button pressed');
+    _viewModel.allIn();
+  }
+
+  Widget buildPlayerWidget(int tableIndex) {
+    final playerId = _viewModel.gameState!.seatAssignments[tableIndex];
+
+    if (playerId == null) {
+      return SizedBox(width: 140, height: 100); // No player at this seat
+    }
+
+    final player = _viewModel.gameState!.players[playerId];
+    if (player == null) {
+      return SizedBox(width: 140, height: 100); // Player data not found
+    }
+
+    return PlayerWidget(
+      player: player,
+      currentTurnPlayerId: _viewModel.gameState?.currentTurnPlayerId ?? '',
+      dealerId: _viewModel.gameState?.dealerId ?? '',
+      smallBlindId: _viewModel.gameState?.smallBlindId ?? '',
+      bigBlindId: _viewModel.gameState?.bigBlindId ?? '',
     );
   }
 }

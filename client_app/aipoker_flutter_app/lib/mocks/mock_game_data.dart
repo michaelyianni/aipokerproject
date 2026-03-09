@@ -459,7 +459,7 @@ class MockGameData {
         },
       },
       "playerOrder": ["id49", "id50", "id51", "id52", "id53", "id54"],
-      "currentTurnPlayerId": "id54",
+      "currentTurnPlayerId": "id51",
       "activePlayerIds": ["id49", "id51", "id52", "id54"],
       "pots": [
         {

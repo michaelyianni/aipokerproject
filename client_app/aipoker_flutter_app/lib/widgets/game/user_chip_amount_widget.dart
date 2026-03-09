@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class ChipAmountWidget extends StatelessWidget {
+class UserChipAmountWidget extends StatelessWidget {
   final String text;
   final int amount;
   final String assetPath;
 
-  const ChipAmountWidget({
+  const UserChipAmountWidget({
     required this.text,
     required this.amount,
     required this.assetPath,
@@ -15,9 +15,11 @@ class ChipAmountWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 120,
+      height: 80,
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.black,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(5),
       ),
       child: Column(
@@ -25,20 +27,20 @@ class ChipAmountWidget extends StatelessWidget {
           Center(
             child: Text(
               text,
-              style: TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
             ),
           ),
-          SizedBox(height: 4),
+          SizedBox(height: 10),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Image.asset(assetPath, width: 20, height: 20),
-              SizedBox(width: 4),
+              SizedBox(width: 8),
               Text(
                 '$amount',
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 14,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
