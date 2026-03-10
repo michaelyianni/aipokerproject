@@ -6,7 +6,7 @@ export default class ActionChecker {
         let player = tableStateRepository.getPlayer(playerId);
 
         if (tableStateRepository.getCurrentTurnPlayerId() !== playerId) {
-            throw new Error('Player '+ playerId + ' cannot act out of turn. Current turn ID: ' + tableStateRepository.getCurrentTurnPlayerId());
+            throw new Error('Player ' + playerId + ' cannot act out of turn. Current turn ID: ' + tableStateRepository.getCurrentTurnPlayerId());
         }
 
         if (tableStateRepository.getCanActPlayerIds().includes(playerId) === false) {
@@ -15,7 +15,7 @@ export default class ActionChecker {
 
         // Validate action type and amount
 
-        switch(action) {
+        switch (action) {
             case GAME_ACTIONS.FOLD:
                 return true; // Player can always fold
             case GAME_ACTIONS.CHECK:
@@ -27,6 +27,8 @@ export default class ActionChecker {
                 return this.validateBet(player, amount, tableStateRepository);
             case GAME_ACTIONS.RAISE:
                 return this.validateRaise(player, amount, tableStateRepository);
+            case GAME_ACTIONS.ALL_IN:
+                return true; // Player can always go all-in (even if they don't have enough chips to call or raise, they can just go all-in with their remaining chips)
             default:
                 throw new Error('Invalid action: ' + action);
         }

@@ -13,6 +13,8 @@ export default class GameState {
         
         this.pots = tableStateRepository.pots;
         this.currentBet = tableStateRepository.currentBet;
+
+        this.minimumRaise = tableStateRepository.minimumRaiseAmount;
         
         this.currentStreet = tableStateRepository.getCurrentStreet();
 

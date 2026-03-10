@@ -202,6 +202,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
                 ack?.({ ok: true });
             } catch (err) {
                 ack?.({ ok: false, error: err.message });
+                console.error("[ERROR] Failed to perform player action from playerId:", playerId, err);
             }
         });
 

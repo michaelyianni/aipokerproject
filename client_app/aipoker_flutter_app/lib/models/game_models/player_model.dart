@@ -2,6 +2,7 @@ class Player {
   final String playerId;
   final String name;
   final int chips;
+  final List<String> hand;
   final int currentBet;
   final int totalBetThisHand;
   final bool hasFolded;
@@ -9,13 +10,14 @@ class Player {
   final bool hasLeft;
 
 
-  const Player({required this.playerId, required this.name, required this.chips, required this.currentBet, required this.totalBetThisHand, required this.hasFolded, required this.isAllIn, required this.hasLeft});
+  const Player({required this.playerId, required this.name, required this.chips, required this.hand, required this.currentBet, required this.totalBetThisHand, required this.hasFolded, required this.isAllIn, required this.hasLeft});
 
   factory Player.fromJson(Map<String, dynamic> json) {
     return Player(
       playerId: json['id'] ?? '',
       name: json['name'] ?? 'Unknown',
       chips: json['chips'] ?? 0,
+      hand: List<String>.from(json['hand'] ?? []),
       currentBet: json['currentBet'] ?? 0,
       totalBetThisHand: json['totalBetThisHand'] ?? 0,
       hasFolded: json['hasFolded'] ?? false,
@@ -25,6 +27,6 @@ class Player {
   }
 
   Map<String, dynamic> toJson() {
-    return {'playerId': playerId, 'name': name, 'chips': chips, 'currentBet': currentBet, 'totalBetThisHand': totalBetThisHand, 'hasFolded': hasFolded, 'isAllIn': isAllIn, 'hasLeft': hasLeft};
+    return {'playerId': playerId, 'name': name, 'chips': chips, 'hand': hand, 'currentBet': currentBet, 'totalBetThisHand': totalBetThisHand, 'hasFolded': hasFolded, 'isAllIn': isAllIn, 'hasLeft': hasLeft};
   }
 }

@@ -7,6 +7,7 @@ class MockGameData {
         "id49": {
           "id": "id49",
           "name": "Alice",
+          "hand": ["Ah", "Kh"],
           "chips": 0,
           "currentBet": 890,
           "totalBetThisHand": 1000,
@@ -17,6 +18,7 @@ class MockGameData {
         "id50": {
           "id": "id50",
           "name": "Bob",
+          "hand": ["Jc", "Tc"],
           "chips": 500,
           "currentBet": 0,
           "totalBetThisHand": 110,
@@ -27,6 +29,7 @@ class MockGameData {
         "id51": {
           "id": "id51",
           "name": "Charlie",
+          "hand": ["Qd", "Js"],
           "chips": 1200,
           "currentBet": 890,
           "totalBetThisHand": 1000,
@@ -37,6 +40,7 @@ class MockGameData {
         "id52": {
           "id": "id52",
           "name": "You",
+          "hand": ["As", "Ad"],
           "chips": 800,
           "currentBet": 100,
           "totalBetThisHand": 100,
@@ -70,6 +74,7 @@ class MockGameData {
         "id49": {
           "id": "id49",
           "name": "Alice",
+          "hand": ["9h", "9d"],
           "chips": 950,
           "currentBet": 50,
           "totalBetThisHand": 50,
@@ -80,6 +85,7 @@ class MockGameData {
         "id50": {
           "id": "id50",
           "name": "Bob",
+          "hand": ["Kc", "Qc"],
           "chips": 900,
           "currentBet": 100,
           "totalBetThisHand": 100,
@@ -90,6 +96,7 @@ class MockGameData {
         "id51": {
           "id": "id51",
           "name": "You",
+          "hand": ["Ah", "Kh"],
           "chips": 1000,
           "currentBet": 0,
           "totalBetThisHand": 0,
@@ -123,6 +130,7 @@ class MockGameData {
         "id49": {
           "id": "id49",
           "name": "Alice",
+          "hand": ["Jh", "Th"],
           "chips": 850,
           "currentBet": 150,
           "totalBetThisHand": 200,
@@ -133,6 +141,7 @@ class MockGameData {
         "id50": {
           "id": "id50",
           "name": "Bob",
+          "hand": ["Ac", "Kc"],
           "chips": 750,
           "currentBet": 150,
           "totalBetThisHand": 250,
@@ -143,6 +152,7 @@ class MockGameData {
         "id51": {
           "id": "id51",
           "name": "Charlie",
+          "hand": ["7h", "6h"],
           "chips": 650,
           "currentBet": 0,
           "totalBetThisHand": 100,
@@ -153,6 +163,7 @@ class MockGameData {
         "id52": {
           "id": "id52",
           "name": "You",
+          "hand": ["As", "Qh"],
           "chips": 900,
           "currentBet": 150,
           "totalBetThisHand": 150,
@@ -186,6 +197,7 @@ class MockGameData {
         "id49": {
           "id": "id49",
           "name": "Alice",
+          "hand": ["Jh", "6d"],
           "chips": 400,
           "currentBet": 200,
           "totalBetThisHand": 600,
@@ -196,6 +208,7 @@ class MockGameData {
         "id50": {
           "id": "id50",
           "name": "You",
+          "hand": ["Qc", "Jd"],
           "chips": 1200,
           "currentBet": 200,
           "totalBetThisHand": 400,
@@ -229,6 +242,7 @@ class MockGameData {
         "id49": {
           "id": "id49",
           "name": "Alice",
+          "hand": ["Ks", "Kh"],
           "chips": 0,
           "currentBet": 1000,
           "totalBetThisHand": 1000,
@@ -239,6 +253,7 @@ class MockGameData {
         "id50": {
           "id": "id50",
           "name": "Bob",
+          "hand": ["Qd", "Qc"],
           "chips": 0,
           "currentBet": 800,
           "totalBetThisHand": 800,
@@ -249,6 +264,7 @@ class MockGameData {
         "id51": {
           "id": "id51",
           "name": "You",
+          "hand": ["Ah", "Kd"],
           "chips": 0,
           "currentBet": 1000,
           "totalBetThisHand": 1000,
@@ -286,6 +302,7 @@ class MockGameData {
         "id49": {
           "id": "id49",
           "name": "Opponent",
+          "hand": ["Kh", "Qh"],
           "chips": 1500,
           "currentBet": 300,
           "totalBetThisHand": 500,
@@ -296,6 +313,7 @@ class MockGameData {
         "id50": {
           "id": "id50",
           "name": "You",
+          "hand": ["Js", "Tc"],
           "chips": 1500,
           "currentBet": 0,
           "totalBetThisHand": 200,
@@ -329,6 +347,7 @@ class MockGameData {
         "id49": {
           "id": "id49",
           "name": "Alice",
+          "hand": ["Ac", "Ah"],
           "chips": 0,
           "currentBet": 500,
           "totalBetThisHand": 500,
@@ -339,6 +358,7 @@ class MockGameData {
         "id50": {
           "id": "id50",
           "name": "Bob",
+          "hand": ["Qc", "Qd"],
           "chips": 0,
           "currentBet": 800,
           "totalBetThisHand": 800,
@@ -349,6 +369,7 @@ class MockGameData {
         "id51": {
           "id": "id51",
           "name": "Charlie",
+          "hand": ["Jh", "Th"],
           "chips": 200,
           "currentBet": 1200,
           "totalBetThisHand": 1200,
@@ -359,6 +380,7 @@ class MockGameData {
         "id52": {
           "id": "id52",
           "name": "You",
+          "hand": ["Kc", "3h"],
           "chips": 100,
           "currentBet": 1200,
           "totalBetThisHand": 1200,
@@ -400,6 +422,7 @@ class MockGameData {
         "id49": {
           "id": "id49",
           "name": "Alice",
+          "hand": ["Jh", "Jd"],
           "chips": 900,
           "currentBet": 100,
           "totalBetThisHand": 150,
@@ -410,6 +433,7 @@ class MockGameData {
         "id50": {
           "id": "id50",
           "name": "Bob",
+          "hand": ["7c", "6c"],
           "chips": 850,
           "currentBet": 0,
           "totalBetThisHand": 50,
@@ -420,6 +444,7 @@ class MockGameData {
         "id51": {
           "id": "id51",
           "name": "Charlie",
+          "hand": ["Kd", "Qd"],
           "chips": 1100,
           "currentBet": 100,
           "totalBetThisHand": 150,
@@ -430,6 +455,7 @@ class MockGameData {
         "id52": {
           "id": "id52",
           "name": "Diana",
+          "hand": ["Ac", "Tc"],
           "chips": 950,
           "currentBet": 100,
           "totalBetThisHand": 150,
@@ -440,6 +466,7 @@ class MockGameData {
         "id53": {
           "id": "id53",
           "name": "Eve",
+          "hand": ["8h", "7h"],
           "chips": 800,
           "currentBet": 0,
           "totalBetThisHand": 100,
@@ -450,6 +477,7 @@ class MockGameData {
         "id54": {
           "id": "id54",
           "name": "You",
+          "hand": ["As", "Ks"],
           "chips": 1000,
           "currentBet": 100,
           "totalBetThisHand": 150,
@@ -468,7 +496,7 @@ class MockGameData {
         },
       ],
       "currentBet": 100,
-      "currentStreet": "flop",
+      "currentStreet": "river",
       "smallBlindId": "id53",
       "bigBlindId": "id54",
       "dealerId": "id52",
@@ -483,6 +511,7 @@ class MockGameData {
         "id49": {
           "id": "id49",
           "name": "Alice",
+          "hand": ["Ts", "Td"],
           "chips": 950,
           "currentBet": 50,
           "totalBetThisHand": 50,
@@ -493,6 +522,7 @@ class MockGameData {
         "id50": {
           "id": "id50",
           "name": "Bob",
+          "hand": ["9c", "9h"],
           "chips": 900,
           "currentBet": 100,
           "totalBetThisHand": 100,
@@ -503,6 +533,7 @@ class MockGameData {
         "id51": {
           "id": "id51",
           "name": "Charlie",
+          "hand": ["Ac", "Kc"],
           "chips": 800,
           "currentBet": 200,
           "totalBetThisHand": 200,
@@ -513,6 +544,7 @@ class MockGameData {
         "id52": {
           "id": "id52",
           "name": "You",
+          "hand": ["Qh", "Qd"],
           "chips": 1000,
           "currentBet": 0,
           "totalBetThisHand": 0,
@@ -540,14 +572,13 @@ class MockGameData {
   }
 
   // Helper methods for test player IDs
-  static String getTestPlayerId() => "id52"; // For river scenario
-  static String getTestPlayerIdPreflop() => "id51"; // For preflop scenario
-  static String getTestPlayerIdFlop() => "id52"; // For flop scenario
-  static String getTestPlayerIdTurn() => "id50"; // For turn scenario
-  static String getTestPlayerIdAllIn() => "id51"; // For all-in scenario
-  static String getTestPlayerIdHeadsUp() => "id50"; // For heads-up scenario
-  static String getTestPlayerIdMultiPot() => "id52"; // For multi-pot scenario
-  static String getTestPlayerIdBigTable() => "id54"; // For big table scenario
-  static String getTestPlayerIdYourTurnPreflop() =>
-      "id52"; // For your turn preflop
+  static String getTestPlayerId() => "id52";
+  static String getTestPlayerIdPreflop() => "id51";
+  static String getTestPlayerIdFlop() => "id52";
+  static String getTestPlayerIdTurn() => "id50";
+  static String getTestPlayerIdAllIn() => "id51";
+  static String getTestPlayerIdHeadsUp() => "id50";
+  static String getTestPlayerIdMultiPot() => "id52";
+  static String getTestPlayerIdBigTable() => "id54";
+  static String getTestPlayerIdYourTurnPreflop() => "id52";
 }

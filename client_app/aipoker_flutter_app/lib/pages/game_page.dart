@@ -16,6 +16,7 @@ import '../widgets/game/player_widget.dart';
 import '../widgets/game/pots_widget.dart';
 import '../widgets/game/poker_action_buttons.dart';
 import '../widgets/game/user_chip_amount_widget.dart';
+import '../widgets/game/user_cards_widget.dart';
 
 class GamePage extends ConsumerStatefulWidget {
   const GamePage({super.key});
@@ -176,6 +177,7 @@ class _GamePageState extends ConsumerState<GamePage> {
 
                           // Total chips, cards, and current bet
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               // Total chips widget
                               UserChipAmountWidget(
@@ -185,6 +187,9 @@ class _GamePageState extends ConsumerState<GamePage> {
                               ),
 
                               // Cards widget
+                              UserCardsWidget(
+                                userCards: _viewModel.gameState?.thisPlayer.hand ?? [],
+                              ),
 
                               // Current bet widget
                               UserChipAmountWidget(
@@ -204,6 +209,11 @@ class _GamePageState extends ConsumerState<GamePage> {
                         onCheckCall: _onCheckCall,
                         onBetRaise: _onBetRaise,
                         onAllIn: _onAllIn,
+                        isTurn: _viewModel.gameState?.currentTurnPlayerId ==
+                            _viewModel.gameState?.thisPlayer.playerId,
+                        minBet: _viewModel.gameState?.minimumRaise ?? 0,
+                        maxBet: calculateMaxRaise(),
+                        currentChips: _viewModel.gameState?.thisPlayer.chips ?? 0,
                       ),
                     ],
                   ),
@@ -214,6 +224,17 @@ class _GamePageState extends ConsumerState<GamePage> {
         );
       },
     );
+  }
+
+  int calculateMaxRaise() {
+    final playerChips = _viewModel.gameState?.thisPlayer.chips ?? 0;
+    final currentBet = _viewModel.gameState?.currentBet ?? 0;
+    final playerCurrentBet = _viewModel.gameState?.thisPlayer.currentBet ?? 0;
+
+    // Max raise is all remaining chips after calling the current bet
+    final maxRaise = playerChips - (currentBet - playerCurrentBet);
+    debugPrint('[GamePage] Calculating max raise - playerChips: $playerChips, currentBet: $currentBet, playerCurrentBet: $playerCurrentBet, maxRaise: $maxRaise');
+    return maxRaise;
   }
 
   void _onFold() {

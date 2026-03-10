@@ -19,7 +19,11 @@ class UserChipAmountWidget extends StatelessWidget {
       height: 80,
       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: Color.fromRGBO(47, 129, 41, 1),
+        border: Border.all(
+          color: Color.fromRGBO(45, 100, 41, 1), // Highlight current turn
+          width: 2,
+        ),
         borderRadius: BorderRadius.circular(5),
       ),
       child: Column(

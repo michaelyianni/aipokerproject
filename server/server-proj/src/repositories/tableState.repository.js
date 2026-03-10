@@ -38,6 +38,8 @@ export default class TableStateRepository {
         this.smallBlindAmount = 5;
         this.bigBlindAmount = 10;
 
+        this.minimumRaiseAmount = this.bigBlindAmount; // Minimum raise is initially the size of the big blind
+
         this.dealerId = null;
         this.bigBlindId = null;
         this.smallBlindId = null;
@@ -153,10 +155,21 @@ export default class TableStateRepository {
             player.isAllIn = true;
         }
 
+        const previousBet = player.currentBet;
         player.placeBet(betAmount);
 
-        if (player.currentBet > this.currentBet) {
-            this.currentBet = player.currentBet;
+        const newTotalBet = player.currentBet;
+        const previousCurrentBet = this.currentBet;
+
+        if (newTotalBet > this.currentBet) {
+            // This is a raise (or initial bet)
+            const raiseSize = newTotalBet - previousCurrentBet;
+            
+            // Update minimum raise for future raises
+            this.minimumRaiseAmount = raiseSize;
+            
+            // Update current bet
+            this.currentBet = newTotalBet;
         }
 
     }
@@ -176,6 +189,23 @@ export default class TableStateRepository {
 
     resetCurrentBet() {
         this.currentBet = 0;
+    }
+
+    // Minimum Raise
+
+    getMinimumRaiseAmount() {
+        return this.minimumRaiseAmount;
+    }
+
+    setMinimumRaiseAmount(amount) {
+        if (amount < 0) {
+            throw new Error('Cannot set minimum raise to a negative amount');
+        }
+        this.minimumRaiseAmount = amount;
+    }
+
+    resetMinimumRaise() {
+        this.minimumRaiseAmount = this.bigBlindAmount;
     }
 
     // Chips
@@ -225,6 +255,9 @@ export default class TableStateRepository {
         this.resetCurrentBet();
 
         this.setLastRaiser(null);
+
+        // Reset minimum raise to big blind for new betting round
+        this.resetMinimumRaise();
 
     }
 
@@ -447,6 +480,7 @@ export default class TableStateRepository {
         this.pots = [];
         this.#resetStreet();
         this.resetCurrentBet();
+        this.resetMinimumRaise();
         this.#resetPlayers();
         this.#resetActivePlayers();
         this.lastHandResults = null;

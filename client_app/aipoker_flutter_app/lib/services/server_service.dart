@@ -245,9 +245,10 @@ class ServerService {
 
     // Use mock data for now
     // TODO: Remove this and use real data when server is implemented
-      Map<String, dynamic> mockGameState = MockGameData.getFlopScenario();
-      final updatedState = GameState.fromJson(mockGameState, MockGameData.getTestPlayerIdFlop());
-      // final updatedState = GameState.fromJson(data, _currentPlayerId!);
+      // Map<String, dynamic> mockGameState = MockGameData.getFlopScenario();
+      // final updatedState = GameState.fromJson(mockGameState, MockGameData.getTestPlayerIdFlop());
+
+      final updatedState = GameState.fromJson(data, _currentPlayerId!);
       _safeAddGameState(updatedState); 
     });
 
@@ -331,6 +332,67 @@ class ServerService {
       return null;
     }
   }
+
+  // Add this method to your ServerService class
+
+/// Send a game action to the server
+/// 
+/// Actions: 'fold', 'check', 'call', 'bet', 'raise', 'all-in'
+Future<bool> sendGameAction(String action, {Map<String, dynamic>? data}) async {
+  if (_socket == null || !_socket!.connected) {
+    debugPrint('[ServerService] Cannot send action - not connected');
+    return false;
+  }
+
+  try {
+    debugPrint('[ServerService] Sending action: $action with data: $data');
+    
+    final completer = Completer<bool>();
+
+    // Prepare the payload
+    final payload = {
+      'playerId': _currentPlayerId,
+      'action': action,
+      if (data != null) ...data,
+    };
+
+    _socket!.emitWithAck(
+      'game:action',
+      payload,
+      ack: (response) {
+        try {
+          debugPrint('[ServerService] Action response: $response');
+          
+          if (response['ok'] == true) {
+            debugPrint('[ServerService] Action "$action" acknowledged successfully');
+            completer.complete(true);
+          } else {
+            debugPrint('[ServerService] Action "$action" failed: ${response['error']}');
+            _safeAddError(response['error'] ?? 'Action failed');
+            completer.complete(false);
+          }
+        } catch (e) {
+          debugPrint('[ServerService] Error parsing action response: $e');
+          _safeAddError('Error processing action response');
+          completer.complete(false);
+        }
+      },
+    );
+
+    return await completer.future.timeout(
+      Duration(seconds: 5),
+      onTimeout: () {
+        debugPrint('[ServerService] Action "$action" timeout');
+        _safeAddError('Action timeout');
+        return false;
+      },
+    );
+  } catch (e) {
+    debugPrint('[ServerService] Error sending action: $e');
+    _safeAddError('Error sending action: $e');
+    return false;
+  }
+}
 
   void _cleanupSocket() {
     debugPrint('[ServerService] Cleaning up socket...');

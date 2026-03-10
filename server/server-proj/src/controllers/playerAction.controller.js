@@ -26,7 +26,7 @@ export default class PlayerActionController {
             throw new Error('Invalid amount for action ' + action + ': ' + amount);
         }
 
-        this.gameEngineService.playerAction(playerId, action, amount);
+        return this.gameEngineService.playerAction(playerId, action, amount);
 
     }
 

@@ -19,6 +19,8 @@ class GameState {
   final List<Pot> pots;
   // currentBet
   final int currentBet;
+  // minimumRaise
+  final int minimumRaise;
   // currentStreet
   final String currentStreet;
   // smallBlindId
@@ -36,6 +38,7 @@ class GameState {
     required this.currentTurnPlayerId,
     required this.pots,
     required this.currentBet,
+    required this.minimumRaise,
     required this.currentStreet,
     required this.smallBlindId,
     required this.bigBlindId,
@@ -120,6 +123,7 @@ class GameState {
           playerId: thisPlayerId,
           name: 'Unknown',
           chips: 0,
+          hand: [],
           currentBet: 0,
           totalBetThisHand: 0,
           hasFolded: false,
@@ -151,6 +155,7 @@ class GameState {
       currentTurnPlayerId: json['currentTurnPlayerId'] ?? '',
       pots: pots,
       currentBet: json['currentBet'] ?? 0,
+      minimumRaise: json['minimumRaise'] ?? 0,
       currentStreet: json['currentStreet'] ?? '',
       smallBlindId: json['smallBlindId'] ?? '',
       bigBlindId: json['bigBlindId'] ?? '',

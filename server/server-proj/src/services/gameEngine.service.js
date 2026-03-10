@@ -75,6 +75,14 @@ export default class GameEngineService {
                 this.tableStateRepository.playerBet(playerId, raiseAmount);
                 this.tableStateRepository.setLastRaiser(playerId);
                 break;
+            case GAME_ACTIONS.ALL_IN:
+                let allInAmount = player.chips;
+                this.tableStateRepository.playerBet(playerId, allInAmount);
+                player.isAllIn = true;
+                if (allInAmount > this.tableStateRepository.getCurrentBet()) {
+                    this.tableStateRepository.setLastRaiser(playerId);
+                }
+                break;
             case GAME_ACTIONS.CHECK:
                 // No chips are bet when checking
                 break;
@@ -314,8 +322,6 @@ export default class GameEngineService {
     }
 
     endHand() {
-
-
 
         this.tableStateRepository.setStreet(PokerStreets.HAND_COMPLETE); // move to hand complete street for game state clarity
 

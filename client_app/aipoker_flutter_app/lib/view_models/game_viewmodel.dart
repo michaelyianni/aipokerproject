@@ -63,27 +63,47 @@ class GameViewModel extends ChangeNotifier {
   }
 
   // Game actions
-  Future<void> performAction(String action, {dynamic data}) async {
-    debugPrint('[GameViewModel] Performing action: $action');
-    // await _serverService.sendGameAction(action, data: data);
-  }
+ Future<void> fold() async {
+  await _serverService.sendGameAction('FOLD');
+}
 
-  // Add other game-specific methods here
-  Future<void> fold() async {
-    await performAction('fold');
-  }
+Future<void> check() async {
+  await _serverService.sendGameAction('CHECK');
+}
 
-  Future<void> checkCall() async {
-    await performAction('check/call');
-  }
+Future<void> call() async {
+  await _serverService.sendGameAction('CALL');
+}
 
-  Future<void> betRaise(int amount) async {
-    await performAction('bet/raise', data: {'amount': amount});
-  }
+Future<void> bet(int amount) async {
+  await _serverService.sendGameAction('BET', data: {'amount': amount});
+}
 
-  Future<void> allIn() async {
-    await performAction('all-in');
+Future<void> raise(int amount) async {
+  await _serverService.sendGameAction('RAISE', data: {'amount': amount});
+}
+
+Future<void> allIn() async {
+  await _serverService.sendGameAction('ALL-IN');
+}
+
+// Helper to determine check vs call
+Future<void> checkCall() async {
+  if (gameState?.thisPlayer.currentBet == gameState?.currentBet) {
+    await check();
+  } else {
+    await call();
   }
+}
+
+// Helper to determine bet vs raise
+Future<void> betRaise(int amount) async {
+  if (gameState?.currentBet == 0) {
+    await bet(amount);
+  } else {
+    await raise(amount);
+  }
+}
 
 
   void onBackPressed(BuildContext context) {

@@ -4,5 +4,6 @@ export const GAME_ACTIONS = {
     CALL: 'CALL',
     BET: 'BET',
     RAISE: 'RAISE',
+    ALL_IN: 'ALL-IN',
 };
 
