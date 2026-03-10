@@ -13,7 +13,7 @@ class ServerService {
   StreamController<String>? _errorController;
   StreamController<void>? _gameStartedController;
   StreamController<GameState>? _gameStateController;
-  StreamController<void>? _handResultsController;
+  StreamController<GameState>? _handResultsController;
 
   bool _isDisposed = false; // ✅ Add this flag
 
@@ -22,7 +22,7 @@ class ServerService {
   Stream<String> get errorStream => _errorController!.stream;
   Stream<void> get gameStartedStream => _gameStartedController!.stream;
   Stream<GameState> get gameStateStream => _gameStateController!.stream;
-  Stream<void> get handResultsStream => _handResultsController!.stream;
+  Stream<GameState> get handResultsStream => _handResultsController!.stream;
 
   String? _currentPlayerId;
   String? get currentPlayerId => _currentPlayerId;
@@ -40,7 +40,7 @@ class ServerService {
     _errorController = StreamController<String>.broadcast();
     _gameStartedController = StreamController<void>.broadcast();
     _gameStateController = StreamController<GameState>.broadcast();
-    _handResultsController = StreamController<void>.broadcast();
+    _handResultsController = StreamController<GameState>.broadcast();
     _isDisposed = false; // ✅ Reset flag
   }
 
@@ -77,9 +77,9 @@ class ServerService {
     }
   }
 
-  void _safeAddHandResults() {
+  void _safeAddHandResults(GameState state) {
     if (!_isDisposed && _handResultsController != null && !_handResultsController!.isClosed) {
-      _handResultsController!.add(null);
+      _handResultsController!.add(state);
     } else {
       debugPrint('[ServerService] Skipped adding hand results (disposed)');
     }
@@ -254,7 +254,9 @@ class ServerService {
 
     _socket!.on('game:hand_results', (data) {
       debugPrint('[ServerService] Received hand results update');
-      _safeAddHandResults(); // ✅ Just notify listeners for now
+
+      final updatedState = GameState.fromJson(data, _currentPlayerId!);
+      _safeAddHandResults(updatedState); // ✅ Just notify listeners for now
     });
   }
 

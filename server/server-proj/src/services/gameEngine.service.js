@@ -525,7 +525,8 @@ export default class GameEngineService {
 
         // Store hand results for game state
         const winners = Object.entries(payouts).map(([playerId, amount]) => new Winner(playerId, amount, "best hand"));
-        this.tableStateRepository.setHandResults({ winners });
+        
+        this.tableStateRepository.setHandResults(winners);
 
         // Optional: log payouts for debugging
         console.log("Showdown payouts:", payouts);

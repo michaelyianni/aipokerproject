@@ -11,15 +11,17 @@ class GameViewModel extends ChangeNotifier {
   GameState? _gameState;
   String? _errorMessage;
   bool _isLoading = true;
+  bool _isDisplayingHandResults = false; // New state for hand results display
 
   StreamSubscription<GameState>? _gameStateSubscription;
-  StreamSubscription<void>? _handResultsSubscription; // TODO: Change to correct type when HandResults is defined
+  StreamSubscription<GameState>? _handResultsSubscription; 
   StreamSubscription<String>? _errorSubscription;
 
   // Getters
   GameState? get gameState => _gameState;
   String? get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
+  bool get isDisplayingHandResults => _isDisplayingHandResults;
 
   GameViewModel(this._serverService) {
     _listenToServiceStreams();
@@ -32,6 +34,7 @@ class GameViewModel extends ChangeNotifier {
         debugPrint('[GameViewModel] Received game state update');
         _gameState = state;
         _isLoading = false;
+        _isDisplayingHandResults = false;
         notifyListeners();
       },
       onError: (error) {
@@ -42,9 +45,11 @@ class GameViewModel extends ChangeNotifier {
     );
 
     _handResultsSubscription = _serverService.handResultsStream.listen(
-      (results) {
+      (state) {
         debugPrint('[GameViewModel] Received hand results update');
         // Handle hand results update
+        _gameState = state;
+        _isDisplayingHandResults = true;
         notifyListeners();
       },
       onError: (error) {

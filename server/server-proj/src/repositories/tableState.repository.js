@@ -67,7 +67,14 @@ export default class TableStateRepository {
     // Hand results
 
     setHandResults(winners) {
-        this.lastHandResults = winners;
+        // this.lastHandResults = winners;
+        
+        // Filter out winners
+        let otherActivePlayers = this.activePlayerIds.filter(id => !winners.some(w => w.playerId === id));
+
+        this.lastHandResults = {winners: winners,
+            otherActivePlayers: otherActivePlayers
+        };
     }
 
     getHandResults() {

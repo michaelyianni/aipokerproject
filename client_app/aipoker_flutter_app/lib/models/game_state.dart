@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'game_models/player_model.dart';
 import 'game_models/comm_cards_model.dart';
 import 'game_models/pot_model.dart';
+import 'game_models/hand_results_model.dart';
 
 class GameState {
   // Community cards
@@ -11,8 +12,7 @@ class GameState {
   // thisPlayer
   final Player thisPlayer; // The player object for the current user
   // seatAssignments
-  final Map<int, String>
-  seatAssignments; // Array of player IDs in seating order
+  final Map<int, String> seatAssignments; // Array of player IDs in seating order
   // currentTurnPlayerId
   final String currentTurnPlayerId;
   // pots
@@ -29,6 +29,8 @@ class GameState {
   final String bigBlindId;
   // dealerId
   final String dealerId;
+  // handResults (nullable)
+  final HandResults? handResults;
 
   const GameState({
     required this.players,
@@ -43,66 +45,33 @@ class GameState {
     required this.smallBlindId,
     required this.bigBlindId,
     required this.dealerId,
+    this.handResults,
   });
 
   // Convert to list for UI
   List<Player> get playerList => players.values.toList();
   int get playerCount => players.length;
 
-  factory GameState.fromJson(Map<String, dynamic> json, String thisPlayerId) {
-    /* Server format:  
-  {
-    "communityCards": [
-      "2d",
-      "6s",
-      "6c",
-      "2s",
-      "7c"
-    ],
-    "players": {
-      "id49": {
-        "id": "id49",
-        "name": "Alice",
-        "chips": 0,
-        "currentBet": 890,
-        "totalBetThisHand": 1000,
-        "hasFolded": false,
-        "isAllIn": true,
-        "hasLeft": false
-      },
-      ...
-    },
-    "playerOrder": [
-      "id49",
-      "id50",
-      "id51",
-      "id52"
-    ],
-    "currentTurnPlayerId": "id52",
-    "activePlayerIds": [
-      "id49",
-      "id52"
-    ],
-    "pots": [
-      {
-        "amount": 335,
-        "eligiblePlayerIds": [
-          "id49",
-          "id52"
-        ]
-      }
-    ],
-    "currentBet": 890,
-    "currentStreet": "river",
-    "smallBlindId": "id50",
-    "bigBlindId": "id51",
-    "dealerId": "id49",
-    "handResults": null
+  // Helper getters for hand results
+  bool get hasHandResults => handResults != null;
+  bool get isHandComplete => currentStreet == 'hand_complete';
+  List<Winner> get winners => handResults?.winners ?? [];
+  
+  // Check if this player won
+  bool isWinner(String playerId) {
+    return winners.any((winner) => winner.playerId == playerId);
   }
-  */
+  
+  // Get winnings for a specific player
+  int getWinnings(String playerId) {
+    final winner = winners.firstWhere(
+      (w) => w.playerId == playerId,
+      orElse: () => Winner(playerId: '', amount: 0, reason: ''),
+    );
+    return winner.amount;
+  }
 
-    // Hard-code json string for now, will replace with real server data later
-
+  factory GameState.fromJson(Map<String, dynamic> json, String thisPlayerId) {
     // Parse players
     final playersJson = json['players'] as Map<String, dynamic>? ?? {};
     final players = playersJson.map(
@@ -117,8 +86,7 @@ class GameState {
     );
 
     // Find thisPlayer (matches thisPlayerId)
-    final thisPlayer =
-        players[thisPlayerId] ??
+    final thisPlayer = players[thisPlayerId] ??
         Player(
           playerId: thisPlayerId,
           name: 'Unknown',
@@ -131,9 +99,8 @@ class GameState {
           hasLeft: false,
         );
 
-    // Parse seat assignments (Re-order playerOrder such that thisPlayerId is first, then the rest in order)
-    final playerOrder =
-        (json['playerOrder'] as List<dynamic>?)
+    // Parse seat assignments
+    final playerOrder = (json['playerOrder'] as List<dynamic>?)
             ?.map((e) => e.toString())
             .toList() ??
         [];
@@ -145,6 +112,12 @@ class GameState {
     final pots = potsJson
         .map((potJson) => Pot.fromJson(potJson as Map<String, dynamic>))
         .toList();
+
+    // Parse hand results (nullable)
+    final handResultsJson = json['handResults'];
+    final handResults = handResultsJson != null
+        ? HandResults.fromJson(handResultsJson as Map<String, dynamic>)
+        : null;
 
     // Parse the rest as normal
     return GameState(
@@ -160,6 +133,7 @@ class GameState {
       smallBlindId: json['smallBlindId'] ?? '',
       bigBlindId: json['bigBlindId'] ?? '',
       dealerId: json['dealerId'] ?? '',
+      handResults: handResults,
     );
   }
 
@@ -178,21 +152,18 @@ class GameState {
     final thisPlayerIndex = playerOrder.indexOf(thisPlayerId);
 
     // Rotate the list so thisPlayerId is first
-    // e.g., ["id49", "id50", "id51", "id52"] with thisPlayerId = "id51"
-    // becomes ["id51", "id52", "id49", "id50"]
     final reordered = [
       ...playerOrder.sublist(thisPlayerIndex),
       ...playerOrder.sublist(0, thisPlayerIndex),
     ];
 
     // Remove thisPlayerId from the list
-    final reorderedWithoutThisPlayer = reordered
-        .where((id) => id != thisPlayerId)
-        .toList();
+    final reorderedWithoutThisPlayer =
+        reordered.where((id) => id != thisPlayerId).toList();
 
-    final int maxSeats = 5; // Assuming max 5 players at the table (not including thisPlayer)
+    final int maxSeats = 5;
 
-    // Map players at end to end of seat assignments, players at start to start of seat assignments
+    // Map players at end to end of seat assignments, players at start to start
     final seatAssignments = <int, String>{};
     for (int i = 0; i < reorderedWithoutThisPlayer.length / 2; i++) {
       seatAssignments[i] = reorderedWithoutThisPlayer[i];
@@ -207,5 +178,37 @@ class GameState {
     debugPrint('Reordered seat assignments: $seatAssignments');
 
     return seatAssignments;
+  }
+
+  GameState copyWith({
+    Map<String, Player>? players,
+    CommunityCards? communityCards,
+    Player? thisPlayer,
+    Map<int, String>? seatAssignments,
+    String? currentTurnPlayerId,
+    List<Pot>? pots,
+    int? currentBet,
+    int? minimumRaise,
+    String? currentStreet,
+    String? smallBlindId,
+    String? bigBlindId,
+    String? dealerId,
+    HandResults? handResults,
+  }) {
+    return GameState(
+      players: players ?? this.players,
+      communityCards: communityCards ?? this.communityCards,
+      thisPlayer: thisPlayer ?? this.thisPlayer,
+      seatAssignments: seatAssignments ?? this.seatAssignments,
+      currentTurnPlayerId: currentTurnPlayerId ?? this.currentTurnPlayerId,
+      pots: pots ?? this.pots,
+      currentBet: currentBet ?? this.currentBet,
+      minimumRaise: minimumRaise ?? this.minimumRaise,
+      currentStreet: currentStreet ?? this.currentStreet,
+      smallBlindId: smallBlindId ?? this.smallBlindId,
+      bigBlindId: bigBlindId ?? this.bigBlindId,
+      dealerId: dealerId ?? this.dealerId,
+      handResults: handResults ?? this.handResults,
+    );
   }
 }

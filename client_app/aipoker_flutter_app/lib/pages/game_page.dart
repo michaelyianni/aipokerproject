@@ -17,6 +17,7 @@ import '../widgets/game/pots_widget.dart';
 import '../widgets/game/poker_action_buttons.dart';
 import '../widgets/game/user_chip_amount_widget.dart';
 import '../widgets/game/user_cards_widget.dart';
+import '../widgets/game/hand_results_dialog.dart';
 
 class GamePage extends ConsumerStatefulWidget {
   const GamePage({super.key});
@@ -47,6 +48,11 @@ class _GamePageState extends ConsumerState<GamePage> {
         debugPrint(
           '[GamePage] REBUILDING - Game state: ${_viewModel.gameState}, Community Cards: ${_viewModel.gameState?.communityCards.cards}, Players: ${_viewModel.gameState?.players.length}',
         );
+
+        // Check and show hand results dialog
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showHandResults();
+        });
 
         // Show loading indicator while connecting
         if (_viewModel.isLoading) {
@@ -182,22 +188,28 @@ class _GamePageState extends ConsumerState<GamePage> {
                               // Total chips widget
                               UserChipAmountWidget(
                                 text: "Total",
-                                amount: _viewModel.gameState?.thisPlayer.chips ?? 0,
+                                amount:
+                                    _viewModel.gameState?.thisPlayer.chips ?? 0,
                                 assetPath: "assets/icons/chip-128-blue.png",
                               ),
 
                               // Cards widget
                               UserCardsWidget(
-                                userCards: _viewModel.gameState?.thisPlayer.hand ?? [],
+                                userCards:
+                                    _viewModel.gameState?.thisPlayer.hand ?? [],
                               ),
 
                               // Current bet widget
                               UserChipAmountWidget(
                                 text: "Bet",
-                                amount: _viewModel.gameState?.thisPlayer.currentBet ?? 0,
+                                amount:
+                                    _viewModel
+                                        .gameState
+                                        ?.thisPlayer
+                                        .currentBet ??
+                                    0,
                                 assetPath: "assets/icons/chip-128-red.png",
                               ),
-
                             ],
                           ),
                         ],
@@ -209,11 +221,13 @@ class _GamePageState extends ConsumerState<GamePage> {
                         onCheckCall: _onCheckCall,
                         onBetRaise: _onBetRaise,
                         onAllIn: _onAllIn,
-                        isTurn: _viewModel.gameState?.currentTurnPlayerId ==
+                        isTurn:
+                            _viewModel.gameState?.currentTurnPlayerId ==
                             _viewModel.gameState?.thisPlayer.playerId,
                         minBet: _viewModel.gameState?.minimumRaise ?? 0,
                         maxBet: calculateMaxRaise(),
-                        currentChips: _viewModel.gameState?.thisPlayer.chips ?? 0,
+                        currentChips:
+                            _viewModel.gameState?.thisPlayer.chips ?? 0,
                       ),
                     ],
                   ),
@@ -226,6 +240,22 @@ class _GamePageState extends ConsumerState<GamePage> {
     );
   }
 
+  void _showHandResults() {
+    if (_viewModel.isDisplayingHandResults == true &&
+        _viewModel.gameState?.handResults != null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => HandResultsDialog(
+          players: _viewModel.gameState!.players,
+          thisPlayer: _viewModel.gameState!.thisPlayer,
+          handResults: _viewModel.gameState!.handResults!,
+          communityCards: _viewModel.gameState!.communityCards,
+        ),
+      );
+    }
+  }
+
   int calculateMaxRaise() {
     final playerChips = _viewModel.gameState?.thisPlayer.chips ?? 0;
     final currentBet = _viewModel.gameState?.currentBet ?? 0;
@@ -233,7 +263,9 @@ class _GamePageState extends ConsumerState<GamePage> {
 
     // Max raise is all remaining chips after calling the current bet
     final maxRaise = playerChips - (currentBet - playerCurrentBet);
-    debugPrint('[GamePage] Calculating max raise - playerChips: $playerChips, currentBet: $currentBet, playerCurrentBet: $playerCurrentBet, maxRaise: $maxRaise');
+    debugPrint(
+      '[GamePage] Calculating max raise - playerChips: $playerChips, currentBet: $currentBet, playerCurrentBet: $playerCurrentBet, maxRaise: $maxRaise',
+    );
     return maxRaise;
   }
 
