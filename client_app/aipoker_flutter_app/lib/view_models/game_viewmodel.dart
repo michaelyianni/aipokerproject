@@ -11,7 +11,7 @@ class GameViewModel extends ChangeNotifier {
   GameState? _gameState;
   String? _errorMessage;
   bool _isLoading = true;
-  bool _isDisplayingHandResults = false; // New state for hand results display
+  bool isDisplayingHandResults = false; // New state for hand results display
 
   StreamSubscription<GameState>? _gameStateSubscription;
   StreamSubscription<GameState>? _handResultsSubscription; 
@@ -21,7 +21,7 @@ class GameViewModel extends ChangeNotifier {
   GameState? get gameState => _gameState;
   String? get errorMessage => _errorMessage;
   bool get isLoading => _isLoading;
-  bool get isDisplayingHandResults => _isDisplayingHandResults;
+
 
   GameViewModel(this._serverService) {
     _listenToServiceStreams();
@@ -34,7 +34,7 @@ class GameViewModel extends ChangeNotifier {
         debugPrint('[GameViewModel] Received game state update');
         _gameState = state;
         _isLoading = false;
-        _isDisplayingHandResults = false;
+        isDisplayingHandResults = false;
         notifyListeners();
       },
       onError: (error) {
@@ -49,7 +49,7 @@ class GameViewModel extends ChangeNotifier {
         debugPrint('[GameViewModel] Received hand results update');
         // Handle hand results update
         _gameState = state;
-        _isDisplayingHandResults = true;
+        isDisplayingHandResults = true;
         notifyListeners();
       },
       onError: (error) {

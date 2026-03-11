@@ -222,8 +222,8 @@ class _GamePageState extends ConsumerState<GamePage> {
                         onBetRaise: _onBetRaise,
                         onAllIn: _onAllIn,
                         isTurn:
-                            _viewModel.gameState?.currentTurnPlayerId ==
-                            _viewModel.gameState?.thisPlayer.playerId,
+                            (_viewModel.gameState?.currentTurnPlayerId ==
+                            _viewModel.gameState?.thisPlayer.playerId) && _viewModel.isDisplayingHandResults == false,
                         minBet: _viewModel.gameState?.minimumRaise ?? 0,
                         maxBet: calculateMaxRaise(),
                         currentChips:
@@ -241,16 +241,23 @@ class _GamePageState extends ConsumerState<GamePage> {
   }
 
   void _showHandResults() {
-    if (_viewModel.isDisplayingHandResults == true &&
-        _viewModel.gameState?.handResults != null) {
+    final gameState = _viewModel.gameState;
+    final handResults = gameState?.handResults;
+    final isDisplaying = _viewModel.isDisplayingHandResults;
+
+    // ✅ Now check the captured values
+    if (isDisplaying == true && gameState != null && handResults != null) {
+
+      _viewModel.isDisplayingHandResults = false; // Set the flag to true to prevent multiple dialogs
+
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (context) => HandResultsDialog(
-          players: _viewModel.gameState!.players,
-          thisPlayer: _viewModel.gameState!.thisPlayer,
-          handResults: _viewModel.gameState!.handResults!,
-          communityCards: _viewModel.gameState!.communityCards,
+          players: gameState.players,
+          thisPlayer: gameState.thisPlayer,
+          handResults: handResults,
+          communityCards: gameState.communityCards,
         ),
       );
     }
