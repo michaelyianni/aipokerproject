@@ -43,9 +43,13 @@ export default class GameEngineService {
         // Post blinds
         this.tableStateRepository.postBlinds();
 
+        // Get small and big blind players
+        const smallBlindPlayer = this.tableStateRepository.getPlayer(this.tableStateRepository.getSmallBlind());
+        const bigBlindPlayer = this.tableStateRepository.getPlayer(this.tableStateRepository.getBigBlind());
+
         // Record posting of blinds as actions in round history
-        this.tableStateRepository.roundHistory.addPostBlindAction(this.tableStateRepository.getSmallBlind(), "small_blind", this.tableStateRepository.smallBlindAmount);
-        this.tableStateRepository.roundHistory.addPostBlindAction(this.tableStateRepository.getBigBlind(), "big_blind", this.tableStateRepository.bigBlindAmount);
+        this.tableStateRepository.roundHistory.addPostBlindAction(smallBlindPlayer.playerId, "POST_SB", smallBlindPlayer.getCurrentBet(), smallBlindPlayer.getCurrentBet(), smallBlindPlayer.isAllIn);
+        this.tableStateRepository.roundHistory.addPostBlindAction(bigBlindPlayer.playerId, "POST_BB", bigBlindPlayer.getCurrentBet(), bigBlindPlayer.getCurrentBet(), bigBlindPlayer.isAllIn);
 
         // Set turn to player left of big blind to start action
         this.setTurnToNextActivePlayer(this.tableStateRepository.getBigBlind());
@@ -446,7 +450,7 @@ export default class GameEngineService {
 
 
         // Store hand results
-        const winner = new Winner(winnerId, totalWinnings, null, "last player standing");
+        const winner = new Winner(winnerId, totalWinnings, "last player standing");
 
         this.tableStateRepository.setHandResults([winner]);
     }
@@ -543,6 +547,12 @@ export default class GameEngineService {
         const winners = Object.entries(payouts).map(([playerId, amount]) => new Winner(playerId, amount, "best hand"));
         
         this.tableStateRepository.setHandResults(winners);
+
+        // Store shown hole cards for round history
+        for (const playerId of activePlayerIds) {
+            const player = this.tableStateRepository.getPlayer(playerId);
+            this.tableStateRepository.roundHistory.setShownHoleCards(playerId, player.getHand().convertToStringArray());
+        }
 
         // Optional: log payouts for debugging
         console.log("Showdown payouts:", payouts);

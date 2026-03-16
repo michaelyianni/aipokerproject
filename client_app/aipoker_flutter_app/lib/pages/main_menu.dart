@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:aipoker_flutter_app/widgets/general/menu_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aipoker_flutter_app/models/user_model.dart';
+import 'package:aipoker_flutter_app/providers/user_model.dart';
 
 class MainMenu extends ConsumerStatefulWidget {  // Changed to ConsumerStatefulWidget
   const MainMenu({super.key});
@@ -13,11 +13,10 @@ class MainMenu extends ConsumerStatefulWidget {  // Changed to ConsumerStatefulW
 }
 
 class _MainMenuState extends ConsumerState<MainMenu> {  // Changed to ConsumerState
-  int count = 0;
 
   @override
   void initState() {
-    // TODO: implement initState
+
     super.initState();
   }
 
@@ -71,7 +70,6 @@ class _MainMenuState extends ConsumerState<MainMenu> {  // Changed to ConsumerSt
       debugPrint('AI Feedback Pressed');
     }
 
-    // TODO: Join the lobby before navigating to the AI Feedback page. Pass the lobby state and assigned player id to the AI Feedback page.
 
     GoRouter.of(context).go('/ai-feedback');
   }

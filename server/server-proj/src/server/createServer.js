@@ -97,7 +97,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
         try {
             const roundHistory = gameEngineService.tableStateRepository.roundHistory;
             console.log("[DEBUG] Round history retrieved:", roundHistory ? "✓" : "✗");
-            console.log("[DEBUG] Round history structure:", Object.keys(roundHistory || {}));
+            console.log("[DEBUG] Entire round history object:", JSON.stringify(roundHistory, null, 2));
 
             io.to(LOBBY_ROOM).emit("game:round_history", roundHistory);
             console.log("[DEBUG] game:round_history emitted to LOBBY_ROOM");

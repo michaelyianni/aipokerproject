@@ -24,7 +24,7 @@ assert.strictEqual(roundHistory.smallBlindAmount, 5, "Small blind amount should 
 assert.strictEqual(roundHistory.bigBlindAmount, 10, "Big blind amount should be 10");
 assert.strictEqual(Object.keys(roundHistory.playerInfo).length, 2, "Should have player info for both players");
 assert.strictEqual(roundHistory.playerInfo[player1.id].seatPosition, "BTN", "Player 1 should be in BTN position");
-assert.strictEqual(roundHistory.playerInfo[player2.id].seatPosition, "SB", "Player 2 should be in SB position");
+assert.strictEqual(roundHistory.playerInfo[player2.id].seatPosition, "BB", "Player 2 should be in BB position");
 
 // Test for 6 players
 player1 = new Player("Alice");

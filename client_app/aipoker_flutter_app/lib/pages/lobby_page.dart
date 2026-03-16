@@ -1,12 +1,10 @@
 import 'package:aipoker_flutter_app/widgets/general/back_button.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aipoker_flutter_app/models/user_model.dart';
+import 'package:aipoker_flutter_app/providers/user_model.dart';
 
 import '../view_models/lobby_viewmodel.dart';
-import '../services/server_service.dart';
 import '../providers/server_service_provider.dart';
 import '../models/lobby_state.dart';
 import 'dart:async';

@@ -8,20 +8,21 @@ export default class RoundHistory {
     this.bigBlindAmount = 0;
     this.playerInfo = {};
     this.streetRecords = []; 
-    this.potsAtEndOfHand = [];
+    this.potsBeforeAward = [];
     this.winners = [];  // playerIds, amountWon, reason 
+    this.shownHoleCards = {}; // playerId -> hole cards shown at showdown
   }
 
   addPlayerInfo(playerId, holeCards, seatPosition, blindPosition, stackSize) {
     this.playerInfo[playerId] = new PlayerInfo(holeCards, seatPosition, blindPosition, stackSize);
   }
 
-  addPostBlindAction(playerId, blindType, amount) {
+  addPostBlindAction(playerId, blindType, amountAddedToPot, betTo = 0, isAllIn = false) {
     if (this.streetRecords.length === 0) {
       throw new Error('No street record available to add player action.');
     }
     
-    this.streetRecords[this.streetRecords.length - 1].addPlayerAction(ActionRecordGenerator.createPostBlindAction(playerId, blindType, amount));
+    this.streetRecords[this.streetRecords.length - 1].addPlayerAction(ActionRecordGenerator.createPostBlindAction(playerId, blindType, amountAddedToPot, betTo, isAllIn));
   }
 
   addActionRecord(playerId, action, amountAddedToPot = 0, raiseTo = 0, isAllIn = false) {
@@ -40,10 +41,12 @@ export default class RoundHistory {
   }
 
   setPotsAtEndOfHand(pots) {
-    this.potsAtEndOfHand = pots; // Array of pot objects, each with amount and eligiblePlayerIds
+    this.potsBeforeAward = pots; // Array of pot objects, each with amount and eligiblePlayerIds
   }
 
-
+  setShownHoleCards(playerId, holeCards) {
+    this.shownHoleCards[playerId] = holeCards; // Array of card strings
+  }
 
 
 }

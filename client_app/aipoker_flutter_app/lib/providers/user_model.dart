@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:aipoker_flutter_app/models/round_history/round_history.dart'; // Import RoundHistory model
 
 class UserModel {
   final String? username;
   final String? playerId;
+  List<RoundHistory> roundHistories = []; // Add roundHistories to UserModel
 
   UserModel({this.username, String? playerId}) : playerId = playerId ?? 'unknown_player_id';
 
@@ -11,6 +13,10 @@ class UserModel {
       username: username ?? this.username,
       playerId: playerId ?? this.playerId,
     );
+  }
+
+  String getRoundHistories() {
+    return roundHistories.map((rh) => rh.toJsonString()).join('\n');
   }
 }
 
@@ -36,6 +42,18 @@ class UserNotifier extends Notifier<UserModel> {
   void clearPlayerId() {
     state = UserModel(username: state.username, playerId: null);
   }
+
+  void addRoundHistory(RoundHistory roundHistory) {
+    
+    if (state.roundHistories.length >= 20) {
+      state.roundHistories.removeAt(0);
+    }
+    
+    state.roundHistories.add(roundHistory);
+    // Notify listeners that the state has changed
+    state = UserModel(username: state.username, playerId: state.playerId)..roundHistories = state.roundHistories;
+  }
+
 }
 
 // Provider definition

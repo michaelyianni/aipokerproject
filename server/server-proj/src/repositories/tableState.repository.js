@@ -110,6 +110,12 @@ export default class TableStateRepository {
 
         const relativeIndex = (index - dealerIndex + numPlayers) % numPlayers;
 
+        // Special case for heads-up - BTN and SB are the same player, and BB is the other player
+        if (numPlayers === 2) {
+            if (relativeIndex === 0) return "BTN";
+            if (relativeIndex === 1) return "BB";
+        }
+
         if (relativeIndex === 0) return "BTN";
         if (relativeIndex === 1) return "SB";
         if (relativeIndex === 2) return "BB";
@@ -134,7 +140,6 @@ export default class TableStateRepository {
     // Hand results
 
     setHandResults(winners) {
-        // this.lastHandResults = winners;
 
         // Filter out winners
         let otherActivePlayers = this.activePlayerIds.filter(id => !winners.some(w => w.playerId === id));

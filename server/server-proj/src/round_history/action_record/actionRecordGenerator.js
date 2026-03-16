@@ -5,12 +5,12 @@ import StreetRecord from "./streetRecord.js";
 
 export default class ActionRecordGenerator {
 
-static createPostBlindAction(playerId, blindType, amount) {
-    if (!["small_blind", "big_blind"].includes(blindType)) {
+static createPostBlindAction(playerId, blindType, amountAddedToPot, betTo = 0, isAllIn = false) {
+    if (!["POST_SB", "POST_BB"].includes(blindType)) {
         throw new Error('Invalid blind type for post-blind action: ' + blindType);
     }
 
-    return new PlayerActionRecord(playerId, blindType, amount);
+    return new PlayerActionRecord(playerId, blindType, amountAddedToPot, betTo, isAllIn);
 }
 
     static createPlayerAction(playerId, action, amountAddedToPot = 0, betTo = 0, isAllIn = false) {
@@ -22,7 +22,6 @@ static createPostBlindAction(playerId, blindType, amount) {
     }
 
     static createStreetRecord(street, communityCardsStr, pots) {
-
 
         return new StreetRecord(street, communityCardsStr, pots);
     }

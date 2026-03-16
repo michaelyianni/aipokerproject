@@ -1,13 +1,19 @@
 import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aipoker_flutter_app/models/game_state.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:flutter/foundation.dart';
 import '../models/lobby_state.dart';
-import '../mocks/mock_game_data.dart'; // For testing without server
+// import '../mocks/mock_game_data.dart'; // For testing without server
+import '../models/round_history/round_history.dart'; // Import RoundHistory model
+import 'package:aipoker_flutter_app/providers/user_model.dart';
 
 String serverUrl = 'http://10.0.2.2:3000'; // Localhost for Android emulator
 
 class ServerService {
+
+  final Ref _ref; // Add Ref to access providers if needed
+
   IO.Socket? _socket;
   StreamController<LobbyState>? _lobbyStateController;
   StreamController<String>? _errorController;
@@ -30,7 +36,7 @@ class ServerService {
   bool _isHost = false;
   bool get isHost => _isHost;
 
-  ServerService() {
+  ServerService(this._ref) {
     _initializeControllers();
   }
 
@@ -244,7 +250,6 @@ class ServerService {
       debugPrint('[ServerService] Received game state update');
 
     // Use mock data for now
-    // TODO: Remove this and use real data when server is implemented
       // Map<String, dynamic> mockGameState = MockGameData.getFlopScenario();
       // final updatedState = GameState.fromJson(mockGameState, MockGameData.getTestPlayerIdFlop());
 
@@ -257,6 +262,20 @@ class ServerService {
 
       final updatedState = GameState.fromJson(data, _currentPlayerId!);
       _safeAddHandResults(updatedState); // ✅ Just notify listeners for now
+    });
+
+    _socket!.on('game:round_history', (data) {
+      debugPrint('[ServerService] Received round history update');
+      
+      final roundHistory = RoundHistory.fromJson(data, _currentPlayerId!);
+
+      roundHistory.obscureUnshownHoleCards(_currentPlayerId!); // Obscure hole cards for players who did not show at showdown
+
+      _ref.read(userProvider.notifier).addRoundHistory(roundHistory);
+          debugPrint('[ServerService] Round history added to user model');
+      
+      // For now, just print the round history to verify it's being received correctly
+      debugPrint('[ServerService] Round History: $data');
     });
   }
 
