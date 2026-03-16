@@ -37,6 +37,17 @@ export default class GameEngineService {
         // Deal hole cards to players
         this.tableStateRepository.dealCardsToPlayers();
 
+        // Store initial game state round history information
+        this.tableStateRepository.initialiseRoundHistory();
+
+        // Post blinds
+        this.tableStateRepository.postBlinds();
+
+        // Record posting of blinds as actions in round history
+        this.tableStateRepository.roundHistory.addPostBlindAction(this.tableStateRepository.getSmallBlind(), "small_blind", this.tableStateRepository.smallBlindAmount);
+        this.tableStateRepository.roundHistory.addPostBlindAction(this.tableStateRepository.getBigBlind(), "big_blind", this.tableStateRepository.bigBlindAmount);
+
+        // Set turn to player left of big blind to start action
         this.setTurnToNextActivePlayer(this.tableStateRepository.getBigBlind());
 
         // Awaiting player actions
@@ -60,31 +71,41 @@ export default class GameEngineService {
         switch (action) {
             case GAME_ACTIONS.FOLD:
                 player.fold();
+                this.tableStateRepository.roundHistory.addActionRecord(playerId, action);
                 this.tableStateRepository.removeActivePlayer(playerId);
                 break;
             case GAME_ACTIONS.CALL:
                 let callAmount = this.tableStateRepository.getCurrentBet() - player.currentBet;
                 this.tableStateRepository.playerBet(playerId, callAmount);
+                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, callAmount, this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 break;
             case GAME_ACTIONS.BET:
                 this.tableStateRepository.playerBet(playerId, amount);
+                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, amount, this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 this.tableStateRepository.setLastRaiser(playerId);
                 break;
             case GAME_ACTIONS.RAISE:
                 let raiseAmount = this.tableStateRepository.getCurrentBet() + amount - player.currentBet;
                 this.tableStateRepository.playerBet(playerId, raiseAmount);
+                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, raiseAmount, this.tableStateRepository.getCurrentBet(), player.isAllIn); // Record the "raise to" amount for clarity in action history
                 this.tableStateRepository.setLastRaiser(playerId);
                 break;
             case GAME_ACTIONS.ALL_IN:
                 let allInAmount = player.chips;
                 this.tableStateRepository.playerBet(playerId, allInAmount);
                 player.isAllIn = true;
+
                 if (allInAmount > this.tableStateRepository.getCurrentBet()) {
+                    this.tableStateRepository.roundHistory.addActionRecord(playerId, GAME_ACTIONS.RAISE, this.tableStateRepository.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn); // Record as raise if all-in amount exceeds current bet
                     this.tableStateRepository.setLastRaiser(playerId);
+                }
+                else {
+                    this.tableStateRepository.roundHistory.addActionRecord(playerId, GAME_ACTIONS.CALL, allInAmount, this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 }
                 break;
             case GAME_ACTIONS.CHECK:
                 // No chips are bet when checking
+                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, 0, this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 break;
             default:
                 throw new Error('Invalid action');
@@ -188,10 +209,6 @@ export default class GameEngineService {
         // 3) If betting round complete, advance street
         if (this.isBettingRoundComplete()) {
 
-            this.tableStateRepository.recalculatePots();
-
-            this.tableStateRepository.resetPlayerBetsAndFlags();
-
             this.advanceStreet();
 
             // If river completed, determine winners
@@ -258,6 +275,8 @@ export default class GameEngineService {
     }
 
     advanceStreet() {
+        this.tableStateRepository.recalculatePots();
+
         this.tableStateRepository.advanceStreet();
 
         // Deal community cards as per street
@@ -272,13 +291,8 @@ export default class GameEngineService {
             this.tableStateRepository.dealRiver();
         }
 
-
-
-        this.tableStateRepository.resetPlayerBetsAndFlags();
-
-        this.tableStateRepository.resetCurrentBet();
-
-        this.tableStateRepository.setLastRaiser(null);
+        // Round history street action record
+        this.tableStateRepository.roundHistory.addStreetRecord(currentStreet, this.tableStateRepository.getCommunityCards().convertToStringArray(), this.tableStateRepository.getPots());
     }
 
     findNextActivePlayer(playerId) {
@@ -322,6 +336,9 @@ export default class GameEngineService {
     }
 
     endHand() {
+
+        // Add pots to round history for record keeping
+        this.tableStateRepository.roundHistory.setPotsAtEndOfHand(this.tableStateRepository.getPots());
 
         this.tableStateRepository.setStreet(PokerStreets.HAND_COMPLETE); // move to hand complete street for game state clarity
 
@@ -402,8 +419,7 @@ export default class GameEngineService {
         this.tableStateRepository.setSmallBlind(smallBlindPlayerId);
         this.tableStateRepository.setBigBlind(bigBlindPlayerId);
 
-        this.tableStateRepository.playerBet(smallBlindPlayerId, this.tableStateRepository.smallBlindAmount);
-        this.tableStateRepository.playerBet(bigBlindPlayerId, this.tableStateRepository.bigBlindAmount);
+        
     }
 
     awardAllPotsToSingleWinner(winnerId) {

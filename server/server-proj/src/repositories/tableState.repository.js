@@ -2,6 +2,7 @@ import CommunityCards from "../models/CommunityCards.js";
 import Deck from "../models/Deck.js";
 import Player from "../models/Player.js";
 import Pot from "../models/Pot.js";
+import RoundHistory from "../round_history/roundHistory.js";
 import { PokerStreets } from "../constants/pokerStreets.js";
 
 const streetsInOrder = [
@@ -45,6 +46,8 @@ export default class TableStateRepository {
         this.smallBlindId = null;
 
         this.lastHandResults = null;
+
+        this.roundHistory = null;
     }
 
     initialiseTable(initialChips = 1000) {
@@ -64,17 +67,84 @@ export default class TableStateRepository {
 
     }
 
+    // Round History
+
+    initialiseRoundHistory() {
+        this.roundHistory = new RoundHistory();
+
+        this.roundHistory.smallBlindAmount = this.smallBlindAmount;
+        this.roundHistory.bigBlindAmount = this.bigBlindAmount;
+
+        for (let playerId in this.players) {
+            let player = this.getPlayer(playerId);
+
+            // Don't include inactive players in round history player info
+            if (!this.activePlayerIds.includes(playerId)) {
+                continue;
+            }
+
+            let holeCards = player.hand.convertToStringArray();
+            let stackSize = player.chips;
+            // Get seat position and blind position for player
+            let seatPosition = this.getSeatPosition(playerId);
+            let blindPosition = this.getBlindPosition(playerId);
+
+            this.roundHistory.addPlayerInfo(playerId,
+                holeCards,
+                seatPosition,
+                blindPosition,
+                stackSize
+            );
+        }
+
+        this.roundHistory.addStreetRecord(this.getCurrentStreet(), this.communityCards.convertToStringArray(), this.pots);
+    }
+
+    getSeatPosition(playerId) {
+        const index = this.playerOrder.indexOf(playerId);
+        if (index === -1) throw new Error("Player not found in seating order");
+
+        const numPlayers = this.playerOrder.length;
+        const dealerIndex = this.playerOrder.indexOf(this.dealerId);
+        if (dealerIndex === -1) throw new Error("Dealer not found in seating order");
+
+        const relativeIndex = (index - dealerIndex + numPlayers) % numPlayers;
+
+        if (relativeIndex === 0) return "BTN";
+        if (relativeIndex === 1) return "SB";
+        if (relativeIndex === 2) return "BB";
+
+        // Preflop early position (first to act) exists at 4+ players
+        if (relativeIndex === 3) return "UTG";
+
+        // Cutoff exists at 5+ players (seat immediately right of BTN)
+        if (relativeIndex === numPlayers - 1) return "CO";
+
+        // Everything between UTG and CO
+        // For 6-max, this will produce MP1 for relativeIndex=4
+        return "MP"; // + (relativeIndex - 3); // MP1, MP2, ...
+    }
+
+    getBlindPosition(playerId) {
+        if (playerId === this.smallBlindId) return "small_blind";
+        if (playerId === this.bigBlindId) return "big_blind";
+        return null;
+    }
+
     // Hand results
 
     setHandResults(winners) {
         // this.lastHandResults = winners;
-        
+
         // Filter out winners
         let otherActivePlayers = this.activePlayerIds.filter(id => !winners.some(w => w.playerId === id));
 
-        this.lastHandResults = {winners: winners,
+        this.lastHandResults = {
+            winners: winners,
             otherActivePlayers: otherActivePlayers
         };
+
+        this.roundHistory.setWinners(winners);
     }
 
     getHandResults() {
@@ -146,6 +216,16 @@ export default class TableStateRepository {
 
     // Betting
 
+    postBlinds() {
+        if (this.smallBlindId) {
+            this.playerBet(this.smallBlindId, this.smallBlindAmount);
+        }
+        if (this.bigBlindId) {
+            this.playerBet(this.bigBlindId, this.bigBlindAmount);
+        }
+
+    }
+
     playerBet(playerId, amount) {
         if (amount < 0) {
             throw new Error('Cannot apply a negative bet');
@@ -171,10 +251,10 @@ export default class TableStateRepository {
         if (newTotalBet > this.currentBet) {
             // This is a raise (or initial bet)
             const raiseSize = newTotalBet - previousCurrentBet;
-            
+
             // Update minimum raise for future raises
             this.minimumRaiseAmount = raiseSize;
-            
+
             // Update current bet
             this.currentBet = newTotalBet;
         }

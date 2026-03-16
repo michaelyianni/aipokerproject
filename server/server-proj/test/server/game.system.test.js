@@ -115,6 +115,14 @@ async function waitForGameStateOnAll(sockets, predicate, timeoutMs = 5000) {
     return Promise.all(promises);
 }
 
+// Wait for all sockets to receive game:round_history update matching a predicate
+async function waitForRoundHistoryOnAll(sockets, predicate, timeoutMs = 5000) {
+    const promises = sockets.map((socket) =>
+        waitForEventMatching(socket, "game:round_history", predicate, timeoutMs)
+    );
+    return Promise.all(promises);
+}
+
 describe("Game System Test (Full Socket Integration)", function () {
     this.timeout(30000);
 
@@ -671,6 +679,13 @@ describe("Game System Test (Full Socket Integration)", function () {
             10000
         );
 
+        // Wait for game:round_history broadcast
+        const roundHistoryPromises = waitForRoundHistoryOnAll(
+            [alice, bob, diana].filter((s) => !s.disconnected),
+            () => true,
+            10000
+        );
+
         // Execute action
         const dianaCallAck = await emitAck(playerSockets[dianaId], "game:action", {
             playerId: dianaId,
@@ -685,9 +700,15 @@ describe("Game System Test (Full Socket Integration)", function () {
         const dianaCallStates = await dianaCallPromises;
         currentState = dianaCallStates[0];
 
+        // Wait for round history broadcast
+        const roundHistory = await roundHistoryPromises;
+
         // Log current game state for manual inspection
         console.log("\n[RIVER GAME STATE AFTER DIANA CALL]");
         console.log(JSON.stringify(currentState, null, 2));
+
+        console.log("\n[ROUND HISTORY]");
+        console.log(JSON.stringify(roundHistory[0], null, 2));
 
         // ---------- FINAL VALIDATION ----------
         console.log("\n========== FINAL VALIDATION ==========\n");

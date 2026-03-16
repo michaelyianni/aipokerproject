@@ -90,6 +90,20 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
         } catch (err) {
             console.error("[ERROR] Failed to emit game state:", err);
         }
+
+
+        console.log("[DEBUG] Emitting round history...");
+
+        try {
+            const roundHistory = gameEngineService.tableStateRepository.roundHistory;
+            console.log("[DEBUG] Round history retrieved:", roundHistory ? "✓" : "✗");
+            console.log("[DEBUG] Round history structure:", Object.keys(roundHistory || {}));
+
+            io.to(LOBBY_ROOM).emit("game:round_history", roundHistory);
+            console.log("[DEBUG] game:round_history emitted to LOBBY_ROOM");
+        } catch (err) {
+            console.error("[ERROR] Failed to emit round history:", err);
+        }
     }
 
 
