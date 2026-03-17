@@ -1,22 +1,23 @@
 import 'package:aipoker_flutter_app/models/game_models/pot_model.dart';
 import 'package:aipoker_flutter_app/models/round_history/street_record.dart';
-import 'dart:convert'; // For JSON encoding
+import 'dart:convert';
+
+import 'package:flutter/cupertino.dart'; // For JSON encoding
 
 class RoundHistory {
   final int smallBlindAmount;
   final int bigBlindAmount;
-  final Map<String, PlayerInfo> players; // playerId to PlayerInfo
+  final Map<String, PlayerInfo> playerInfo; // playerId to PlayerInfo
   final List<StreetRecord>
   streetRecords; // Records for each street (pre-flop, flop, turn, river)
   final List<Pot> potsBeforeAward; // Final pots at the end of the hand
   final List<WinnerRecord> winners; // Final winners of the hand
-  final Map<String, List<String>>
-  shownHoleCards; // playerId to their hole cards if shown at showdown
+  final Map<String, List<String>> shownHoleCards; // playerId to their hole cards if shown at showdown
 
   RoundHistory({
     required this.smallBlindAmount,
     required this.bigBlindAmount,
-    required this.players,
+    required this.playerInfo,
     required this.streetRecords,
     required this.potsBeforeAward,
     required this.winners,
@@ -37,7 +38,7 @@ class RoundHistory {
     final smallBlindAmount = json['smallBlindAmount'] ?? 0;
     final bigBlindAmount = json['bigBlindAmount'] ?? 0;
 
-    final playersJson = json['players'] as Map<String, dynamic>? ?? {};
+    final playersJson = json['playerInfo'] as Map<String, dynamic>? ?? {};
     final players = <String, PlayerInfo>{};
     playersJson.forEach((playerId, playerData) {
       if (playerData is Map<String, dynamic>) {
@@ -76,7 +77,7 @@ class RoundHistory {
     return RoundHistory(
       smallBlindAmount: smallBlindAmount,
       bigBlindAmount: bigBlindAmount,
-      players: players,
+      playerInfo: players,
       streetRecords: streetRecords,
       potsBeforeAward: potsBeforeAward,
       winners: winners,
@@ -86,11 +87,73 @@ class RoundHistory {
 
   void obscureUnshownHoleCards(String thisPlayerId) {
     // For any player who did not show their hole cards at showdown (except the current player), replace with 'XX'
-    players.forEach((playerId, playerInfo) {
-      if (playerId != thisPlayerId && !shownHoleCards.containsKey(playerId)) {
-        shownHoleCards[playerId] = ['XX', 'XX']; // Obscure hole cards
+    playerInfo.forEach((playerId, playerInfo) {
+      if (playerId != thisPlayerId) {
+        playerInfo.holeCards = ['XX', 'XX']; // Obscure hole cards
+
       }
     });
+  }
+
+  void renameThisPlayerAsHero(String thisPlayerId) {
+    
+    // Player info
+    if (playerInfo.containsKey(thisPlayerId)) {
+      final info = playerInfo[thisPlayerId]!;
+      playerInfo['hero'] = PlayerInfo(
+        holeCards: info.holeCards,
+        seatPosition: info.seatPosition,
+        blindPosition: info.blindPosition,
+        startingStack: info.startingStack,
+      );
+      playerInfo.remove(thisPlayerId);
+    }
+
+    // Shown hole cards
+    if (shownHoleCards.containsKey(thisPlayerId)) {
+      shownHoleCards['hero'] = shownHoleCards[thisPlayerId]!;
+      shownHoleCards.remove(thisPlayerId);
+    }
+
+    // Pots before award
+    for (var pot in potsBeforeAward) {
+      if (pot.eligiblePlayerIds.contains(thisPlayerId)) {
+        pot.eligiblePlayerIds.remove(thisPlayerId);
+        pot.eligiblePlayerIds.add('hero');
+      }
+    }
+
+
+    // Street records
+    for (var street in streetRecords) {
+      // Player actions
+      for (var action in street.playerActions) {
+        if (action.playerId == thisPlayerId) {
+          action.playerId = 'hero';
+        }
+      }
+      
+      // Pots
+      for (var pot in street.potsAtStart) {
+        if (pot.eligiblePlayerIds.contains(thisPlayerId)) {
+          pot.eligiblePlayerIds.remove(thisPlayerId);
+          pot.eligiblePlayerIds.add('hero');
+        }
+      }
+    }
+
+    // Winners
+    for (var winner in winners) {
+      if (winner.playerId == thisPlayerId) {
+        winner.playerId = 'hero';
+      }
+    }
+  }
+
+  void postProcessAfterDataCollection(String thisPlayerId) {
+    // Call this after processing the showdown to obscure unshown hole cards for any players who did not show
+    obscureUnshownHoleCards(thisPlayerId);
+    renameThisPlayerAsHero(thisPlayerId);
   }
 
   String toJsonString() {
@@ -98,7 +161,7 @@ class RoundHistory {
     final Map<String, dynamic> jsonMap = {
       'smallBlindAmount': smallBlindAmount,
       'bigBlindAmount': bigBlindAmount,
-      'players': players.map(
+      'playerInfo': this.playerInfo.map(
         (playerId, playerInfo) => MapEntry(playerId, {
           'holeCards': playerInfo.holeCards,
           'seatPosition': playerInfo.seatPosition,
@@ -125,7 +188,9 @@ class RoundHistory {
                       'playerId': action.playerId,
                       'action': action.action,
                       'amountAddedToPot': action.amountAddedToPot,
-                      'betTo': action.betTo,
+                      'toCallBefore': action.toCallBefore,
+                      'streetContributionAfter': action.streetContributionAfter,
+                      'tableCurrentBetAfter': action.tableCurrentBetAfter,
                       'isAllIn': action.isAllIn,
                     },
                   )
@@ -150,6 +215,7 @@ class RoundHistory {
             },
           )
           .toList(),
+      'shownHoleCards': shownHoleCards,
     };
 
     // Pretty-printed for readability in prompts (still valid JSON)
@@ -158,7 +224,7 @@ class RoundHistory {
 }
 
 class PlayerInfo {
-  final List<String> holeCards; // The player's hole cards
+  List<String> holeCards; // The player's hole cards
   final String seatPosition; // e.g., 'SB', 'BB', 'UTG', etc.
   final String blindPosition; // 'small_blind', 'big_blind', or null
   final int startingStack; // The player's stack at the start of the hand
@@ -183,7 +249,7 @@ class PlayerInfo {
 }
 
 class WinnerRecord {
-  final String playerId;
+  String playerId;
   final int amount; // Amount won from the pot
   final String reason; // e.g., 'best hand' or 'last player standing'
 

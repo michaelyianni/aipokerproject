@@ -229,6 +229,8 @@ export default class TableStateRepository {
             this.playerBet(this.bigBlindId, this.bigBlindAmount);
         }
 
+        this.minimumRaiseAmount = this.bigBlindAmount; // Set minimum raise to big blind after blinds are posted
+
     }
 
     playerBet(playerId, amount) {
@@ -303,9 +305,14 @@ export default class TableStateRepository {
     // Chips
 
     initialiseChipsForPlayers(initialChips = 1000) {
+        
+        // Only initialise chips for players that don't already have chips (e.g. from previous hand)
+        
         for (let playerId in this.players) {
             let player = this.getPlayer(playerId);
-            player.addChips(initialChips);
+            if (player.chips === 0) {
+                player.addChips(initialChips);
+            }
         }
     }
 
@@ -576,6 +583,8 @@ export default class TableStateRepository {
         this.#resetPlayers();
         this.#resetActivePlayers();
         this.lastHandResults = null;
+        this.lastRaiserId = null;
+        this.minimumRaiseAmount = this.bigBlindAmount;
     }
 
 }

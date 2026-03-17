@@ -17,19 +17,19 @@ export default class RoundHistory {
     this.playerInfo[playerId] = new PlayerInfo(holeCards, seatPosition, blindPosition, stackSize);
   }
 
-  addPostBlindAction(playerId, blindType, amountAddedToPot, betTo = 0, isAllIn = false) {
+  addPostBlindAction(playerId, blindType, amountAddedToPot, toCallBefore = 0, streetContributionAfter = 0, tableCurrentBetAfter = 0, isAllIn = false) {
     if (this.streetRecords.length === 0) {
       throw new Error('No street record available to add player action.');
     }
     
-    this.streetRecords[this.streetRecords.length - 1].addPlayerAction(ActionRecordGenerator.createPostBlindAction(playerId, blindType, amountAddedToPot, betTo, isAllIn));
+    this.streetRecords[this.streetRecords.length - 1].addPlayerAction(ActionRecordGenerator.createPostBlindAction(playerId, blindType, amountAddedToPot, toCallBefore, streetContributionAfter, tableCurrentBetAfter, isAllIn));
   }
 
-  addActionRecord(playerId, action, amountAddedToPot = 0, raiseTo = 0, isAllIn = false) {
+  addActionRecord(playerId, action, amountAddedToPot = 0, toCallBefore = 0, streetContributionAfter = 0, tableCurrentBetAfter = 0, isAllIn = false) {
     if (this.streetRecords.length === 0) {
       throw new Error('No street record available to add player action.');
     }
-    this.streetRecords[this.streetRecords.length - 1].addPlayerAction(ActionRecordGenerator.createPlayerAction(playerId, action, amountAddedToPot, raiseTo, isAllIn));
+    this.streetRecords[this.streetRecords.length - 1].addPlayerAction(ActionRecordGenerator.createPlayerAction(playerId, action, amountAddedToPot, toCallBefore, streetContributionAfter, tableCurrentBetAfter, isAllIn));
   }
 
   addStreetRecord(street, communityCardsStr, pots) {

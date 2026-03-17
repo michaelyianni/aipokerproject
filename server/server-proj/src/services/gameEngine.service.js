@@ -48,8 +48,8 @@ export default class GameEngineService {
         const bigBlindPlayer = this.tableStateRepository.getPlayer(this.tableStateRepository.getBigBlind());
 
         // Record posting of blinds as actions in round history
-        this.tableStateRepository.roundHistory.addPostBlindAction(smallBlindPlayer.playerId, "POST_SB", smallBlindPlayer.getCurrentBet(), smallBlindPlayer.getCurrentBet(), smallBlindPlayer.isAllIn);
-        this.tableStateRepository.roundHistory.addPostBlindAction(bigBlindPlayer.playerId, "POST_BB", bigBlindPlayer.getCurrentBet(), bigBlindPlayer.getCurrentBet(), bigBlindPlayer.isAllIn);
+        this.tableStateRepository.roundHistory.addPostBlindAction(smallBlindPlayer.id, "POST_SB", smallBlindPlayer.getCurrentBet(), 0, smallBlindPlayer.getCurrentBet(), smallBlindPlayer.getCurrentBet(), smallBlindPlayer.isAllIn);
+        this.tableStateRepository.roundHistory.addPostBlindAction(bigBlindPlayer.id, "POST_BB", bigBlindPlayer.getCurrentBet(), 0, bigBlindPlayer.getCurrentBet(), bigBlindPlayer.getCurrentBet(), bigBlindPlayer.isAllIn);
 
         // Set turn to player left of big blind to start action
         this.setTurnToNextActivePlayer(this.tableStateRepository.getBigBlind());
@@ -72,44 +72,48 @@ export default class GameEngineService {
         // Handle player actions: fold, call, raise, check
         let player = this.tableStateRepository.getPlayer(playerId);
 
+        let toCallBefore = Math.max(0, this.tableStateRepository.getCurrentBet() - player.getCurrentBet());
+        let prevCurrentBet = player.getCurrentBet();
+
         switch (action) {
             case GAME_ACTIONS.FOLD:
                 player.fold();
-                this.tableStateRepository.roundHistory.addActionRecord(playerId, action);
+                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, 0, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 this.tableStateRepository.removeActivePlayer(playerId);
                 break;
             case GAME_ACTIONS.CALL:
-                let callAmount = this.tableStateRepository.getCurrentBet() - player.currentBet;
-                this.tableStateRepository.playerBet(playerId, callAmount);
-                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, callAmount, this.tableStateRepository.getCurrentBet(), player.isAllIn);
+                this.tableStateRepository.playerBet(playerId, toCallBefore);
+                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, player.getCurrentBet() - prevCurrentBet, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 break;
             case GAME_ACTIONS.BET:
                 this.tableStateRepository.playerBet(playerId, amount);
-                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, amount, this.tableStateRepository.getCurrentBet(), player.isAllIn);
+                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, amount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 this.tableStateRepository.setLastRaiser(playerId);
                 break;
             case GAME_ACTIONS.RAISE:
-                let raiseAmount = this.tableStateRepository.getCurrentBet() + amount - player.currentBet;
+                let raiseAmount = this.tableStateRepository.getCurrentBet() + amount - player.getCurrentBet();
                 this.tableStateRepository.playerBet(playerId, raiseAmount);
-                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, raiseAmount, this.tableStateRepository.getCurrentBet(), player.isAllIn); // Record the "raise to" amount for clarity in action history
+                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, raiseAmount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn); 
                 this.tableStateRepository.setLastRaiser(playerId);
                 break;
             case GAME_ACTIONS.ALL_IN:
                 let allInAmount = player.chips;
+                let tableBetBeforeAction = this.tableStateRepository.getCurrentBet();
+
                 this.tableStateRepository.playerBet(playerId, allInAmount);
                 player.isAllIn = true;
 
-                if (allInAmount > this.tableStateRepository.getCurrentBet()) {
-                    this.tableStateRepository.roundHistory.addActionRecord(playerId, GAME_ACTIONS.RAISE, this.tableStateRepository.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn); // Record as raise if all-in amount exceeds current bet
+                if (player.getCurrentBet() > tableBetBeforeAction) {
+                    this.tableStateRepository.roundHistory.addActionRecord(playerId, GAME_ACTIONS.RAISE, allInAmount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn); // Record as raise if all-in amount exceeds current bet
                     this.tableStateRepository.setLastRaiser(playerId);
                 }
                 else {
-                    this.tableStateRepository.roundHistory.addActionRecord(playerId, GAME_ACTIONS.CALL, allInAmount, this.tableStateRepository.getCurrentBet(), player.isAllIn);
+                    this.tableStateRepository.roundHistory.addActionRecord(playerId, GAME_ACTIONS.CALL, allInAmount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 }
                 break;
             case GAME_ACTIONS.CHECK:
                 // No chips are bet when checking
-                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, 0, this.tableStateRepository.getCurrentBet(), player.isAllIn);
+                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, 0, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 break;
             default:
                 throw new Error('Invalid action');

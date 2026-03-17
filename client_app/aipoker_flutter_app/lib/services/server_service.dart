@@ -7,10 +7,33 @@ import '../models/lobby_state.dart';
 // import '../mocks/mock_game_data.dart'; // For testing without server
 import '../models/round_history/round_history.dart'; // Import RoundHistory model
 import 'package:aipoker_flutter_app/providers/user_model.dart';
+import 'dart:io';
 
-String serverUrl = 'http://10.0.2.2:3000'; // Localhost for Android emulator
+class ServerConfig {
+  static String get serverUrl {
+    // Check for environment variable first (for custom configs)
+    const envUrl = String.fromEnvironment('SERVER_URL');
+    if (envUrl.isNotEmpty) {
+      return envUrl;
+    }
+    
+    // Auto-detect based on platform
+    if (kIsWeb) {
+      return 'http://localhost:3000';
+    } else if (Platform.isAndroid) {
+      // Check if running on physical device vs emulator
+      // For physical device, you'd use your computer's local IP
+      return 'http://10.0.2.2:3000'; // Emulator
+      // return 'http://192.168.1.100:3000'; // Physical device (use your IP)
+    } else {
+      return 'http://localhost:3000'; // Desktop
+    }
+  }
+}
 
 class ServerService {
+
+  final String serverUrl = ServerConfig.serverUrl;
 
   final Ref _ref; // Add Ref to access providers if needed
 
@@ -269,7 +292,7 @@ class ServerService {
       
       final roundHistory = RoundHistory.fromJson(data, _currentPlayerId!);
 
-      roundHistory.obscureUnshownHoleCards(_currentPlayerId!); // Obscure hole cards for players who did not show at showdown
+      roundHistory.postProcessAfterDataCollection(_currentPlayerId!);
 
       _ref.read(userProvider.notifier).addRoundHistory(roundHistory);
           debugPrint('[ServerService] Round history added to user model');

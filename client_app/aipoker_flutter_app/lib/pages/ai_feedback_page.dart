@@ -32,7 +32,7 @@ class _AIFeedbackPageState extends ConsumerState<AIFeedbackPage> {
 
     try {
       // ✅ Write to project root (works on desktop during development)
-      final file = File('round_histories.txt'); // Writes to project root
+      final file = File('debug/round_histories.txt'); // Writes to project root
 
       // Get round histories
       final roundHistories = ref.read(userProvider).getRoundHistories();
