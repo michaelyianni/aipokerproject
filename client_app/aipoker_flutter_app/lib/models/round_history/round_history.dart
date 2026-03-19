@@ -156,12 +156,12 @@ class RoundHistory {
     renameThisPlayerAsHero(thisPlayerId);
   }
 
-  String toJsonString() {
+  Map<String, dynamic> toJson() {
     // Used for LLM API calls
     final Map<String, dynamic> jsonMap = {
       'smallBlindAmount': smallBlindAmount,
       'bigBlindAmount': bigBlindAmount,
-      'playerInfo': this.playerInfo.map(
+      'playerInfo': playerInfo.map(
         (playerId, playerInfo) => MapEntry(playerId, {
           'holeCards': playerInfo.holeCards,
           'seatPosition': playerInfo.seatPosition,
@@ -219,7 +219,7 @@ class RoundHistory {
     };
 
     // Pretty-printed for readability in prompts (still valid JSON)
-    return JsonEncoder.withIndent('  ').convert(jsonMap);
+    return jsonMap;
   }
 }
 

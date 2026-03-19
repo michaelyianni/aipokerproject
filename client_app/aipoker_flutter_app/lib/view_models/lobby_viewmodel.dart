@@ -66,12 +66,6 @@ class LobbyViewModel extends ChangeNotifier {
       notifyListeners();
     });
 
-    // Listen for game started event
-    // _lobbyService.gameStartedStream.listen((_) {
-    //   debugPrint('[ViewModel] Game started, triggering navigation');
-    //   _shouldNavigateToGame = true;
-    //   notifyListeners();
-    // });
   }
 
   // Connect to lobby

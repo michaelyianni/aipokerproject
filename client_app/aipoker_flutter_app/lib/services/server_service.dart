@@ -8,6 +8,8 @@ import '../models/lobby_state.dart';
 import '../models/round_history/round_history.dart'; // Import RoundHistory model
 import 'package:aipoker_flutter_app/providers/user_model.dart';
 import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ServerConfig {
   static String get serverUrl {
@@ -300,6 +302,7 @@ class ServerService {
       // For now, just print the round history to verify it's being received correctly
       debugPrint('[ServerService] Round History: $data');
     });
+
   }
 
   // Send start game command (host only)
@@ -438,10 +441,60 @@ Future<bool> sendGameAction(String action, {Map<String, dynamic>? data}) async {
   }
 }
 
-  void _cleanupSocket() {
-    debugPrint('[ServerService] Cleaning up socket...');
-    _socket?.clearListeners();
-    _socket?.disconnect();
+ /// Send round history to server and get AI feedback via HTTP
+  /// Returns the AI feedback string or null if failed
+  Future<String?> getAIFeedback(String roundHistoryJson) async {
+    try {
+      
+      final url = Uri.parse('$serverUrl/api/ai-feedback');
+
+      debugPrint('[ServerService] Requesting AI feedback via HTTP... URL: $url');
+
+      final roundHistoryData = jsonDecode(roundHistoryJson);
+    
+    // ✅ Wrap it as the server expects
+    final payload = {
+      'roundHistory': roundHistoryData,
+    };
+      
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode(payload), // Send as JSON object
+      ).timeout(
+        Duration(seconds: 30), // LLM responses can take time
+        onTimeout: () {
+          throw TimeoutException('AI feedback request timeout');
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        
+        if (data['ok'] == true) {
+          debugPrint('[ServerService] AI feedback received successfully');
+          return data['feedback'] as String?;
+        } else {
+          debugPrint('[ServerService] AI feedback failed: ${data['error']}');
+          return null;
+        }
+      } else {
+        debugPrint('[ServerService] AI feedback HTTP error: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      debugPrint('[ServerService] Error requesting AI feedback: $e');
+      return null;
+    }
+  }
+
+
+void _cleanupSocket() {
+  debugPrint('[ServerService] Cleaning up socket...');
+  _socket?.clearListeners();
+  _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
     _currentPlayerId = null;

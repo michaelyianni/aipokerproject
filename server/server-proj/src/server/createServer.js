@@ -7,6 +7,7 @@ import LobbyRepository from "../repositories/lobby.repository.js";
 import LobbyController from "../controllers/lobby.controller.js";
 import PlayerActionController from "../controllers/playerAction.controller.js";
 import GameEngineService from "../services/gameEngine.service.js";
+import AIFeedbackService from "../services/aiFeedback.service.js"; 
 
 export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
     const app = express();
@@ -16,17 +17,65 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
         cors: { origin: corsOrigin },
     });
 
+    // ✅ Middleware for parsing JSON
+    app.use(express.json({ limit: '10mb' })); // Increase limit for large hand histories
+
     // Dependencies
     const lobbyRepository = new LobbyRepository();
     const lobbyController = new LobbyController(lobbyRepository);
+    const aiFeedbackService = new AIFeedbackService(); 
 
     let playerActionController;
     let gameEngineService;
 
     const LOBBY_ROOM = "lobby";
 
-    // Optional HTTP health route
+    // ============================================
+    // HTTP Routes
+    // ============================================
+
+    // Health check
     app.get("/health", (req, res) => res.json({ ok: true }));
+
+    // ✅ AI Feedback endpoint
+    app.post("/api/ai-feedback", async (req, res) => {
+        try {
+            const { roundHistory } = req.body;
+
+            if (!roundHistory) {
+
+                console.log(`[AI Feedback] Missing roundHistory in request body`);
+
+                return res.status(400).json({
+                    ok: false,
+                    error: "Missing roundHistory"
+                });
+            }
+
+            console.log(`[AI Feedback] Round history hands count: ${roundHistory.hands?.length || 0}`);
+
+            // Call AI service to get feedback
+            const feedback = await aiFeedbackService.getFeedback(roundHistory);
+
+            res.json({
+                ok: true,
+                feedback: feedback,
+            });
+
+            console.log(`[AI Feedback] Response sent successfully`);
+
+        } catch (error) {
+            console.error('[AI Feedback] Error:', error);
+            res.status(500).json({
+                ok: false,
+                error: error.message || "Failed to generate AI feedback"
+            });
+        }
+    });
+
+    // ============================================
+    // WebSocket Helper Functions
+    // ============================================
 
     function emitLobbyState() {
         io.to(LOBBY_ROOM).emit("lobby:update", {

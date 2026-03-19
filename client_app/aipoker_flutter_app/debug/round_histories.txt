@@ -1,360 +1,602 @@
 {
-  "smallBlindAmount": 5,
-  "bigBlindAmount": 10,
-  "playerInfo": {
-    "id2": {
-      "holeCards": [
-        "XX",
-        "XX"
-      ],
-      "seatPosition": "BB",
-      "blindPosition": "big_blind",
-      "startingStack": 1000
-    },
-    "hero": {
-      "holeCards": [
-        "Ah",
-        "5s"
-      ],
-      "seatPosition": "BTN",
-      "blindPosition": "small_blind",
-      "startingStack": 1000
-    }
-  },
-  "streetRecords": [
+  "hands": [
     {
-      "streetName": "pre-flop",
-      "communityCards": [],
-      "potsAtStart": [],
-      "playerActions": [
-        {
-          "playerId": "hero",
-          "action": "POST_SB",
-          "amountAddedToPot": 5,
-          "toCallBefore": 0,
-          "streetContributionAfter": 5,
-          "tableCurrentBetAfter": 5,
-          "isAllIn": false
+      "smallBlindAmount": 5,
+      "bigBlindAmount": 10,
+      "playerInfo": {
+        "id4": {
+          "holeCards": [
+            "XX",
+            "XX"
+          ],
+          "seatPosition": "BB",
+          "blindPosition": "big_blind",
+          "startingStack": 1000
         },
-        {
-          "playerId": "id2",
-          "action": "POST_BB",
-          "amountAddedToPot": 10,
-          "toCallBefore": 0,
-          "streetContributionAfter": 10,
-          "tableCurrentBetAfter": 10,
-          "isAllIn": false
-        },
-        {
-          "playerId": "hero",
-          "action": "CALL",
-          "amountAddedToPot": 5,
-          "toCallBefore": 5,
-          "streetContributionAfter": 10,
-          "tableCurrentBetAfter": 10,
-          "isAllIn": false
-        },
-        {
-          "playerId": "id2",
-          "action": "RAISE",
-          "amountAddedToPot": 10,
-          "toCallBefore": 0,
-          "streetContributionAfter": 20,
-          "tableCurrentBetAfter": 20,
-          "isAllIn": false
-        },
-        {
-          "playerId": "hero",
-          "action": "CALL",
-          "amountAddedToPot": 10,
-          "toCallBefore": 10,
-          "streetContributionAfter": 20,
-          "tableCurrentBetAfter": 20,
-          "isAllIn": false
+        "hero": {
+          "holeCards": [
+            "Qs",
+            "6s"
+          ],
+          "seatPosition": "BTN",
+          "blindPosition": "small_blind",
+          "startingStack": 1000
         }
-      ]
-    },
-    {
-      "streetName": "flop",
-      "communityCards": [
-        "7h",
-        "4h",
-        "Th"
+      },
+      "streetRecords": [
+        {
+          "streetName": "pre-flop",
+          "communityCards": [],
+          "potsAtStart": [],
+          "playerActions": [
+            {
+              "playerId": "hero",
+              "action": "POST_SB",
+              "amountAddedToPot": 5,
+              "toCallBefore": 0,
+              "streetContributionAfter": 5,
+              "tableCurrentBetAfter": 5,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "POST_BB",
+              "amountAddedToPot": 10,
+              "toCallBefore": 0,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            },
+            {
+              "playerId": "hero",
+              "action": "CALL",
+              "amountAddedToPot": 5,
+              "toCallBefore": 5,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            }
+          ]
+        },
+        {
+          "streetName": "flop",
+          "communityCards": [
+            "8c",
+            "5s",
+            "4d"
+          ],
+          "potsAtStart": [
+            {
+              "amount": 20,
+              "eligiblePlayerIds": [
+                "id4",
+                "hero"
+              ]
+            }
+          ],
+          "playerActions": [
+            {
+              "playerId": "hero",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 0,
+              "tableCurrentBetAfter": 0,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 0,
+              "tableCurrentBetAfter": 0,
+              "isAllIn": false
+            }
+          ]
+        },
+        {
+          "streetName": "turn",
+          "communityCards": [
+            "8c",
+            "5s",
+            "4d",
+            "7c"
+          ],
+          "potsAtStart": [
+            {
+              "amount": 20,
+              "eligiblePlayerIds": [
+                "id4",
+                "hero"
+              ]
+            }
+          ],
+          "playerActions": [
+            {
+              "playerId": "hero",
+              "action": "BET",
+              "amountAddedToPot": 10,
+              "toCallBefore": 0,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "CALL",
+              "amountAddedToPot": 10,
+              "toCallBefore": 10,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            }
+          ]
+        },
+        {
+          "streetName": "river",
+          "communityCards": [
+            "8c",
+            "5s",
+            "4d",
+            "7c",
+            "6d"
+          ],
+          "potsAtStart": [
+            {
+              "amount": 40,
+              "eligiblePlayerIds": [
+                "id4",
+                "hero"
+              ]
+            }
+          ],
+          "playerActions": [
+            {
+              "playerId": "hero",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 0,
+              "tableCurrentBetAfter": 0,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 0,
+              "tableCurrentBetAfter": 0,
+              "isAllIn": false
+            }
+          ]
+        },
+        {
+          "streetName": "showdown",
+          "communityCards": [
+            "8c",
+            "5s",
+            "4d",
+            "7c",
+            "6d"
+          ],
+          "potsAtStart": [
+            {
+              "amount": 40,
+              "eligiblePlayerIds": [
+                "id4",
+                "hero"
+              ]
+            }
+          ],
+          "playerActions": []
+        }
       ],
-      "potsAtStart": [
+      "potsBeforeAward": [
         {
           "amount": 40,
           "eligiblePlayerIds": [
-            "id2",
+            "id4",
             "hero"
           ]
         }
       ],
-      "playerActions": [
+      "winners": [
         {
-          "playerId": "hero",
-          "action": "BET",
-          "amountAddedToPot": 10,
-          "toCallBefore": 0,
-          "streetContributionAfter": 10,
-          "tableCurrentBetAfter": 10,
-          "isAllIn": false
-        },
-        {
-          "playerId": "id2",
-          "action": "FOLD",
-          "amountAddedToPot": 0,
-          "toCallBefore": 10,
-          "streetContributionAfter": 0,
-          "tableCurrentBetAfter": 10,
-          "isAllIn": false
-        }
-      ]
-    }
-  ],
-  "potsBeforeAward": [
-    {
-      "amount": 50,
-      "eligiblePlayerIds": [
-        "hero"
-      ]
-    }
-  ],
-  "winners": [
-    {
-      "playerId": "hero",
-      "amount": 50,
-      "reason": "last player standing"
-    }
-  ],
-  "shownHoleCards": {}
-}
-{
-  "smallBlindAmount": 5,
-  "bigBlindAmount": 10,
-  "playerInfo": {
-    "id2": {
-      "holeCards": [
-        "XX",
-        "XX"
-      ],
-      "seatPosition": "BTN",
-      "blindPosition": "small_blind",
-      "startingStack": 980
-    },
-    "hero": {
-      "holeCards": [
-        "Ad",
-        "3h"
-      ],
-      "seatPosition": "BB",
-      "blindPosition": "big_blind",
-      "startingStack": 1020
-    }
-  },
-  "streetRecords": [
-    {
-      "streetName": "pre-flop",
-      "communityCards": [],
-      "potsAtStart": [],
-      "playerActions": [
-        {
-          "playerId": "id2",
-          "action": "POST_SB",
-          "amountAddedToPot": 5,
-          "toCallBefore": 0,
-          "streetContributionAfter": 5,
-          "tableCurrentBetAfter": 5,
-          "isAllIn": false
-        },
-        {
-          "playerId": "hero",
-          "action": "POST_BB",
-          "amountAddedToPot": 10,
-          "toCallBefore": 0,
-          "streetContributionAfter": 10,
-          "tableCurrentBetAfter": 10,
-          "isAllIn": false
-        },
-        {
-          "playerId": "id2",
-          "action": "CALL",
-          "amountAddedToPot": 5,
-          "toCallBefore": 5,
-          "streetContributionAfter": 10,
-          "tableCurrentBetAfter": 10,
-          "isAllIn": false
-        },
-        {
-          "playerId": "hero",
-          "action": "CHECK",
-          "amountAddedToPot": 0,
-          "toCallBefore": 0,
-          "streetContributionAfter": 10,
-          "tableCurrentBetAfter": 10,
-          "isAllIn": false
-        }
-      ]
-    },
-    {
-      "streetName": "flop",
-      "communityCards": [
-        "7h",
-        "4c",
-        "4h"
-      ],
-      "potsAtStart": [
-        {
-          "amount": 20,
-          "eligiblePlayerIds": [
-            "id2",
-            "hero"
-          ]
-        }
-      ],
-      "playerActions": [
-        {
-          "playerId": "id2",
-          "action": "CHECK",
-          "amountAddedToPot": 0,
-          "toCallBefore": 0,
-          "streetContributionAfter": 0,
-          "tableCurrentBetAfter": 0,
-          "isAllIn": false
-        },
-        {
-          "playerId": "hero",
-          "action": "CHECK",
-          "amountAddedToPot": 0,
-          "toCallBefore": 0,
-          "streetContributionAfter": 0,
-          "tableCurrentBetAfter": 0,
-          "isAllIn": false
-        }
-      ]
-    },
-    {
-      "streetName": "turn",
-      "communityCards": [
-        "7h",
-        "4c",
-        "4h",
-        "Th"
-      ],
-      "potsAtStart": [
-        {
-          "amount": 20,
-          "eligiblePlayerIds": [
-            "id2",
-            "hero"
-          ]
-        }
-      ],
-      "playerActions": [
-        {
-          "playerId": "id2",
-          "action": "CHECK",
-          "amountAddedToPot": 0,
-          "toCallBefore": 0,
-          "streetContributionAfter": 0,
-          "tableCurrentBetAfter": 0,
-          "isAllIn": false
-        },
-        {
-          "playerId": "hero",
-          "action": "CHECK",
-          "amountAddedToPot": 0,
-          "toCallBefore": 0,
-          "streetContributionAfter": 0,
-          "tableCurrentBetAfter": 0,
-          "isAllIn": false
-        }
-      ]
-    },
-    {
-      "streetName": "river",
-      "communityCards": [
-        "7h",
-        "4c",
-        "4h",
-        "Th",
-        "8s"
-      ],
-      "potsAtStart": [
-        {
-          "amount": 20,
-          "eligiblePlayerIds": [
-            "id2",
-            "hero"
-          ]
-        }
-      ],
-      "playerActions": [
-        {
-          "playerId": "id2",
-          "action": "BET",
-          "amountAddedToPot": 10,
-          "toCallBefore": 0,
-          "streetContributionAfter": 10,
-          "tableCurrentBetAfter": 10,
-          "isAllIn": false
-        },
-        {
-          "playerId": "hero",
-          "action": "CALL",
-          "amountAddedToPot": 10,
-          "toCallBefore": 10,
-          "streetContributionAfter": 10,
-          "tableCurrentBetAfter": 10,
-          "isAllIn": false
-        }
-      ]
-    },
-    {
-      "streetName": "showdown",
-      "communityCards": [
-        "7h",
-        "4c",
-        "4h",
-        "Th",
-        "8s"
-      ],
-      "potsAtStart": [
-        {
+          "playerId": "id4",
           "amount": 40,
+          "reason": "best hand"
+        }
+      ],
+      "shownHoleCards": {
+        "id4": [
+          "6c",
+          "9c"
+        ],
+        "hero": [
+          "Qs",
+          "6s"
+        ]
+      }
+    },
+    {
+      "smallBlindAmount": 5,
+      "bigBlindAmount": 10,
+      "playerInfo": {
+        "id4": {
+          "holeCards": [
+            "XX",
+            "XX"
+          ],
+          "seatPosition": "BTN",
+          "blindPosition": "small_blind",
+          "startingStack": 1020
+        },
+        "hero": {
+          "holeCards": [
+            "4d",
+            "Qh"
+          ],
+          "seatPosition": "BB",
+          "blindPosition": "big_blind",
+          "startingStack": 980
+        }
+      },
+      "streetRecords": [
+        {
+          "streetName": "pre-flop",
+          "communityCards": [],
+          "potsAtStart": [],
+          "playerActions": [
+            {
+              "playerId": "id4",
+              "action": "POST_SB",
+              "amountAddedToPot": 5,
+              "toCallBefore": 0,
+              "streetContributionAfter": 5,
+              "tableCurrentBetAfter": 5,
+              "isAllIn": false
+            },
+            {
+              "playerId": "hero",
+              "action": "POST_BB",
+              "amountAddedToPot": 10,
+              "toCallBefore": 0,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "RAISE",
+              "amountAddedToPot": 15,
+              "toCallBefore": 5,
+              "streetContributionAfter": 20,
+              "tableCurrentBetAfter": 20,
+              "isAllIn": false
+            },
+            {
+              "playerId": "hero",
+              "action": "CALL",
+              "amountAddedToPot": 10,
+              "toCallBefore": 10,
+              "streetContributionAfter": 20,
+              "tableCurrentBetAfter": 20,
+              "isAllIn": false
+            }
+          ]
+        },
+        {
+          "streetName": "flop",
+          "communityCards": [
+            "5d",
+            "4s",
+            "3h"
+          ],
+          "potsAtStart": [
+            {
+              "amount": 40,
+              "eligiblePlayerIds": [
+                "id4",
+                "hero"
+              ]
+            }
+          ],
+          "playerActions": [
+            {
+              "playerId": "id4",
+              "action": "BET",
+              "amountAddedToPot": 10,
+              "toCallBefore": 0,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            },
+            {
+              "playerId": "hero",
+              "action": "FOLD",
+              "amountAddedToPot": 0,
+              "toCallBefore": 10,
+              "streetContributionAfter": 0,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            }
+          ]
+        }
+      ],
+      "potsBeforeAward": [
+        {
+          "amount": 50,
           "eligiblePlayerIds": [
-            "id2",
+            "id4"
+          ]
+        }
+      ],
+      "winners": [
+        {
+          "playerId": "id4",
+          "amount": 50,
+          "reason": "last player standing"
+        }
+      ],
+      "shownHoleCards": {}
+    },
+    {
+      "smallBlindAmount": 5,
+      "bigBlindAmount": 10,
+      "playerInfo": {
+        "id4": {
+          "holeCards": [
+            "XX",
+            "XX"
+          ],
+          "seatPosition": "BB",
+          "blindPosition": "big_blind",
+          "startingStack": 1040
+        },
+        "hero": {
+          "holeCards": [
+            "4s",
+            "Jh"
+          ],
+          "seatPosition": "BTN",
+          "blindPosition": "small_blind",
+          "startingStack": 960
+        }
+      },
+      "streetRecords": [
+        {
+          "streetName": "pre-flop",
+          "communityCards": [],
+          "potsAtStart": [],
+          "playerActions": [
+            {
+              "playerId": "hero",
+              "action": "POST_SB",
+              "amountAddedToPot": 5,
+              "toCallBefore": 0,
+              "streetContributionAfter": 5,
+              "tableCurrentBetAfter": 5,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "POST_BB",
+              "amountAddedToPot": 10,
+              "toCallBefore": 0,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            },
+            {
+              "playerId": "hero",
+              "action": "CALL",
+              "amountAddedToPot": 5,
+              "toCallBefore": 5,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            }
+          ]
+        },
+        {
+          "streetName": "flop",
+          "communityCards": [
+            "Ks",
+            "8s",
+            "7h"
+          ],
+          "potsAtStart": [
+            {
+              "amount": 20,
+              "eligiblePlayerIds": [
+                "id4",
+                "hero"
+              ]
+            }
+          ],
+          "playerActions": [
+            {
+              "playerId": "hero",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 0,
+              "tableCurrentBetAfter": 0,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "BET",
+              "amountAddedToPot": 10,
+              "toCallBefore": 0,
+              "streetContributionAfter": 10,
+              "tableCurrentBetAfter": 10,
+              "isAllIn": false
+            },
+            {
+              "playerId": "hero",
+              "action": "RAISE",
+              "amountAddedToPot": 20,
+              "toCallBefore": 10,
+              "streetContributionAfter": 20,
+              "tableCurrentBetAfter": 20,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "CALL",
+              "amountAddedToPot": 10,
+              "toCallBefore": 10,
+              "streetContributionAfter": 20,
+              "tableCurrentBetAfter": 20,
+              "isAllIn": false
+            }
+          ]
+        },
+        {
+          "streetName": "turn",
+          "communityCards": [
+            "Ks",
+            "8s",
+            "7h",
+            "Qs"
+          ],
+          "potsAtStart": [
+            {
+              "amount": 60,
+              "eligiblePlayerIds": [
+                "id4",
+                "hero"
+              ]
+            }
+          ],
+          "playerActions": [
+            {
+              "playerId": "hero",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 0,
+              "tableCurrentBetAfter": 0,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 0,
+              "tableCurrentBetAfter": 0,
+              "isAllIn": false
+            }
+          ]
+        },
+        {
+          "streetName": "river",
+          "communityCards": [
+            "Ks",
+            "8s",
+            "7h",
+            "Qs",
+            "4c"
+          ],
+          "potsAtStart": [
+            {
+              "amount": 60,
+              "eligiblePlayerIds": [
+                "id4",
+                "hero"
+              ]
+            }
+          ],
+          "playerActions": [
+            {
+              "playerId": "hero",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 0,
+              "tableCurrentBetAfter": 0,
+              "isAllIn": false
+            },
+            {
+              "playerId": "id4",
+              "action": "CHECK",
+              "amountAddedToPot": 0,
+              "toCallBefore": 0,
+              "streetContributionAfter": 0,
+              "tableCurrentBetAfter": 0,
+              "isAllIn": false
+            }
+          ]
+        },
+        {
+          "streetName": "showdown",
+          "communityCards": [
+            "Ks",
+            "8s",
+            "7h",
+            "Qs",
+            "4c"
+          ],
+          "potsAtStart": [
+            {
+              "amount": 60,
+              "eligiblePlayerIds": [
+                "id4",
+                "hero"
+              ]
+            }
+          ],
+          "playerActions": []
+        }
+      ],
+      "potsBeforeAward": [
+        {
+          "amount": 60,
+          "eligiblePlayerIds": [
+            "id4",
             "hero"
           ]
         }
       ],
-      "playerActions": []
+      "winners": [
+        {
+          "playerId": "hero",
+          "amount": 60,
+          "reason": "best hand"
+        }
+      ],
+      "shownHoleCards": {
+        "id4": [
+          "6c",
+          "9c"
+        ],
+        "hero": [
+          "4s",
+          "Jh"
+        ]
+      }
     }
-  ],
-  "potsBeforeAward": [
-    {
-      "amount": 40,
-      "eligiblePlayerIds": [
-        "id2",
-        "hero"
-      ]
-    }
-  ],
-  "winners": [
-    {
-      "playerId": "id2",
-      "amount": 40,
-      "reason": "best hand"
-    }
-  ],
-  "shownHoleCards": {
-    "id2": [
-      "Jc",
-      "9h"
-    ],
-    "hero": [
-      "Ad",
-      "3h"
-    ]
-  }
+  ]
 }

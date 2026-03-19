@@ -1,10 +1,15 @@
+import 'package:aipoker_flutter_app/view_models/ai_feedback_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aipoker_flutter_app/providers/user_model.dart';
 import 'dart:io';
+
+import 'package:aipoker_flutter_app/widgets/general/back_button.dart';
+
+import '../providers/server_service_provider.dart';
 
 class AIFeedbackPage extends ConsumerStatefulWidget {
   const AIFeedbackPage({super.key});
@@ -14,12 +19,19 @@ class AIFeedbackPage extends ConsumerStatefulWidget {
 }
 
 class _AIFeedbackPageState extends ConsumerState<AIFeedbackPage> {
-  String? _filePath;
-  bool _isWriting = false;
+  late AIFeedbackViewmodel _viewModel;
 
+  @override
   @override
   void initState() {
     super.initState();
+
+    final serverService = ref.read(serverServiceProvider);
+    _viewModel = AIFeedbackViewmodel(serverService, ref);
+
+    debugPrint(
+      '[LobbyPage] ViewModel initialized with ServerService and UserModel',
+    );
 
     // Write to file after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -28,8 +40,6 @@ class _AIFeedbackPageState extends ConsumerState<AIFeedbackPage> {
   }
 
   Future<void> _writeRoundHistoriesToFile() async {
-    setState(() => _isWriting = true);
-
     try {
       // ✅ Write to project root (works on desktop during development)
       final file = File('debug/round_histories.txt'); // Writes to project root
@@ -40,11 +50,6 @@ class _AIFeedbackPageState extends ConsumerState<AIFeedbackPage> {
       // Write to file
       await file.writeAsString(roundHistories);
 
-      setState(() {
-        _filePath = file.absolute.path;
-        _isWriting = false;
-      });
-
       if (kDebugMode) {
         debugPrint('✅ Round histories written to: ${file.absolute.path}');
       }
@@ -52,42 +57,123 @@ class _AIFeedbackPageState extends ConsumerState<AIFeedbackPage> {
       if (kDebugMode) {
         debugPrint('❌ Error writing round histories: $e');
       }
-      setState(() => _isWriting = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.amber,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Center(child: Text('AI Feedback', style: TextStyle(fontSize: 60))),
-          Expanded(
-            child: SingleChildScrollView(
+    return ListenableBuilder(
+      listenable: _viewModel,
+      builder: (context, child) {
+        if (_viewModel.isLoading) {
+          return Scaffold(
+            backgroundColor: Colors.amber,
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (_viewModel.feedback == null) {
+          return Scaffold(
+            backgroundColor: Colors.amber,
+            body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Text(
-                  //   'Display Round History data for now: \n ${ref.watch(userProvider).getRoundHistories()}',
-                  // ),
-                  TextButton(
-                    onPressed: () {
-                      if (kDebugMode) {
-                        debugPrint('Back to Main Menu Pressed');
-                      }
-
-                      GoRouter.of(context).go('/main-menu');
-                    },
-                    child: Text("Go Back"),
-                  ),
+                  Text('Error - no AI feedback available.'),
+                  TextButton(onPressed: _onBackPressed, child: Text("Go Back")),
                 ],
               ),
             ),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: Color(0xFFE5BB48),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 15),
+
+              // Header row
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Feedback & Advice',
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    CustomBackButton(onPressed: _onBackPressed),
+                  ],
+                ),
+              ),
+
+              SizedBox(height: 20),
+
+              // ✅ White background container with Expanded
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                  ), // ✅ Optional: margin around the white box
+                  decoration: BoxDecoration(
+                    color: Colors.white, // ✅ White background
+                    borderRadius: BorderRadius.circular(
+                      12,
+                    ), // ✅ Optional: rounded corners
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(
+                          0.5,
+                        ), // ✅ Optional: subtle shadow
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Feedback:',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        MarkdownBody(
+                          data: _viewModel.feedback ?? 'No feedback available',
+                          styleSheet: MarkdownStyleSheet(
+                            p: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Bottom spacing
+              SizedBox(height: 30),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  void _onBackPressed() {
+    if (kDebugMode) {
+      debugPrint('Back to Main Menu Pressed');
+    }
+
+    GoRouter.of(context).go('/main-menu');
   }
 }
