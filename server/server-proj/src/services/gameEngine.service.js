@@ -195,9 +195,10 @@ export default class GameEngineService {
         const canActIds = this.tableStateRepository.getCanActPlayerIds();
         const allInIds = this.tableStateRepository.getAllInPlayerIds();
 
+        const canActPlayer = this.tableStateRepository.getPlayer(canActIds[0]);
+
         if (canActIds.length === 1 && allInIds.length >= 1) {
-            if (this.isBettingRoundComplete()) {
-                // Only one player can act and at least one player is all-in, run out board to river
+            if (canActPlayer.currentBet >= this.tableStateRepository.getCurrentBet()) { // Check if the one player who can act has matched the bet
                 this.runOutBoardToShowdown();
                 this.determineWinners();
                 return this.endHand();

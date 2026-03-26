@@ -74,8 +74,8 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
     });
 
     // ============================================
-    // WebSocket Helper Functions
-    // ============================================
+    // Socket.io Helper Functions
+    // ============================================ 
 
     function emitLobbyState() {
         io.to(LOBBY_ROOM).emit("lobby:update", {
@@ -167,9 +167,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
 
                 socket.data.playerId = playerId;
                 socket.data.username = username;
-                if (isHost) {
-                    lobbyRepository.setHostPlayer(playerId);
-                }
+
 
                 socket.join(LOBBY_ROOM);
 
@@ -276,6 +274,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
                     // Check if game is not viable
                     if (!gameEngineService.gameInProgress) {
                         console.log("[INFO] Player " + socket.data.username + " (" + socket.data.playerId + ") disconnected but game already ended. Just removing from lobby.");
+                        lobbyRepository.isGameStarted = false; // ensure lobby is marked as not started
                         return;
                     }
 
