@@ -7,7 +7,7 @@ import LobbyRepository from "../repositories/lobby.repository.js";
 import LobbyController from "../controllers/lobby.controller.js";
 import PlayerActionController from "../controllers/playerAction.controller.js";
 import GameEngineService from "../services/gameEngine.service.js";
-import AIFeedbackService from "../services/aiFeedback.service.js"; 
+import AIFeedbackService from "../ai_feedback/aiFeedback.service.js"; 
 
 export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
     const app = express();
@@ -274,7 +274,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
                     // Check if game is not viable
                     if (!gameEngineService.gameInProgress) {
                         console.log("[INFO] Player " + socket.data.username + " (" + socket.data.playerId + ") disconnected but game already ended. Just removing from lobby.");
-                        lobbyRepository.isGameStarted = false; // ensure lobby is marked as not started
+                        lobbyRepository.reset(); // reset lobby for next game
                         return;
                     }
 

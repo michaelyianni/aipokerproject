@@ -67,8 +67,8 @@ class PokerActionButtons extends StatelessWidget {
               child: _buildActionButton(
                 label: betRaiseLabel ?? 'Bet/Raise',
                 color: Color.fromARGB(255, 33, 167, 37), // Green
-                onPressed: isTurn ? () => _showBetRaiseDialog(context) : null,
-                isEnabled: isTurn,
+                onPressed: isTurn && maxBet > minBet && currentChips > minBet ? () => _showBetRaiseDialog(context) : null,
+                isEnabled: isTurn && maxBet > minBet && currentChips > minBet, // Enable only if betting is possible
               ),
             ),
             SizedBox(width: 5),
