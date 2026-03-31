@@ -38,7 +38,7 @@ export default class GameEngineService {
         this.tableStateRepository.dealCardsToPlayers();
 
         // Store initial game state round history information
-        this.tableStateRepository.initialiseRoundHistory();
+        this.tableStateRepository.initialiseHandHistory();
 
         // Post blinds
         this.tableStateRepository.postBlinds();
@@ -48,8 +48,8 @@ export default class GameEngineService {
         const bigBlindPlayer = this.tableStateRepository.getPlayer(this.tableStateRepository.getBigBlind());
 
         // Record posting of blinds as actions in round history
-        this.tableStateRepository.roundHistory.addPostBlindAction(smallBlindPlayer.id, "POST_SB", smallBlindPlayer.getCurrentBet(), 0, smallBlindPlayer.getCurrentBet(), smallBlindPlayer.getCurrentBet(), smallBlindPlayer.isAllIn);
-        this.tableStateRepository.roundHistory.addPostBlindAction(bigBlindPlayer.id, "POST_BB", bigBlindPlayer.getCurrentBet(), 0, bigBlindPlayer.getCurrentBet(), bigBlindPlayer.getCurrentBet(), bigBlindPlayer.isAllIn);
+        this.tableStateRepository.handHistory.addPostBlindAction(smallBlindPlayer.id, "POST_SB", smallBlindPlayer.getCurrentBet(), 0, smallBlindPlayer.getCurrentBet(), smallBlindPlayer.getCurrentBet(), smallBlindPlayer.isAllIn);
+        this.tableStateRepository.handHistory.addPostBlindAction(bigBlindPlayer.id, "POST_BB", bigBlindPlayer.getCurrentBet(), 0, bigBlindPlayer.getCurrentBet(), bigBlindPlayer.getCurrentBet(), bigBlindPlayer.isAllIn);
 
         // Set turn to player left of big blind to start action
         this.setTurnToNextActivePlayer(this.tableStateRepository.getBigBlind());
@@ -78,23 +78,21 @@ export default class GameEngineService {
         switch (action) {
             case GAME_ACTIONS.FOLD:
                 player.fold();
-                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, 0, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
+                this.tableStateRepository.handHistory.addActionRecord(playerId, action, 0, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 this.tableStateRepository.removeActivePlayer(playerId);
                 break;
             case GAME_ACTIONS.CALL:
                 this.tableStateRepository.playerBet(playerId, toCallBefore);
-                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, player.getCurrentBet() - prevCurrentBet, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
+                this.tableStateRepository.handHistory.addActionRecord(playerId, action, player.getCurrentBet() - prevCurrentBet, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 break;
             case GAME_ACTIONS.BET:
                 this.tableStateRepository.playerBet(playerId, amount);
-                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, amount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
-                this.tableStateRepository.setLastRaiser(playerId);
+                this.tableStateRepository.handHistory.addActionRecord(playerId, action, amount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 break;
             case GAME_ACTIONS.RAISE:
                 let raiseAmount = this.tableStateRepository.getCurrentBet() + amount - player.getCurrentBet();
                 this.tableStateRepository.playerBet(playerId, raiseAmount);
-                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, raiseAmount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn); 
-                this.tableStateRepository.setLastRaiser(playerId);
+                this.tableStateRepository.handHistory.addActionRecord(playerId, action, raiseAmount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn); 
                 break;
             case GAME_ACTIONS.ALL_IN:
                 let allInAmount = player.chips;
@@ -104,16 +102,15 @@ export default class GameEngineService {
                 player.isAllIn = true;
 
                 if (player.getCurrentBet() > tableBetBeforeAction) {
-                    this.tableStateRepository.roundHistory.addActionRecord(playerId, GAME_ACTIONS.RAISE, allInAmount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn); // Record as raise if all-in amount exceeds current bet
-                    this.tableStateRepository.setLastRaiser(playerId);
+                    this.tableStateRepository.handHistory.addActionRecord(playerId, GAME_ACTIONS.RAISE, allInAmount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn); // Record as raise if all-in amount exceeds current bet
                 }
                 else {
-                    this.tableStateRepository.roundHistory.addActionRecord(playerId, GAME_ACTIONS.CALL, allInAmount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
+                    this.tableStateRepository.handHistory.addActionRecord(playerId, GAME_ACTIONS.CALL, allInAmount, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 }
                 break;
             case GAME_ACTIONS.CHECK:
                 // No chips are bet when checking
-                this.tableStateRepository.roundHistory.addActionRecord(playerId, action, 0, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
+                this.tableStateRepository.handHistory.addActionRecord(playerId, action, 0, toCallBefore, player.getCurrentBet(), this.tableStateRepository.getCurrentBet(), player.isAllIn);
                 break;
             default:
                 throw new Error('Invalid action');
@@ -242,14 +239,12 @@ export default class GameEngineService {
     isBettingRoundComplete() {
         const inHandIds = this.tableStateRepository.getActivePlayerIds(); // not folded
         const currentBet = this.tableStateRepository.getCurrentBet();
-        const lastRaiserId = this.tableStateRepository.getLastRaiserId(); // null if no bet this street
         const currentTurnId = this.tableStateRepository.getCurrentTurnPlayerId();
 
-        // 1) Everyone who CAN act is either matched, folded, or all-in
+        // 1) Check that everyone who can act is either matched, folded, or all-in
         for (const playerId of inHandIds) {
             const p = this.tableStateRepository.getPlayer(playerId);
 
-            if (p.hasFolded) continue;
             if (p.isAllIn) continue;
 
             if (p.currentBet < currentBet) {
@@ -261,26 +256,19 @@ export default class GameEngineService {
             }
         }
 
-        // 2) Close-out condition
-        if (lastRaiserId == null) {
-            // No bet this street: everyone must have acted (checked)
-            for (const playerId of inHandIds) {
-                const p = this.tableStateRepository.getPlayer(playerId);
-                if (p.hasFolded || p.isAllIn) continue;
+        // 2) Check that every player has acted (checked)
 
-                if (!p.hasActedThisStreet) {
-                    console.log(`Betting round not complete: player ${playerId} has not acted this street`);
-                    return false;
-                }
+        for (const playerId of inHandIds) {
+            const p = this.tableStateRepository.getPlayer(playerId);
+            if (p.hasFolded || p.isAllIn) continue;
+
+            if (!p.hasActedThisStreet) {
+                console.log(`Betting round not complete: player ${playerId} has not acted this street`);
+                return false;
             }
-            return true;
         }
 
-        // There was aggression: round ends when action returns to last raiser
-
-        console.log('Checking if betting round complete by last raiser return. lastRaiserId:', lastRaiserId, 'currentTurnId:', currentTurnId);
-
-        return currentTurnId === lastRaiserId;
+        return true;
     }
 
     advanceStreet() {
@@ -301,7 +289,7 @@ export default class GameEngineService {
         }
 
         // Round history street action record
-        this.tableStateRepository.roundHistory.addStreetRecord(currentStreet, this.tableStateRepository.getCommunityCards().convertToStringArray(), this.tableStateRepository.getPots());
+        this.tableStateRepository.handHistory.addStreetRecord(currentStreet, this.tableStateRepository.getCommunityCards().convertToStringArray(), this.tableStateRepository.getPots());
     }
 
     findNextActivePlayer(playerId) {
@@ -347,7 +335,7 @@ export default class GameEngineService {
     endHand() {
 
         // Add pots to round history for record keeping
-        this.tableStateRepository.roundHistory.setPotsAtEndOfHand(this.tableStateRepository.getPots());
+        this.tableStateRepository.handHistory.setPotsAtEndOfHand(this.tableStateRepository.getPots());
 
         this.tableStateRepository.setStreet(PokerStreets.HAND_COMPLETE); // move to hand complete street for game state clarity
 
@@ -406,15 +394,15 @@ export default class GameEngineService {
     }
 
     allocateBlinds(dealerId) {
-        const playerIds = this.tableStateRepository.playerOrder;
+        const activeIds = this.tableStateRepository.activePlayerIds;
 
         var smallBlindPlayerId;
         var bigBlindPlayerId;
 
-        if (this.tableStateRepository.getActivePlayerIds().length == 2) {
+        if (activeIds.length == 2) {
             // In 2 player game, dealer is small blind and other player is big blind
             smallBlindPlayerId = dealerId;
-            bigBlindPlayerId = playerIds.find(id => id !== dealerId);
+            bigBlindPlayerId = activeIds.find(id => id !== dealerId);
 
 
         }
@@ -556,7 +544,7 @@ export default class GameEngineService {
         // Store shown hole cards for round history
         for (const playerId of activePlayerIds) {
             const player = this.tableStateRepository.getPlayer(playerId);
-            this.tableStateRepository.roundHistory.setShownHoleCards(playerId, player.getHand().convertToStringArray());
+            this.tableStateRepository.handHistory.setShownHoleCards(playerId, player.getHand().convertToStringArray());
         }
 
         // Optional: log payouts for debugging

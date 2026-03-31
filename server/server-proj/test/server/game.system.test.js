@@ -115,10 +115,10 @@ async function waitForGameStateOnAll(sockets, predicate, timeoutMs = 5000) {
     return Promise.all(promises);
 }
 
-// Wait for all sockets to receive game:round_history update matching a predicate
-async function waitForRoundHistoryOnAll(sockets, predicate, timeoutMs = 5000) {
+// Wait for all sockets to receive game:hand_history update matching a predicate
+async function waitForHandHistoryOnAll(sockets, predicate, timeoutMs = 5000) {
     const promises = sockets.map((socket) =>
-        waitForEventMatching(socket, "game:round_history", predicate, timeoutMs)
+        waitForEventMatching(socket, "game:hand_history", predicate, timeoutMs)
     );
     return Promise.all(promises);
 }
@@ -679,8 +679,8 @@ describe("Game System Test (Full Socket Integration)", function () {
             10000
         );
 
-        // Wait for game:round_history broadcast
-        const roundHistoryPromises = waitForRoundHistoryOnAll(
+        // Wait for game:hand_history broadcast
+        const handHistoryPromises = waitForHandHistoryOnAll(
             [alice, bob, diana].filter((s) => !s.disconnected),
             () => true,
             10000
@@ -700,15 +700,15 @@ describe("Game System Test (Full Socket Integration)", function () {
         const dianaCallStates = await dianaCallPromises;
         currentState = dianaCallStates[0];
 
-        // Wait for round history broadcast
-        const roundHistory = await roundHistoryPromises;
+        // Wait for hand history broadcast
+        const handHistory = await handHistoryPromises;
 
         // Log current game state for manual inspection
         console.log("\n[RIVER GAME STATE AFTER DIANA CALL]");
         console.log(JSON.stringify(currentState, null, 2));
 
-        console.log("\n[ROUND HISTORY]");
-        console.log(JSON.stringify(roundHistory[0], null, 2));
+        console.log("\n[HAND HISTORY]");
+        console.log(JSON.stringify(handHistory[0], null, 2));
 
         // ---------- FINAL VALIDATION ----------
         console.log("\n========== FINAL VALIDATION ==========\n");

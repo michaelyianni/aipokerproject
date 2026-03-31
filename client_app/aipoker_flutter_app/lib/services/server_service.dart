@@ -5,7 +5,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:flutter/foundation.dart';
 import '../models/lobby_state.dart';
 // import '../mocks/mock_game_data.dart'; // For testing without server
-import '../models/round_history/round_history.dart'; // Import RoundHistory model
+import '../models/hand_history/hand_history.dart'; // Import HandHistory model
 import 'package:aipoker_flutter_app/providers/user_model.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -46,7 +46,7 @@ class ServerService {
   StreamController<GameState>? _gameStateController;
   StreamController<GameState>? _handResultsController;
 
-  bool _isDisposed = false; // ✅ Add this flag
+  bool _isDisposed = false;
 
   // Expose streams for ViewModel to listen to
   Stream<LobbyState> get lobbyStateStream => _lobbyStateController!.stream;
@@ -72,10 +72,9 @@ class ServerService {
     _gameStartedController = StreamController<void>.broadcast();
     _gameStateController = StreamController<GameState>.broadcast();
     _handResultsController = StreamController<GameState>.broadcast();
-    _isDisposed = false; // ✅ Reset flag
+    _isDisposed = false; 
   }
 
-  // ✅ Add safe methods
   void _safeAddError(String error) {
     if (!_isDisposed && _errorController != null && !_errorController!.isClosed) {
       _errorController!.add(error);
@@ -229,7 +228,7 @@ class ServerService {
     );
   }
 
-  // Set up Socket.IO event listeners - ✅ USE SAFE METHODS
+  // Set up Socket.IO event listeners
   void _setupSocketListeners() {
     // Connection events
     _socket!.onConnect((_) {
@@ -238,17 +237,17 @@ class ServerService {
 
     _socket!.onDisconnect((_) {
       debugPrint('[ServerService] Socket.IO disconnected');
-      // _safeAddError('Disconnected from server'); // ✅
+      _safeAddError('Disconnected from server'); 
     });
 
     _socket!.onConnectError((error) {
       debugPrint('[ServerService] Socket.IO connect error: $error');
-      _safeAddError('Connection error: $error'); // ✅
+      _safeAddError('Connection error: $error'); 
     });
 
     _socket!.onError((error) {
       debugPrint('[ServerService] Socket.IO error: $error');
-      _safeAddError('Socket error: $error'); // ✅
+      _safeAddError('Socket error: $error'); 
     });
 
     // Lobby state updates
@@ -257,17 +256,17 @@ class ServerService {
         debugPrint('[ServerService] Received lobby:update');
         final lobbyData = data['lobby'];
         final updatedState = LobbyState.fromJson(lobbyData);
-        _safeAddLobbyState(updatedState); // ✅
+        _safeAddLobbyState(updatedState); 
       } catch (e) {
         debugPrint('[ServerService] Error parsing lobby update: $e');
-        _safeAddError('Error parsing lobby update: $e'); // ✅
+        _safeAddError('Error parsing lobby update: $e'); 
       }
     });
 
     // Game started event
     _socket!.on('game:started', (data) {
       debugPrint('[ServerService] Game started by: ${data['startedBy']}');
-      _safeAddGameStarted(); // ✅
+      _safeAddGameStarted();
     });
 
     // You can add more event listeners here for game events later
@@ -286,21 +285,21 @@ class ServerService {
       debugPrint('[ServerService] Received hand results update');
 
       final updatedState = GameState.fromJson(data, _currentPlayerId!);
-      _safeAddHandResults(updatedState); // ✅ Just notify listeners for now
+      _safeAddHandResults(updatedState); 
     });
 
-    _socket!.on('game:round_history', (data) {
-      debugPrint('[ServerService] Received round history update');
+    _socket!.on('game:hand_history', (data) {
+      debugPrint('[ServerService] Received hand history update');
       
-      final roundHistory = RoundHistory.fromJson(data, _currentPlayerId!);
+      final handHistory = HandHistory.fromJson(data, _currentPlayerId!);
 
-      roundHistory.postProcessAfterDataCollection(_currentPlayerId!);
+      handHistory.postProcessAfterDataCollection(_currentPlayerId!);
 
-      _ref.read(userProvider.notifier).addRoundHistory(roundHistory);
-          debugPrint('[ServerService] Round history added to user model');
+      _ref.read(userProvider.notifier).addHandHistory(handHistory);
+          debugPrint('[ServerService] Hand history added to user model');
       
-      // For now, just print the round history to verify it's being received correctly
-      debugPrint('[ServerService] Round History: $data');
+      // For now, just print the hand history to verify it's being received correctly
+      debugPrint('[ServerService] Hand History: $data');
     });
 
   }
@@ -326,7 +325,7 @@ class ServerService {
             debugPrint(
               '[ServerService] Game start failed: ${response['error']}',
             );
-            _safeAddError(response['error'] ?? 'Failed to start game'); // ✅
+            _safeAddError(response['error'] ?? 'Failed to start game');
             completer.complete(false);
           }
         },
@@ -335,13 +334,13 @@ class ServerService {
       return await completer.future.timeout(
         Duration(seconds: 5),
         onTimeout: () {
-          _safeAddError('Start game timeout'); // ✅
+          _safeAddError('Start game timeout'); 
           return false;
         },
       );
     } catch (e) {
       debugPrint('[ServerService] Error starting game: $e');
-      _safeAddError('Error starting game: $e'); // ✅
+      _safeAddError('Error starting game: $e');
       return false;
     }
   }
@@ -441,20 +440,20 @@ Future<bool> sendGameAction(String action, {Map<String, dynamic>? data}) async {
   }
 }
 
- /// Send round history to server and get AI feedback via HTTP
+ /// Send hand history to server and get AI feedback via HTTP
   /// Returns the AI feedback string or null if failed
-  Future<String?> getAIFeedback(String roundHistoryJson) async {
+  Future<String?> getAIFeedback(String handHistoryJson) async {
     try {
       
       final url = Uri.parse('$serverUrl/api/ai-feedback');
 
       debugPrint('[ServerService] Requesting AI feedback via HTTP... URL: $url');
 
-      final roundHistoryData = jsonDecode(roundHistoryJson);
+      final handHistoryData = jsonDecode(handHistoryJson);
     
-    // ✅ Wrap it as the server expects
+    // Wrap it as the server expects
     final payload = {
-      'roundHistory': roundHistoryData,
+      'handHistory': handHistoryData,
     };
       
       final response = await http.post(
@@ -509,7 +508,7 @@ void _cleanupSocket() {
 
   void dispose() {
     debugPrint('[ServerService] Disposing service...');
-    _isDisposed = true; // ✅ Set flag BEFORE cleanup
+    _isDisposed = true;
     disconnect();
     _lobbyStateController?.close();
     _errorController?.close();

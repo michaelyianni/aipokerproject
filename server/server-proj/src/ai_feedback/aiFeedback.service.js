@@ -17,11 +17,11 @@ export default class AIFeedbackService {
 
     /**
      * Generate AI feedback for poker hands
-     * @param {Object} roundHistory - Object with 'hands' array
+     * @param {Object} handHistory - Object with 'hands' array
      * @returns {Promise<string>} - AI-generated feedback
      */
-    async getFeedback(roundHistory) {
-        const hands = roundHistory.hands || [];
+    async getFeedback(handHistory) {
+        const hands = handHistory.hands || [];
 
         if (hands.length === 0) {
             return "No hands to analyze. Play some poker first!";

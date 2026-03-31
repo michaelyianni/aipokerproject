@@ -314,6 +314,8 @@ class _GamePageState extends ConsumerState<GamePage> {
       dealerId: _viewModel.gameState?.dealerId ?? '',
       smallBlindId: _viewModel.gameState?.smallBlindId ?? '',
       bigBlindId: _viewModel.gameState?.bigBlindId ?? '',
+      isEliminated: player.isEliminated,
+      hasLeft: player.hasLeft,
     );
   }
 }

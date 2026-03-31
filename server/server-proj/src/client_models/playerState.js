@@ -11,5 +11,6 @@ export default class PlayerState {
         this.hasFolded = player.hasFolded;
         this.isAllIn = player.isAllIn;
         this.hasLeft = player.hasLeft;
+        this.isEliminated = player.isEliminated;
     }
 }

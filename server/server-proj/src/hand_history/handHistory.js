@@ -1,7 +1,7 @@
 import PlayerInfo from "./playerInfo.js";
 import ActionRecordGenerator from "./action_record/actionRecordGenerator.js";
 
-export default class RoundHistory {
+export default class HandHistory {
 
   constructor() {
     this.smallBlindAmount = 0;

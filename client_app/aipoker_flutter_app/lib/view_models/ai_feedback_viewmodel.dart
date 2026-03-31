@@ -30,12 +30,12 @@ class AIFeedbackViewmodel extends ChangeNotifier{
     // Initialize any necessary streams or data here
     debugPrint('[AIFeedbackViewmodel] Initialized with ServerService and UserModel');
 
-    if (_ref.read(userProvider).hasReceivedNewRoundHistory) {
-      debugPrint('[AIFeedbackViewmodel] Detected new round history on initialization, fetching AI feedback');
+    if (_ref.read(userProvider).hasReceivedNewHandHistory) {
+      debugPrint('[AIFeedbackViewmodel] Detected new hand history on initialization, fetching AI feedback');
       fetchAIFeedback();
     }
     else {
-      debugPrint('[AIFeedbackViewmodel] No new round history detected on initialization, displaying previous feedback.');
+      debugPrint('[AIFeedbackViewmodel] No new hand history detected on initialization, displaying previous feedback.');
 
       _feedback = _ref.read(userProvider).feedback; // Load existing feedback from UserModel
       notifyListeners(); // Notify listeners to update UI with existing feedback
@@ -45,14 +45,14 @@ class AIFeedbackViewmodel extends ChangeNotifier{
 
 
   void fetchAIFeedback() {
-    final roundHistoryJson = _ref.read(userProvider).getRoundHistories();
+    final handHistoryJson = _ref.read(userProvider).getHandHistories();
 
     _feedback = null; // Clear previous feedback
     _isLoading = true; // Set loading state
 
     notifyListeners(); // Notify listeners to update UI with loading state
 
-    Future<String?> aiFeedbackFuture = _serverService.getAIFeedback(roundHistoryJson);
+    Future<String?> aiFeedbackFuture = _serverService.getAIFeedback(handHistoryJson);
 
 
     aiFeedbackFuture.then((feedback) {

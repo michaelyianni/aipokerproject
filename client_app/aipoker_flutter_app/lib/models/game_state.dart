@@ -97,6 +97,7 @@ class GameState {
           hasFolded: false,
           isAllIn: false,
           hasLeft: false,
+          isEliminated: false,
         );
 
     // Parse seat assignments

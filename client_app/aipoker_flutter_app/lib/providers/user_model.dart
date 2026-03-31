@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aipoker_flutter_app/models/round_history/round_history.dart'; // Import RoundHistory model
+import 'package:aipoker_flutter_app/models/hand_history/hand_history.dart'; // Import RoundHistory model
 import 'dart:convert'; // For JSON encoding
 
 class UserModel {
   String? username;
   String? playerId;
-  List<RoundHistory> roundHistories = []; // Add roundHistories to UserModel
-  bool hasReceivedNewRoundHistory = false; // Flag to track if a new round history has been added
+  List<HandHistory> handHistories = []; // Add handHistories to UserModel
+  bool hasReceivedNewHandHistory = false; // Flag to track if a new hand history has been added
   String feedback = 'No feedback available - play some rounds to get feedback!'; // Add feedback field to UserModel
 
   UserModel({this.username, String? playerId}) : playerId = playerId ?? 'unknown_player_id';
@@ -18,15 +18,15 @@ class UserModel {
     );
   }
 
-  String getRoundHistories() {
+  String getHandHistories() {
     
 
-    return JsonEncoder.withIndent('  ').convert(getRoundHistoriesAsJson());
+    return JsonEncoder.withIndent('  ').convert(getHandHistoriesAsJson());
   }
 
-  Map<String, dynamic> getRoundHistoriesAsJson() {
-    // Convert round histories to JSON-serializable map with 'hands' parent
-    final handsJson = roundHistories.map((round) => round.toJson()).toList();
+  Map<String, dynamic> getHandHistoriesAsJson() {
+    // Convert hand histories to JSON-serializable map with 'hands' parent
+    final handsJson = handHistories.map((hand) => hand.toJson()).toList();
     return {'hands': handsJson};
   }
 }
@@ -54,21 +54,21 @@ class UserNotifier extends Notifier<UserModel> {
     state = UserModel(username: state.username, playerId: null);
   }
 
-  void addRoundHistory(RoundHistory roundHistory) {
+  void addHandHistory(HandHistory handHistory) {
     
-    if (state.roundHistories.length >= 10) {
-      state.roundHistories.removeAt(0);
+    if (state.handHistories.length >= 10) {
+      state.handHistories.removeAt(0);
     }
     
-    state.roundHistories.add(roundHistory);
+    state.handHistories.add(handHistory);
 
-    state.hasReceivedNewRoundHistory = true;
+    state.hasReceivedNewHandHistory = true;
   }
   
 
   void setFeedback(String feedback) {
     state.feedback = feedback;
-    state.hasReceivedNewRoundHistory = false; // Reset the flag after setting feedback
+    state.hasReceivedNewHandHistory = false; // Reset the flag after setting feedback
   }
 
 }

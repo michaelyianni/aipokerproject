@@ -8,6 +8,8 @@ class PlayerWidget extends StatelessWidget {
   final String dealerId;
   final String smallBlindId;
   final String bigBlindId;
+  final bool isEliminated;
+  final bool hasLeft;
 
   const PlayerWidget({
     required this.player,
@@ -15,6 +17,8 @@ class PlayerWidget extends StatelessWidget {
     required this.dealerId,
     required this.smallBlindId,
     required this.bigBlindId,
+    required this.isEliminated,
+    required this.hasLeft,
     super.key,
   });
 
@@ -125,7 +129,11 @@ class PlayerWidget extends StatelessWidget {
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 decoration: BoxDecoration(
-                  color: player.hasFolded
+                  color: player.hasLeft
+                      ? Colors.blueGrey
+                      : player.isEliminated
+                      ? Colors.red
+                      : player.hasFolded
                       ? Colors.grey
                       : player.isAllIn
                       ? Colors.orange
@@ -133,7 +141,11 @@ class PlayerWidget extends StatelessWidget {
                   borderRadius: BorderRadius.circular(3),
                 ),
                 child: Text(
-                  player.hasFolded
+                  player.hasLeft
+                      ? 'Left'
+                      : player.isEliminated
+                      ? 'Eliminated'
+                      : player.hasFolded
                       ? 'Folded'
                       : player.isAllIn
                       ? 'All-In'

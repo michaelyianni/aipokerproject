@@ -16,6 +16,7 @@ export default class Player {
         this.hasFolded = false;
         this.hasLeft = false;
         this.isAllIn = false;
+        this.isEliminated = false;
         this.hasActedThisStreet = false;
     }
 

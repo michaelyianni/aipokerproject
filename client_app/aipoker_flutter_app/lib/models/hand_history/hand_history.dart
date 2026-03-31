@@ -1,10 +1,8 @@
 import 'package:aipoker_flutter_app/models/game_models/pot_model.dart';
-import 'package:aipoker_flutter_app/models/round_history/street_record.dart';
-import 'dart:convert';
+import 'package:aipoker_flutter_app/models/hand_history/street_record.dart';
 
-import 'package:flutter/cupertino.dart'; // For JSON encoding
 
-class RoundHistory {
+class HandHistory {
   final int smallBlindAmount;
   final int bigBlindAmount;
   final Map<String, PlayerInfo> playerInfo; // playerId to PlayerInfo
@@ -14,7 +12,7 @@ class RoundHistory {
   final List<WinnerRecord> winners; // Final winners of the hand
   final Map<String, List<String>> shownHoleCards; // playerId to their hole cards if shown at showdown
 
-  RoundHistory({
+  HandHistory({
     required this.smallBlindAmount,
     required this.bigBlindAmount,
     required this.playerInfo,
@@ -24,13 +22,13 @@ class RoundHistory {
     required this.shownHoleCards, // Map of playerId to their hole cards if shown at showdown
   });
 
-  factory RoundHistory.fromJson(
+  factory HandHistory.fromJson(
     Map<String, dynamic> json,
     String thisPlayerId,
   ) {
     /*
 
-    Example server JSON format for RoundHistory:
+    Example server JSON format for HandHistory:
 
 
     */
@@ -74,7 +72,7 @@ class RoundHistory {
 
 
 
-    return RoundHistory(
+    return HandHistory(
       smallBlindAmount: smallBlindAmount,
       bigBlindAmount: bigBlindAmount,
       playerInfo: players,

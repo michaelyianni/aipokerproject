@@ -2,7 +2,7 @@ import CommunityCards from "../models/CommunityCards.js";
 import Deck from "../models/Deck.js";
 import Player from "../models/Player.js";
 import Pot from "../models/Pot.js";
-import RoundHistory from "../round_history/roundHistory.js";
+import HandHistory from "../hand_history/handHistory.js";
 import { PokerStreets } from "../constants/pokerStreets.js";
 
 const streetsInOrder = [
@@ -34,7 +34,6 @@ export default class TableStateRepository {
         this.currentBet = 0;
         this.activePlayerIds = [];
         this.currentTurnPlayerId = null;
-        this.lastRaiserId = null;
 
         this.smallBlindAmount = 5;
         this.bigBlindAmount = 10;
@@ -47,7 +46,7 @@ export default class TableStateRepository {
 
         this.lastHandResults = null;
 
-        this.roundHistory = null;
+        this.handHistory = null;
     }
 
     initialiseTable(initialChips = 1000) {
@@ -67,18 +66,18 @@ export default class TableStateRepository {
 
     }
 
-    // Round History
+    // Hand History
 
-    initialiseRoundHistory() {
-        this.roundHistory = new RoundHistory();
+    initialiseHandHistory() {
+        this.handHistory = new HandHistory();
 
-        this.roundHistory.smallBlindAmount = this.smallBlindAmount;
-        this.roundHistory.bigBlindAmount = this.bigBlindAmount;
+        this.handHistory.smallBlindAmount = this.smallBlindAmount;
+        this.handHistory.bigBlindAmount = this.bigBlindAmount;
 
         for (let playerId in this.players) {
             let player = this.getPlayer(playerId);
 
-            // Don't include inactive players in round history player info
+            // Don't include inactive players in hand history player info
             if (!this.activePlayerIds.includes(playerId)) {
                 continue;
             }
@@ -89,7 +88,7 @@ export default class TableStateRepository {
             let seatPosition = this.getSeatPosition(playerId);
             let blindPosition = this.getBlindPosition(playerId);
 
-            this.roundHistory.addPlayerInfo(playerId,
+            this.handHistory.addPlayerInfo(playerId,
                 holeCards,
                 seatPosition,
                 blindPosition,
@@ -97,7 +96,7 @@ export default class TableStateRepository {
             );
         }
 
-        this.roundHistory.addStreetRecord(this.getCurrentStreet(), this.communityCards.convertToStringArray(), this.pots);
+        this.handHistory.addStreetRecord(this.getCurrentStreet(), this.communityCards.convertToStringArray(), this.pots);
     }
 
     getSeatPosition(playerId) {
@@ -149,7 +148,7 @@ export default class TableStateRepository {
             otherActivePlayers: otherActivePlayers
         };
 
-        this.roundHistory.setWinners(winners);
+        this.handHistory.setWinners(winners);
     }
 
     getHandResults() {
@@ -187,7 +186,7 @@ export default class TableStateRepository {
 
 
     dealCardsToPlayers() {
-        for (let playerId in this.players) {
+        for (let playerId of this.activePlayerIds) {
             let player = this.players[playerId];
 
             player.receiveCard(this.deck.dealCard());
@@ -249,7 +248,6 @@ export default class TableStateRepository {
             player.isAllIn = true;
         }
 
-        const previousBet = player.currentBet;
         player.placeBet(betAmount);
 
         const newTotalBet = player.currentBet;
@@ -353,8 +351,6 @@ export default class TableStateRepository {
 
         this.resetCurrentBet();
 
-        this.setLastRaiser(null);
-
         // Reset minimum raise to big blind for new betting round
         this.resetMinimumRaise();
 
@@ -445,14 +441,6 @@ export default class TableStateRepository {
         this.currentTurnPlayerId = this.activePlayerIds[nextIndex];
     }
 
-    setLastRaiser(playerId) {
-        this.lastRaiserId = playerId;
-    }
-
-    getLastRaiserId() {
-        return this.lastRaiserId;
-    }
-
     // COVER CASE THAT CURRENT TURN PLAYER IS REMOVED IN GAME ENGINE
     removeActivePlayer(playerId) {
         this.activePlayerIds = this.activePlayerIds.filter(id => id !== playerId);
@@ -468,6 +456,9 @@ export default class TableStateRepository {
             let player = this.getPlayer(playerId);
             if (player && player.chips > 0) {
                 this.activePlayerIds.push(playerId);
+            }
+            else if (player) {
+                player.isEliminated = true; // Mark player as eliminated if they have no chips at the start of a hand
             }
         }
     }
@@ -583,7 +574,6 @@ export default class TableStateRepository {
         this.#resetPlayers();
         this.#resetActivePlayers();
         this.lastHandResults = null;
-        this.lastRaiserId = null;
         this.minimumRaiseAmount = this.bigBlindAmount;
     }
 

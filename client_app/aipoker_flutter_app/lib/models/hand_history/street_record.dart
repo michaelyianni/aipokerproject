@@ -1,4 +1,4 @@
-import './player_action_record.dart';
+import 'player_action_record.dart';
 import 'package:aipoker_flutter_app/models/game_models/pot_model.dart';
 
 class StreetRecord {

@@ -40,22 +40,22 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
     // ✅ AI Feedback endpoint
     app.post("/api/ai-feedback", async (req, res) => {
         try {
-            const { roundHistory } = req.body;
+            const { handHistory: handHistory } = req.body;
 
-            if (!roundHistory) {
+            if (!handHistory) {
 
-                console.log(`[AI Feedback] Missing roundHistory in request body`);
+                console.log(`[AI Feedback] Missing handHistory in request body`);
 
                 return res.status(400).json({
                     ok: false,
-                    error: "Missing roundHistory"
+                    error: "Missing handHistory"
                 });
             }
 
-            console.log(`[AI Feedback] Round history hands count: ${roundHistory.hands?.length || 0}`);
+            console.log(`[AI Feedback] Hand history hands count: ${handHistory.hands?.length || 0}`);
 
             // Call AI service to get feedback
-            const feedback = await aiFeedbackService.getFeedback(roundHistory);
+            const feedback = await aiFeedbackService.getFeedback(handHistory);
 
             res.json({
                 ok: true,
@@ -97,15 +97,17 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
             console.log("[DEBUG] Current street:", gameState?.currentStreet);
             // console.log("[DEBUG] Game state structure:", Object.keys(gameState || {}));
 
-            // const playerStates = {};
-            // for (const [id, player] of Object.entries(gameState.players || {})) {
-            //     playerStates[id] = {
-            //         hasLeft: player.hasLeft,
-            //         hasFolded: player.hasFolded,
-            //         chips: player.chips
-            //     };
-            // }
-            // console.log("[DEBUG] Player states:", JSON.stringify(playerStates, null, 2));
+            const playerStates = {};
+            for (const [id, player] of Object.entries(gameState.players || {})) {
+                playerStates[id] = {
+                    hasLeft: player.hasLeft,
+                    hasFolded: player.hasFolded,
+                    isAllIn: player.isAllIn,
+                    isEliminated: player.isEliminated,
+                    chips: player.chips
+                };
+            }
+            console.log("[DEBUG] Player states:", JSON.stringify(playerStates, null, 2));
 
             io.to(LOBBY_ROOM).emit("game:state", gameState);
             console.log("[DEBUG] game:state emitted to LOBBY_ROOM");
@@ -141,17 +143,17 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
         }
 
 
-        console.log("[DEBUG] Emitting round history...");
+        console.log("[DEBUG] Emitting hand history...");
 
         try {
-            const roundHistory = gameEngineService.tableStateRepository.roundHistory;
-            console.log("[DEBUG] Round history retrieved:", roundHistory ? "✓" : "✗");
-            console.log("[DEBUG] Entire round history object:", JSON.stringify(roundHistory, null, 2));
+            const handHistory = gameEngineService.tableStateRepository.handHistory;
+            console.log("[DEBUG] Hand history retrieved:", handHistory ? "✓" : "✗");
+            console.log("[DEBUG] Entire hand history object:", JSON.stringify(handHistory, null, 2));
 
-            io.to(LOBBY_ROOM).emit("game:round_history", roundHistory);
-            console.log("[DEBUG] game:round_history emitted to LOBBY_ROOM");
+            io.to(LOBBY_ROOM).emit("game:hand_history", handHistory);
+            console.log("[DEBUG] game:hand_history emitted to LOBBY_ROOM");
         } catch (err) {
-            console.error("[ERROR] Failed to emit round history:", err);
+            console.error("[ERROR] Failed to emit hand history:", err);
         }
     }
 
