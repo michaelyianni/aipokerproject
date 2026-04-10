@@ -17,7 +17,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
         cors: { origin: corsOrigin },
     });
 
-    // ✅ Middleware for parsing JSON
+    // Middleware for parsing JSON
     app.use(express.json({ limit: '10mb' })); // Increase limit for large hand histories
 
     // Dependencies
@@ -37,7 +37,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
     // Health check
     app.get("/health", (req, res) => res.json({ ok: true }));
 
-    // ✅ AI Feedback endpoint
+    // AI Feedback endpoint
     app.post("/api/ai-feedback", async (req, res) => {
         try {
             const { handHistory: handHistory } = req.body;
@@ -220,10 +220,10 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
 
                 emitLobbyState();
 
-                // Wait 3 seconds before emitting game state
+                // Wait 2 seconds before emitting game state
 
                 if (testingMode) {
-                    console.log("[TEST MODE] Skipping 3 second delay before emitting initial game state");
+                    console.log("[TEST MODE] Skipping 2 second delay before emitting initial game state");
                     emitGameState();
                     return;
                 }

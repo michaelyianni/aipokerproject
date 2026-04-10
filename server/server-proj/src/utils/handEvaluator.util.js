@@ -1,6 +1,6 @@
 import pokersolver from 'pokersolver';
 import Card from '../models/Card.js';
-import FullHand from '../models/FullHand.js';
+import FullHand from '../dto/FullHand.js';
 
 export const evaluateHand = (fullHand) => {
     const cardStrings = fullHand.convertCardsToStringArray();

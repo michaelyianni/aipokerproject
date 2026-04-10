@@ -387,7 +387,7 @@ export default class TableStateRepository {
                 delete this.players[playerId];
             }
             else {
-                player.resetForNewRound();
+                player.resetForNewHand();
             }
         }
     }
@@ -441,7 +441,7 @@ export default class TableStateRepository {
         this.currentTurnPlayerId = this.activePlayerIds[nextIndex];
     }
 
-    // COVER CASE THAT CURRENT TURN PLAYER IS REMOVED IN GAME ENGINE
+ 
     removeActivePlayer(playerId) {
         this.activePlayerIds = this.activePlayerIds.filter(id => id !== playerId);
     }

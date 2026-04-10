@@ -1,3 +1,5 @@
+import 'winner_model.dart';
+
 class HandResults {
   final List<Winner> winners;
   final List<String> otherActivePlayers;
@@ -32,30 +34,3 @@ class HandResults {
   }
 }
 
-class Winner {
-  final String playerId;
-  final int amount;
-  final String reason;
-
-  const Winner({
-    required this.playerId,
-    required this.amount,
-    required this.reason,
-  });
-
-  factory Winner.fromJson(Map<String, dynamic> json) {
-    return Winner(
-      playerId: json['playerId'] ?? '',
-      amount: json['amount'] ?? 0,
-      reason: json['reason'] ?? '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'playerId': playerId,
-      'amount': amount,
-      'reason': reason,
-    };
-  }
-}

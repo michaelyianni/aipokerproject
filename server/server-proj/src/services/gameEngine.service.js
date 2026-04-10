@@ -1,13 +1,13 @@
 import Card from "../models/Card.js";
 import CommunityCards from "../models/CommunityCards.js";
 import TableStateRepository from "../repositories/tableState.repository.js";
-import FullHand from "../models/FullHand.js";
+import FullHand from "../dto/FullHand.js";
 import ActionChecker from "../utils/actionChecker.util.js";
 import GameState from "../client_models/gameState.js";
 import { compareHands } from "../utils/handEvaluator.util.js";
 import { GAME_ACTIONS } from "../constants/gameActions.js";
 import { PokerStreets } from "../constants/pokerStreets.js";
-import Winner from "../models/Winner.js";
+import Winner from "../dto/Winner.js";
 
 export default class GameEngineService {
     constructor(players = [], onStateChangeCallback = null, testingMode = false) {
@@ -194,12 +194,11 @@ export default class GameEngineService {
 
         const canActPlayer = this.tableStateRepository.getPlayer(canActIds[0]);
 
-        if (canActIds.length === 1 && allInIds.length >= 1) {
-            if (canActPlayer.currentBet >= this.tableStateRepository.getCurrentBet()) { // Check if the one player who can act has matched the bet
-                this.runOutBoardToShowdown();
-                this.determineWinners();
-                return this.endHand();
-            }
+        if (canActIds.length === 1 && allInIds.length >= 1 && canActPlayer.currentBet >= this.tableStateRepository.getCurrentBet()) { // Check if the one player who can act has matched the bet
+            this.runOutBoardToShowdown();
+            this.determineWinners();
+            return this.endHand();
+        
         }
 
         if (canActIds.length === 0) {
@@ -237,15 +236,12 @@ export default class GameEngineService {
     }
 
     isBettingRoundComplete() {
-        const inHandIds = this.tableStateRepository.getActivePlayerIds(); // not folded
+        const canActIds = this.tableStateRepository.getCanActPlayerIds(); // not folded
         const currentBet = this.tableStateRepository.getCurrentBet();
-        const currentTurnId = this.tableStateRepository.getCurrentTurnPlayerId();
 
-        // 1) Check that everyone who can act is either matched, folded, or all-in
-        for (const playerId of inHandIds) {
+        // 1) Check that everyone who can act is matched
+        for (const playerId of canActIds) {
             const p = this.tableStateRepository.getPlayer(playerId);
-
-            if (p.isAllIn) continue;
 
             if (p.currentBet < currentBet) {
 
@@ -258,10 +254,9 @@ export default class GameEngineService {
 
         // 2) Check that every player has acted (checked)
 
-        for (const playerId of inHandIds) {
+        for (const playerId of canActIds) {
             const p = this.tableStateRepository.getPlayer(playerId);
-            if (p.hasFolded || p.isAllIn) continue;
-
+ 
             if (!p.hasActedThisStreet) {
                 console.log(`Betting round not complete: player ${playerId} has not acted this street`);
                 return false;

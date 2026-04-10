@@ -3,6 +3,7 @@ import '../../models/game_models/player_model.dart';
 import '../../models/game_models/hand_results_model.dart';
 import '../../models/game_models/comm_cards_model.dart';
 import '../../utils/card_image_utils.dart';
+import '../../models/game_models/winner_model.dart';
 
 class HandResultsDialog extends StatelessWidget {
   final Map<String, Player> players;

@@ -8,7 +8,7 @@ import assert from 'assert';
 import Hand from '../../src/models/Hand.js';
 import CommunityCards from '../../src/models/CommunityCards.js';
 import Player from '../../src/models/Player.js';
-import FullHand from '../../src/models/FullHand.js';
+import FullHand from '../../src/dto/FullHand.js';
 import Card from "../../src/models/Card.js";
 
 console.log("Testing handEvaluator utility...");

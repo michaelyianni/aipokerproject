@@ -52,7 +52,7 @@ try {
 assert.strictEqual(errorCaught, true, "Placing a bet when folded should throw an error");
 
 
-player.resetForNewRound();
+player.resetForNewHand();
 assert.strictEqual(player.getHand().getCards().length, 0, "Player hand should be empty after clearing");
 assert.strictEqual(player.getCurrentBet(), 0, "Player current bet should be 0 after reset");
 assert.strictEqual(player.getFoldStatus(), false, "Player should not be folded after reset");

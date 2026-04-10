@@ -64,7 +64,7 @@ export default class Player {
         this.hand.addCard(card);
     }
 
-    resetForNewRound() {
+    resetForNewHand() {
         this.hand.clear();
         this.currentBet = 0;
         this.totalBetThisHand = 0;

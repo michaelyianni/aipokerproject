@@ -1,5 +1,6 @@
 import 'package:aipoker_flutter_app/models/game_models/pot_model.dart';
 import 'package:aipoker_flutter_app/models/hand_history/street_record.dart';
+import 'package:aipoker_flutter_app/models/game_models/winner_model.dart';
 
 
 class HandHistory {
@@ -9,7 +10,7 @@ class HandHistory {
   final List<StreetRecord>
   streetRecords; // Records for each street (pre-flop, flop, turn, river)
   final List<Pot> potsBeforeAward; // Final pots at the end of the hand
-  final List<WinnerRecord> winners; // Final winners of the hand
+  final List<Winner> winners; // Final winners of the hand
   final Map<String, List<String>> shownHoleCards; // playerId to their hole cards if shown at showdown
 
   HandHistory({
@@ -58,7 +59,7 @@ class HandHistory {
 
     final winnersJson = json['winners'] as List<dynamic>? ?? [];
     final winners = winnersJson
-        .map((e) => WinnerRecord.fromJson(e as Map<String, dynamic>))
+        .map((e) => Winner.fromJson(e as Map<String, dynamic>))
         .toList();
 
     final shownHoleCardsJson =
@@ -246,22 +247,4 @@ class PlayerInfo {
   }
 }
 
-class WinnerRecord {
-  String playerId;
-  final int amount; // Amount won from the pot
-  final String reason; // e.g., 'best hand' or 'last player standing'
 
-  WinnerRecord({
-    required this.playerId,
-    required this.amount,
-    required this.reason,
-  });
-
-  factory WinnerRecord.fromJson(Map<String, dynamic> json) {
-    return WinnerRecord(
-      playerId: json['playerId'] ?? '',
-      amount: json['amount'] ?? 0,
-      reason: json['reason'] ?? 'Unknown',
-    );
-  }
-}

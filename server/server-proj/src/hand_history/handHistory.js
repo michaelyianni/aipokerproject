@@ -1,5 +1,7 @@
 import PlayerInfo from "./playerInfo.js";
-import ActionRecordGenerator from "./action_record/actionRecordGenerator.js";
+import PlayerActionRecord from "./action_record/playerActionRecord.js";
+import StreetRecord from "./action_record/streetRecord.js";
+import { GAME_ACTIONS } from "../constants/gameActions.js";
 
 export default class HandHistory {
 
@@ -7,7 +9,7 @@ export default class HandHistory {
     this.smallBlindAmount = 0;
     this.bigBlindAmount = 0;
     this.playerInfo = {};
-    this.streetRecords = []; 
+    this.streetRecords = [];
     this.potsBeforeAward = [];
     this.winners = [];  // playerIds, amountWon, reason 
     this.shownHoleCards = {}; // playerId -> hole cards shown at showdown
@@ -21,19 +23,28 @@ export default class HandHistory {
     if (this.streetRecords.length === 0) {
       throw new Error('No street record available to add player action.');
     }
-    
-    this.streetRecords[this.streetRecords.length - 1].addPlayerAction(ActionRecordGenerator.createPostBlindAction(playerId, blindType, amountAddedToPot, toCallBefore, streetContributionAfter, tableCurrentBetAfter, isAllIn));
+
+    if (!["POST_SB", "POST_BB"].includes(blindType)) {
+      throw new Error('Invalid blind type for post-blind action: ' + blindType);
+    }
+
+    this.streetRecords[this.streetRecords.length - 1].addPlayerAction(new PlayerActionRecord(playerId, blindType, amountAddedToPot, toCallBefore, streetContributionAfter, tableCurrentBetAfter, isAllIn));
   }
 
   addActionRecord(playerId, action, amountAddedToPot = 0, toCallBefore = 0, streetContributionAfter = 0, tableCurrentBetAfter = 0, isAllIn = false) {
     if (this.streetRecords.length === 0) {
       throw new Error('No street record available to add player action.');
     }
-    this.streetRecords[this.streetRecords.length - 1].addPlayerAction(ActionRecordGenerator.createPlayerAction(playerId, action, amountAddedToPot, toCallBefore, streetContributionAfter, tableCurrentBetAfter, isAllIn));
+    if (!Object.values(GAME_ACTIONS).includes(action)) {
+      throw new Error('Invalid action: ' + action);
+    }
+
+    this.streetRecords[this.streetRecords.length - 1].addPlayerAction(new PlayerActionRecord(playerId, action, amountAddedToPot, toCallBefore, streetContributionAfter, tableCurrentBetAfter, isAllIn));
   }
 
   addStreetRecord(street, communityCardsStr, pots) {
-    this.streetRecords.push(ActionRecordGenerator.createStreetRecord(street, communityCardsStr, pots));
+
+    this.streetRecords.push(new StreetRecord(street, communityCardsStr, pots));
   }
 
   setWinners(winners) {

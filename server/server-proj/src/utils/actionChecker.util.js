@@ -91,13 +91,6 @@ export default class ActionChecker {
             throw new Error('Cannot raise when there is no bet on the table - should bet instead');
         }
 
-        // If bet amount is more than player's chips, they can only raise all-in with their remaining chips
-
-        // Calculate the total bet amount of the raise (current bet + raise amount)
-        // let totalBet = currentBet + amount;
-        // if (totalBet > player.chips + player.getCurrentBet()) {
-        //     throw new Error('Cannot raise more than your total chips. Player chips: ' + player.chips + ', current bet: ' + player.getCurrentBet() + ', attempted raise total bet: ' + totalBet);
-        // }
 
         return true;
     }

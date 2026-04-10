@@ -3,6 +3,7 @@ import 'game_models/player_model.dart';
 import 'game_models/comm_cards_model.dart';
 import 'game_models/pot_model.dart';
 import 'game_models/hand_results_model.dart';
+import 'game_models/winner_model.dart';
 
 class GameState {
   // Community cards

@@ -1,7 +1,7 @@
-import Card from "./Card.js";
-import Hand from "./Hand.js";
-import Player from "./Player.js";
-import CommunityCards from "./CommunityCards.js";
+import Card from "../models/Card.js";
+import Hand from "../models/Hand.js";
+import Player from "../models/Player.js";
+import CommunityCards from "../models/CommunityCards.js";
 
 export default class FullHand {
     constructor(player, hand, communityCards) {
