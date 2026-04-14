@@ -105,9 +105,9 @@ function closeAndWait(socket, timeoutMs = 2000) {
     });
 }
 
-/**
- * Wait for all sockets to receive game:state matching a predicate
- */
+
+// Wait for all sockets to receive game:state matching a predicate
+ 
 async function waitForGameStateOnAll(sockets, predicate, timeoutMs = 5000) {
     const promises = sockets.map((socket) =>
         waitForEventMatching(socket, "game:state", predicate, timeoutMs)
@@ -182,7 +182,7 @@ describe("Game System Test (Full Socket Integration)", function () {
         expect(aliceJoin.ok).to.equal(true);
         expect(aliceJoin.isHost).to.equal(true);
         const aliceId = aliceJoin.playerId;
-        console.log(`✓ Alice joined as host (ID: ${aliceId})`);
+        console.log(`Alice joined as host (ID: ${aliceId})`);
 
         // Bob joins
         const { ack: bobJoin } = await emitAckAndConfirmOn(
@@ -198,7 +198,7 @@ describe("Game System Test (Full Socket Integration)", function () {
         expect(bobJoin.ok).to.equal(true);
         expect(bobJoin.isHost).to.equal(false);
         const bobId = bobJoin.playerId;
-        console.log(`✓ Bob joined (ID: ${bobId})`);
+        console.log(`Bob joined (ID: ${bobId})`);
 
         // Charlie joins
         const { ack: charlieJoin } = await emitAckAndConfirmOn(
@@ -213,7 +213,7 @@ describe("Game System Test (Full Socket Integration)", function () {
         );
         expect(charlieJoin.ok).to.equal(true);
         const charlieId = charlieJoin.playerId;
-        console.log(`✓ Charlie joined (ID: ${charlieId})`);
+        console.log(`Charlie joined (ID: ${charlieId})`);
 
         // Diana joins
         const { ack: dianaJoin } = await emitAckAndConfirmOn(
@@ -228,14 +228,14 @@ describe("Game System Test (Full Socket Integration)", function () {
         );
         expect(dianaJoin.ok).to.equal(true);
         const dianaId = dianaJoin.playerId;
-        console.log(`✓ Diana joined (ID: ${dianaId})`);
+        console.log(`Diana joined (ID: ${dianaId})`);
 
         expect(srv.lobbyRepository.getLobbySize()).to.equal(4);
 
         // ---------- STEP 2: Host Starts Game ----------
         console.log("\n--- STEP 2: Host Starts Game ---");
 
-        // ✅ SET UP LISTENERS FIRST (before emitting lobby:start)
+        // SET UP LISTENERS FIRST (before emitting lobby:start)
         const gameStatePromises = waitForGameStateOnAll(
             [alice, bob, charlie, diana],
             (state) => state && state.currentStreet === PokerStreets.PRE_FLOP,
@@ -250,17 +250,17 @@ describe("Game System Test (Full Socket Integration)", function () {
         // NOW start the game
         const hostStartAck = await emitAck(alice, "lobby:start", { testingMode: true });
         expect(hostStartAck.ok).to.equal(true);
-        console.log(`✓ Host (Alice) started the game`);
+        console.log("Host (Alice) started the game");
 
         // Verify all clients received game:started
         await Promise.all(gameStartedPromises);
-        console.log(`✓ All clients received game:started event`);
+        console.log("All clients received game:started event");
 
         expect(srv.lobbyRepository.isGameStarted).to.equal(true);
 
         // Now wait for the game states (listeners already set up)
         const initialStates = await gameStatePromises;
-        console.log(`✓ All clients received initial game:state (PRE_FLOP)`);
+        console.log("All clients received initial game:state (PRE_FLOP)");
 
         // Validate initial game state structure
         const aliceState = initialStates[0];
@@ -271,7 +271,7 @@ describe("Game System Test (Full Socket Integration)", function () {
         expect(aliceState).to.have.property("communityCards");
         expect(aliceState).to.have.property("players");
         expect(Object.keys(aliceState.players).length).to.equal(4);
-        console.log(`✓ Game state has correct structure`);
+        console.log("Game state has correct structure");
 
         // Determine game positions from state
         const dealerId = aliceState.dealerId;
@@ -302,7 +302,7 @@ describe("Game System Test (Full Socket Integration)", function () {
         });
         expect(invalidAck.ok).to.equal(false);
         expect(invalidAck.error).to.match(/cannot act out of turn/i);
-        console.log(`✓ Out-of-turn action correctly rejected`);
+        console.log("Out-of-turn action correctly rejected");
 
         // Player actions - follow betting order
         let currentState = aliceState;
@@ -325,21 +325,21 @@ describe("Game System Test (Full Socket Integration)", function () {
             if (currentBet === 0) {
                 action = GAME_ACTIONS.CHECK;
                 amount = 0;
-                console.log(`  Action: CHECK`);
+                console.log("  Action: CHECK");
             } else {
                 // For variety, first player calls, others call or fold
                 if (actionCount === 0 || actionCount === 1) {
                     action = GAME_ACTIONS.CALL;
                     amount = 0;
-                    console.log(`  Action: CALL`);
+                    console.log("  Action: CALL");
                 } else if (actionCount === 2) {
                     action = GAME_ACTIONS.FOLD;
                     amount = 0;
-                    console.log(`  Action: FOLD`);
+                    console.log("  Action: FOLD");
                 } else if (actionCount === 3) {
                     action = GAME_ACTIONS.CHECK;
                     amount = 0;
-                    console.log(`  Action: CHECK`);
+                    console.log("  Action: CHECK");
                 }
             }
 
@@ -357,7 +357,7 @@ describe("Game System Test (Full Socket Integration)", function () {
                 amount,
             });
 
-            console.log(`  Action ack:`, actionAck);
+            console.log("  Action ack:", actionAck);
 
             expect(actionAck.ok).to.equal(true);
 
@@ -366,7 +366,7 @@ describe("Game System Test (Full Socket Integration)", function () {
             currentState = newStates[0];
 
             console.log(
-                `  ✓ Action broadcasted | New street: ${currentState.currentStreet} | Next turn: ${currentState.currentTurnPlayerId}`
+                `   Action broadcasted | New street: ${currentState.currentStreet} | Next turn: ${currentState.currentTurnPlayerId}`
             );
 
             actionCount++;
@@ -377,13 +377,13 @@ describe("Game System Test (Full Socket Integration)", function () {
         // Should have advanced to FLOP
         expect(currentState.currentStreet).to.equal(PokerStreets.FLOP);
         expect(currentState.communityCards.length).to.equal(3);
-        console.log(`\n✓ Advanced to FLOP with ${currentState.communityCards.length} community cards`);
+        console.log(`\n Advanced to FLOP with ${currentState.communityCards.length} community cards`);
 
         // Verify pots exist
         expect(currentState.pots).to.be.an("array");
         expect(currentState.pots.length).to.be.greaterThan(0);
         const totalPot = currentState.pots.reduce((sum, pot) => sum + pot.amount, 0);
-        console.log(`✓ Pots created with total: ${totalPot} chips`);
+        console.log(`Pots created with total: ${totalPot} chips`);
 
         // ---------- STEP 4: Play FLOP Betting Round with Raises ----------
         console.log("\n--- STEP 4: FLOP Betting with Raises ---");
@@ -419,7 +419,7 @@ describe("Game System Test (Full Socket Integration)", function () {
                 });
                 expect(invalidBet.ok).to.equal(false);
                 expect(invalidBet.error).to.match(/Invalid amount|greater than 0/i);
-                console.log(`  ✓ BET 0 correctly rejected`);
+                console.log("   BET 0 correctly rejected");
             }
 
             // Decide action
@@ -432,7 +432,7 @@ describe("Game System Test (Full Socket Integration)", function () {
                 } else {
                     action = GAME_ACTIONS.CHECK;
                     amount = 0;
-                    console.log(`  Action: CHECK`);
+                    console.log("  Action: CHECK");
                 }
             } else {
                 if (actionCount === 1) {
@@ -442,7 +442,7 @@ describe("Game System Test (Full Socket Integration)", function () {
                 } else {
                     action = GAME_ACTIONS.CALL;
                     amount = 0;
-                    console.log(`  Action: CALL`);
+                    console.log("  Action: CALL");
                 }
             }
 
@@ -467,7 +467,7 @@ describe("Game System Test (Full Socket Integration)", function () {
             currentState = newStates[0];
 
             console.log(
-                `  ✓ Action broadcasted | New street: ${currentState.currentStreet} | Next turn: ${currentState.currentTurnPlayerId}`
+                `  Action broadcasted | New street: ${currentState.currentStreet} | Next turn: ${currentState.currentTurnPlayerId}`
             );
 
             actionCount++;
@@ -479,7 +479,7 @@ describe("Game System Test (Full Socket Integration)", function () {
         // Should have advanced to TURN
         expect(currentState.currentStreet).to.equal(PokerStreets.TURN);
         expect(currentState.communityCards.length).to.equal(4);
-        console.log(`\n✓ Advanced to TURN with ${currentState.communityCards.length} community cards`);
+        console.log(`\n Advanced to TURN with ${currentState.communityCards.length} community cards`);
 
         // ---------- STEP 5: Player Disconnect During Game ----------
         console.log("\n--- STEP 5: Player Disconnect During Game ---");
@@ -510,7 +510,7 @@ describe("Game System Test (Full Socket Integration)", function () {
         console.log(disconnectedPlayer);
 
         expect(disconnectedPlayer.hasLeft).to.equal(true);
-        console.log(`✓ Player ${disconnectingPlayerId} marked as disconnected in game state`);
+        console.log(`Player ${disconnectingPlayerId} marked as disconnected in game state`);
 
         // ---------- STEP 6: Continue Game on TURN ----------
         console.log("\n--- STEP 6: Continue TURN Betting ---");
@@ -569,7 +569,7 @@ describe("Game System Test (Full Socket Integration)", function () {
             finalStates = newStates;
 
             console.log(
-                `  ✓ Action broadcasted | New street: ${currentState.currentStreet} | Next turn: ${currentState.currentTurnPlayerId}`
+                `  Action broadcasted | New street: ${currentState.currentStreet} | Next turn: ${currentState.currentTurnPlayerId}`
             );
 
             actionCount++;
@@ -578,7 +578,7 @@ describe("Game System Test (Full Socket Integration)", function () {
         }
 
         // Should have advanced to RIVER
-        console.log(`\n✓ Street after TURN: ${currentState.currentStreet}`);
+        console.log(`\nStreet after TURN: ${currentState.currentStreet}`);
         expect([PokerStreets.RIVER, PokerStreets.PRE_FLOP]).to.include(currentState.currentStreet);
 
         // ---------- STEP 7: Verify Game State Consistency ----------
@@ -590,16 +590,16 @@ describe("Game System Test (Full Socket Integration)", function () {
 
         expect(aliceState2.currentStreet).to.equal(bobState2.currentStreet);
         expect(aliceState2.currentStreet).to.equal(dianaState2.currentStreet);
-        console.log(`✓ All clients have consistent currentStreet: ${aliceState2.currentStreet}`);
+        console.log(`All clients have consistent currentStreet: ${aliceState2.currentStreet}`);
 
         expect(aliceState2.currentBet).to.equal(bobState2.currentBet);
         expect(aliceState2.currentBet).to.equal(dianaState2.currentBet);
-        console.log(`✓ All clients have consistent currentBet: ${aliceState2.currentBet}`);
+        console.log(`All clients have consistent currentBet: ${aliceState2.currentBet}`);
 
         expect(aliceState2.communityCards.length).to.equal(bobState2.communityCards.length);
         expect(aliceState2.communityCards.length).to.equal(dianaState2.communityCards.length);
         console.log(
-            `✓ All clients have consistent communityCards count: ${aliceState2.communityCards.length}`
+            `All clients have consistent communityCards count: ${aliceState2.communityCards.length}`
         );
 
         // Verify player chip counts are consistent
@@ -607,7 +607,7 @@ describe("Game System Test (Full Socket Integration)", function () {
             expect(aliceState2.players[playerId].chips).to.equal(bobState2.players[playerId].chips);
             expect(aliceState2.players[playerId].chips).to.equal(dianaState2.players[playerId].chips);
         });
-        console.log(`✓ All clients have consistent player chip counts`);
+        console.log(`All clients have consistent player chip counts`);
 
 
         // -------------- STEP 8: Verify Game State Correctness ----------
@@ -641,7 +641,7 @@ describe("Game System Test (Full Socket Integration)", function () {
         currentState = newStates[0];
 
         console.log(
-            `  ✓ Action broadcasted | New street: ${currentState.currentStreet} | Next turn: ${currentState.currentTurnPlayerId}`
+            `  Action broadcasted | New street: ${currentState.currentStreet} | Next turn: ${currentState.currentTurnPlayerId}`
         );
 
         // Alice (P2) goes all-in on river
@@ -710,21 +710,6 @@ describe("Game System Test (Full Socket Integration)", function () {
         console.log("\n[HAND HISTORY]");
         console.log(JSON.stringify(handHistory[0], null, 2));
 
-        // ---------- FINAL VALIDATION ----------
-        console.log("\n========== FINAL VALIDATION ==========\n");
-
-        console.log(`✓ 4 players successfully joined lobby`);
-        console.log(`✓ Host successfully started game`);
-        console.log(`✓ All clients received game:started event`);
-        console.log(`✓ All clients received initial game:state`);
-        console.log(`✓ Pre-flop betting completed with multiple actions`);
-        console.log(`✓ Invalid actions correctly rejected`);
-        console.log(`✓ Game advanced through streets (PRE_FLOP → FLOP → TURN)`);
-        console.log(`✓ FLOP betting with BET and RAISE actions`);
-        console.log(`✓ Player disconnect handled mid-game`);
-        console.log(`✓ Game continued after disconnect`);
-        console.log(`✓ All clients maintained consistent game state`);
-        console.log(`✓ Game state broadcasts working correctly`);
 
         console.log("\nFULL GAME SYSTEM TEST PASSED.\n");
     });

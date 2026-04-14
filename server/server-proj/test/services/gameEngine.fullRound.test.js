@@ -24,7 +24,7 @@ let gameEngine = new GameEngineService(players, null, true);
 
 console.log("\n========== ROUND 1: COMPLEX BETTING WITH ALL-INS AND SIDE POTS ==========\n");
 
-// Set varied chip stacks to create interesting all-in scenarios
+// Set varied chip stacks to create complex all-in scenarios
 gameEngine.tableStateRepository.getPlayer(player1.id).chips = 1000; // Alice - big stack (Dealer)
 gameEngine.tableStateRepository.getPlayer(player2.id).chips = 150;  // Bob - short stack (Small Blind)
 gameEngine.tableStateRepository.getPlayer(player3.id).chips = 500;  // Charlie - medium (Big Blind)
@@ -59,7 +59,7 @@ let currentBet = gameEngine.tableStateRepository.getCurrentBet();
 
 // Verify first to act is player4 (after big blind)
 assert.strictEqual(turnId, player4.id, "First to act pre-flop should be player4 (after big blind)");
-console.log(`[INFO] First to act: P4 (Diana) - correct position after big blind`);
+console.log("[INFO] First to act: P4 (Diana) - correct position after big blind");
 
 // Test invalid action: Player tries to CHECK when there's a bet
 console.log(`\n[INVALID ACTION TEST] P4 (Diana) tries to CHECK when currentBet=${currentBet}`);
@@ -68,58 +68,58 @@ assert.throws(
   /cannot check/i,
   "CHECK should be invalid when there is a bet on the table"
 );
-console.log(`[VALIDATION] ✓ CHECK correctly rejected`);
+console.log("[VALIDATION] CHECK correctly rejected");
 
 // Test invalid action: Out of turn (try player1)
-console.log(`\n[INVALID ACTION TEST] P1 (Alice) tries to act out of turn`);
+console.log("\n[INVALID ACTION TEST] P1 (Alice) tries to act out of turn");
 assert.throws(
   () => ActionChecker.isValidAction(player1.id, GAME_ACTIONS.FOLD, 0, gameEngine.tableStateRepository),
   /cannot act out of turn/i,
   "Out-of-turn action should be rejected"
 );
-console.log(`[VALIDATION] ✓ Out-of-turn action correctly rejected`);
+console.log("[VALIDATION] Out-of-turn action correctly rejected");
 
 // Player 4 (Diana) - CALL
-console.log(`\n[ACTION] P4 (Diana) -> CALL`);
+console.log("\n[ACTION] P4 (Diana) -> CALL");
 gameEngine.playerAction(player4.id, GAME_ACTIONS.CALL);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P4 currentBet = ${gameEngine.tableStateRepository.getPlayer(player4.id).currentBet}`);
 
 // Player 5 (Eve) - RAISE to 100
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player5.id, "Turn should be player5");
-console.log(`\n[ACTION] P5 (Eve) -> RAISE to 100`);
+console.log("\n[ACTION] P5 (Eve) -> RAISE to 100");
 gameEngine.playerAction(player5.id, GAME_ACTIONS.RAISE, 90);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P5 currentBet = ${gameEngine.tableStateRepository.getPlayer(player5.id).currentBet}`);
 
 // Player 6 (Frank) - CALL (ALL-IN with only 75 chips)
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player6.id, "Turn should be player6");
-console.log(`\n[ACTION] P6 (Frank) -> CALL (ALL-IN with only 75 chips)`);
+console.log("\n[ACTION] P6 (Frank) -> CALL (ALL-IN with only 75 chips)");
 gameEngine.playerAction(player6.id, GAME_ACTIONS.CALL);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P6 currentBet = ${gameEngine.tableStateRepository.getPlayer(player6.id).currentBet}`);
 assert.strictEqual(gameEngine.tableStateRepository.getPlayer(player6.id).isAllIn, true, "Player6 should be all-in");
 console.log(`[INFO] P6 is ALL-IN with ${gameEngine.tableStateRepository.getPlayer(player6.id).currentBet} chips bet`);
 
 // Test invalid action: All-in player cannot act
-console.log(`\n[INVALID ACTION TEST] P6 (Frank) tries to act while all-in`);
+console.log("\n[INVALID ACTION TEST] P6 (Frank) tries to act while all-in");
 assert.throws(
   () => ActionChecker.isValidAction(player6.id, GAME_ACTIONS.FOLD, 0, gameEngine.tableStateRepository),
   /cannot act/i,
   "All-in player should not be allowed to act"
 );
-console.log(`[VALIDATION] ✓ All-in player action correctly rejected`);
+console.log("[VALIDATION] All-in player action correctly rejected");
 
 // Player 1 (Alice - Dealer) - RAISE to 200
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player1.id, "Turn should be player1 (dealer)");
-console.log(`\n[ACTION] P1 (Alice) -> RAISE to 200`);
+console.log("\n[ACTION] P1 (Alice) -> RAISE to 200");
 gameEngine.playerAction(player1.id, GAME_ACTIONS.RAISE, 100);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P1 currentBet = ${gameEngine.tableStateRepository.getPlayer(player1.id).currentBet}`);
 
 // Player 2 (Bob - Small Blind) - RAISE ALL-IN to 150
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player2.id, "Turn should be player2 (small blind)");
-console.log(`\n[ACTION] P2 (Bob) -> CALL (ALL-IN with only 150 chips - cannot match 200)`);
+console.log("\n[ACTION] P2 (Bob) -> CALL (ALL-IN with only 150 chips - cannot match 200)");
 let p2ChipsBefore = gameEngine.tableStateRepository.getPlayer(player2.id).chips;
 gameEngine.playerAction(player2.id, GAME_ACTIONS.CALL);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P2 currentBet = ${gameEngine.tableStateRepository.getPlayer(player2.id).currentBet}`);
@@ -129,14 +129,14 @@ console.log(`[INFO] P2 is ALL-IN with ${gameEngine.tableStateRepository.getPlaye
 // Player 3 (Charlie - Big Blind) - CALL
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player3.id, "Turn should be player3 (big blind)");
-console.log(`\n[ACTION] P3 (Charlie) -> CALL`);
+console.log("\n[ACTION] P3 (Charlie) -> CALL");
 gameEngine.playerAction(player3.id, GAME_ACTIONS.CALL);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P3 currentBet = ${gameEngine.tableStateRepository.getPlayer(player3.id).currentBet}`);
 
 // Player 4 (Diana) - DISCONNECTS during their turn
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player4.id, "Turn should be player4");
-console.log(`\n[DISCONNECT] P4 (Diana) disconnects during their turn`);
+console.log("\n[DISCONNECT] P4 (Diana) disconnects during their turn");
 let p4ChipsBefore = gameEngine.tableStateRepository.getPlayer(player4.id).chips;
 gameEngine.playerDisconnect(player4.id);
 
@@ -148,7 +148,7 @@ console.log(`[INFO] P4 removed from active players. Turn advanced.`);
 // Player 5 (Eve) - CALL to close pre-flop
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player5.id, "Turn should be player5 after player4 disconnect");
-console.log(`\n[ACTION] P5 (Eve) -> CALL`);
+console.log("\n[ACTION] P5 (Eve) -> CALL");
 gameEngine.playerAction(player5.id, GAME_ACTIONS.CALL);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P5 currentBet = ${gameEngine.tableStateRepository.getPlayer(player5.id).currentBet}`);
 
@@ -201,43 +201,43 @@ console.log(`[INFO] First to act on FLOP: P${players.findIndex(p => p.id === tur
 assert.strictEqual(turnId, player3.id, "First to act on FLOP should be player3 (P2 is all-in)");
 
 // Test valid CHECK when currentBet = 0
-console.log(`\n[VALIDATION TEST] P3 (Charlie) can CHECK when currentBet=0`);
+console.log("\n[VALIDATION TEST] P3 (Charlie) can CHECK when currentBet=0");
 assert.strictEqual(
   ActionChecker.isValidAction(turnId, GAME_ACTIONS.CHECK, 0, gameEngine.tableStateRepository),
   true,
   "CHECK should be valid when currentBet == 0"
 );
-console.log(`[VALIDATION] ✓ CHECK correctly allowed`);
+console.log("[VALIDATION] CHECK correctly allowed");
 
 // Test invalid CALL when currentBet = 0
-console.log(`\n[INVALID ACTION TEST] P3 (Charlie) tries to CALL when currentBet=0`);
+console.log("\n[INVALID ACTION TEST] P3 (Charlie) tries to CALL when currentBet=0");
 assert.throws(
   () => ActionChecker.isValidAction(turnId, GAME_ACTIONS.CALL, 0, gameEngine.tableStateRepository),
   /cannot call when there is no bet/i,
   "CALL should be invalid when currentBet == 0"
 );
-console.log(`[VALIDATION] ✓ CALL correctly rejected`);
+console.log("[VALIDATION] CALL correctly rejected");
 
 // Test invalid RAISE when currentBet = 0
-console.log(`\n[INVALID ACTION TEST] P3 (Charlie) tries to RAISE when currentBet=0`);
+console.log("\n[INVALID ACTION TEST] P3 (Charlie) tries to RAISE when currentBet=0");
 assert.throws(
   () => ActionChecker.isValidAction(turnId, GAME_ACTIONS.RAISE, 10, gameEngine.tableStateRepository),
   /cannot raise when there is no bet/i,
   "RAISE should be invalid when currentBet == 0"
 );
-console.log(`[VALIDATION] ✓ RAISE correctly rejected`);
+console.log("[VALIDATION] RAISE correctly rejected");
 
 // Player 3 (Charlie) - BET 100
-console.log(`\n[ACTION] P3 (Charlie) -> BET 100`);
+console.log("\n[ACTION] P3 (Charlie) -> BET 100");
 
 // Test invalid BET with amount 0
-console.log(`\n[INVALID ACTION TEST] P3 (Charlie) tries to BET 0`);
+console.log("\n[INVALID ACTION TEST] P3 (Charlie) tries to BET 0");
 assert.throws(
   () => ActionChecker.isValidAction(turnId, GAME_ACTIONS.BET, 0, gameEngine.tableStateRepository),
   /greater than 0/i,
   "BET with amount 0 should be invalid"
 );
-console.log(`[VALIDATION] ✓ BET 0 correctly rejected`);
+console.log("[VALIDATION] BET 0 correctly rejected");
 
 gameEngine.playerAction(player3.id, GAME_ACTIONS.BET, 100);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
@@ -250,25 +250,25 @@ assert.throws(
   /cannot bet when there is already a bet/i,
   "BET should be invalid when currentBet > 0"
 );
-console.log(`[VALIDATION] ✓ BET when bet exists correctly rejected`);
+console.log("[VALIDATION] BET when bet exists correctly rejected");
 
 // Player 5 (Eve) - RAISE to 250
 assert.strictEqual(turnId, player5.id, "Turn should be player5");
-console.log(`\n[ACTION] P5 (Eve) -> RAISE to 250`);
+console.log("\n[ACTION] P5 (Eve) -> RAISE to 250");
 gameEngine.playerAction(player5.id, GAME_ACTIONS.RAISE, 150);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
 
 // Player 1 (Alice) - CALL
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player1.id, "Turn should be player1");
-console.log(`\n[ACTION] P1 (Alice) -> CALL`);
+console.log("\n[ACTION] P1 (Alice) -> CALL");
 gameEngine.playerAction(player1.id, GAME_ACTIONS.CALL);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
 
 // Player 3 (Charlie) - CALL
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player3.id, "Turn should be player3");
-console.log(`\n[ACTION] P3 (Charlie) -> CALL`);
+console.log("\n[ACTION] P3 (Charlie) -> CALL");
 gameEngine.playerAction(player3.id, GAME_ACTIONS.CALL);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
 
@@ -294,22 +294,22 @@ gameEngine.playerAction(player3.id, GAME_ACTIONS.CHECK);
 // Player 5 (Eve) - BET 150
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player5.id, "Turn should be player5");
-console.log(`\n[ACTION] P5 (Eve) -> BET 150`);
+console.log("\n[ACTION] P5 (Eve) -> BET 150");
 gameEngine.playerAction(player5.id, GAME_ACTIONS.BET, 150);
 console.log(`[BET] Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
 
 // Player 1 (Alice) - FOLD
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player1.id, "Turn should be player1");
-console.log(`\n[ACTION] P1 (Alice) -> FOLD`);
+console.log("\n[ACTION] P1 (Alice) -> FOLD");
 gameEngine.playerAction(player1.id, GAME_ACTIONS.FOLD);
-console.log(`[INFO] P1 folded and removed from active players`);
+console.log("[INFO] P1 folded and removed from active players");
 assert.strictEqual(gameEngine.tableStateRepository.getActivePlayerIds().includes(player1.id), false, "Player1 should not be active after folding");
 
 // Player 3 (Charlie) - DISCONNECTS mid-action
 turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player3.id, "Turn should be player3");
-console.log(`\n[DISCONNECT] P3 (Charlie) disconnects during their turn on TURN`);
+console.log("\n[DISCONNECT] P3 (Charlie) disconnects during their turn on TURN");
 let p3ChipsBefore = gameEngine.tableStateRepository.getPlayer(player3.id).chips;
 gameEngine.playerDisconnect(player3.id);
 
@@ -321,7 +321,7 @@ console.log(`\n[STREET] After P3 disconnects, street=${currentStreet}`);
 assert.strictEqual(currentStreet, PokerStreets.HAND_COMPLETE, "Should move to HAND_COMPLETE after all opponents fold/disconnect except one");
 
 // Verify chip changes
-console.log(`\n[RESULT] Chip changes from Round 1:`);
+console.log("\n[RESULT] Chip changes from Round 1:");
 players.forEach((player, idx) => {
   const p = gameEngine.tableStateRepository.getPlayer(player.id);
   if (p) {
@@ -343,14 +343,14 @@ assert.strictEqual(currentStreet, PokerStreets.PRE_FLOP, "Should be PRE_FLOP aft
 
 
 // Verify eliminated players are not active
-console.log(`\n[INFO] Checking eliminated players...`);
+console.log("\n[INFO] Checking eliminated players...");
 if (gameEngine.tableStateRepository.getPlayer(player2.id).chips === 0) {
   assert.strictEqual(
     gameEngine.tableStateRepository.getActivePlayerIds().includes(player2.id),
     false,
     "Player2 should be eliminated if chips = 0"
   );
-  console.log(`  P2 (Bob) eliminated: ✓`);
+  console.log("  P2 (Bob) eliminated: YES");
 }
 
 if (gameEngine.tableStateRepository.getPlayer(player6.id).chips === 0) {
@@ -359,15 +359,15 @@ if (gameEngine.tableStateRepository.getPlayer(player6.id).chips === 0) {
     false,
     "Player6 should be eliminated if chips = 0"
   );
-  console.log(`  P6 (Frank) eliminated: ✓`);
+  console.log("  P6 (Frank) eliminated: YES");
 }
 
 // Verify disconnected players (P3, P4) have been deleted from table state
 assert.strictEqual(gameEngine.tableStateRepository.getPlayer(player4.id), undefined, "Player4 should be removed from table state after hand completion");
-console.log(`  P4 (Diana) removed from table state: ✓`);
+console.log("  P4 (Diana) removed from table state: YES");
 
 assert.strictEqual(gameEngine.tableStateRepository.getPlayer(player3.id), undefined, "Player3 should be removed from table state after hand completion");
-console.log(`  P3 (Charlie) removed from table state: ✓`);
+console.log("  P3 (Charlie) removed from table state: YES");
 
 // Verify dealer rotation
 let newDealerId = gameEngine.tableStateRepository.getDealer();
@@ -380,9 +380,9 @@ console.log(`[INFO] Active players for new hand: ${activePlayerIds.length}`);
 assert.ok(activePlayerIds.length >= 2 || activePlayerIds.length === 0, "Should have 0 players (game over) or >= 2 players (can continue)");
 
 if (activePlayerIds.length >= 2) {
-  console.log(`\n========== ROUND 2: CONTINUED PLAY WITH REMAINING PLAYERS ==========\n`);
+  console.log("\n========== ROUND 2: CONTINUED PLAY WITH REMAINING PLAYERS ==========\n");
   
-  console.log(`[INFO] Starting chip counts for Round 2:`);
+  console.log("\n[INFO] Starting chip counts for Round 2:");
   activePlayerIds.forEach(id => {
     const p = gameEngine.tableStateRepository.getPlayer(id);
     console.log(`  P${players.findIndex(pl => pl.id === id) + 1} (${players.find(pl => pl.id === id).name}): ${p.chips} chips`);
@@ -397,7 +397,7 @@ if (activePlayerIds.length >= 2) {
   console.log(`[INFO] Round 2 Big Blind: P${players.findIndex(p => p.id === round2BB) + 1}`);
   
   // Quick round to verify game continues normally
-  console.log(`\n--- PRE-FLOP BETTING (Round 2) ---`);
+  console.log("\n--- PRE-FLOP BETTING (Round 2) ---");
   
   turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
   currentBet = gameEngine.tableStateRepository.getCurrentBet();
@@ -438,24 +438,9 @@ if (activePlayerIds.length >= 2) {
   console.log(`[INFO] First to act on FLOP Round 2: P${players.findIndex(p => p.id === turnId) + 1} (should be small blind)`);
   assert.strictEqual(turnId, round2SB, "First to act on FLOP should be small blind");
   
-  console.log(`\n[INFO] Round 2 progressing normally ✓`);
+  console.log("\n[INFO] Round 2 progressing normally ");
 } else {
-  console.log(`\n[INFO] Game over - not enough players to continue`);
+  console.log("\n[INFO] Game over - not enough players to continue");
 }
 
-// ---------- FINAL VALIDATION ----------
-console.log("\n========== FINAL VALIDATION ==========\n");
-
-console.log(`✓ Tested 6-player game with correct positions`);
-console.log(`✓ Verified pre-flop first to act (player after big blind)`);
-console.log(`✓ Verified post-flop first to act (small blind position)`);
-console.log(`✓ Tested all-ins with multiple stack sizes`);
-console.log(`✓ Verified side pot creation and eligibility`);
-console.log(`✓ Tested player disconnects (during turn and not during turn)`);
-console.log(`✓ Tested invalid actions (CHECK, CALL, BET, RAISE, out-of-turn, all-in player)`);
-console.log(`✓ Verified pot calculations and chip distribution`);
-console.log(`✓ Verified round reset and dealer rotation`);
-console.log(`✓ Verified player elimination handling`);
-console.log(`✓ Verified game continuation with correct positions`);
-
-console.log("\n✅ FULL ROUND INTEGRATION TEST PASSED.");
+console.log("\nFULL ROUND INTEGRATION TEST PASSED.");

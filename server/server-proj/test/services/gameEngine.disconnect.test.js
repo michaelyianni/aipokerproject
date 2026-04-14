@@ -31,7 +31,7 @@ let currentTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(currentTurnId, player1.id, "Turn should be player1 at start");
 
 // Player 3 disconnects (not their turn)
-console.log(`[DISCONNECT] P3 (Charlie) disconnects`);
+console.log("[DISCONNECT] P3 (Charlie) disconnects");
 gameEngine.playerDisconnect(player3.id);
 
 // Verify player3 is marked as left
@@ -47,11 +47,11 @@ currentTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(currentTurnId, player1.id, "Turn should still be player1");
 
 // Continue game with remaining players
-console.log(`[ACTION] P1 (Alice) -> CALL`);
+console.log("[ACTION] P1 (Alice) -> CALL");
 gameEngine.playerAction(player1.id, GAME_ACTIONS.CALL);
 console.log(`[BET] After P1 CALL | Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
 
-console.log(`[ACTION] P2 (Bob) -> CALL`);
+console.log("[ACTION] P2 (Bob) -> CALL");
 gameEngine.playerAction(player2.id, GAME_ACTIONS.CALL);
 console.log(`[BET] After P2 CALL | Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
 
@@ -81,7 +81,7 @@ currentTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(currentTurnId, player1.id, "Turn should be player1 at start");
 
 // Player 1 disconnects on their turn
-console.log(`[DISCONNECT] P1 (Alice) disconnects on their turn`);
+console.log("[DISCONNECT] P1 (Alice) disconnects on their turn");
 let p1ChipsBefore = gameEngine.tableStateRepository.getPlayer(player1.id).chips;
 
 gameEngine.playerDisconnect(player1.id);
@@ -117,10 +117,10 @@ console.log(`[STREET] Initial street: ${gameEngine.tableStateRepository.getCurre
 let p2ChipsBefore = gameEngine.tableStateRepository.getPlayer(player2.id).chips;
 
 // Player 1 and player 3 disconnect
-console.log(`[DISCONNECT] P1 (Alice) disconnects`);
+console.log("[DISCONNECT] P1 (Alice) disconnects");
 gameEngine.playerDisconnect(player1.id);
 
-console.log(`[DISCONNECT] P3 (Charlie) disconnects`);
+console.log("[DISCONNECT] P3 (Charlie) disconnects");
 gameEngine.playerDisconnect(player3.id);
 
 // Should only have player2 remaining
@@ -155,13 +155,13 @@ players = [player1, player2, player3];
 gameEngine = new GameEngineService(players);
 
 // Play through pre-flop
-console.log(`[ACTION] P1 (Alice) -> CALL`);
+console.log("[ACTION] P1 (Alice) -> CALL");
 gameEngine.playerAction(player1.id, GAME_ACTIONS.CALL);
 
-console.log(`[ACTION] P2 (Bob) -> CALL`);
+console.log("[ACTION] P2 (Bob) -> CALL");
 gameEngine.playerAction(player2.id, GAME_ACTIONS.CALL);
 
-console.log(`[ACTION] P3 (Charlie) -> CHECK`);
+console.log("[ACTION] P3 (Charlie) -> CHECK");
 gameEngine.playerAction(player3.id, GAME_ACTIONS.CHECK);
 
 currentStreet = gameEngine.tableStateRepository.getCurrentStreet();
@@ -169,12 +169,12 @@ console.log(`[STREET] Now on ${currentStreet}`);
 assert.strictEqual(currentStreet, PokerStreets.FLOP, "Should be on FLOP");
 
 // Player2 bets
-console.log(`[ACTION] P2 (Bob) -> BET 20`);
+console.log("[ACTION] P2 (Bob) -> BET 20");
 gameEngine.playerAction(player2.id, GAME_ACTIONS.BET, 20);
 console.log(`[BET] After P2 BET | Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()}`);
 
 // Player3 disconnects before acting
-console.log(`[DISCONNECT] P3 (Charlie) disconnects on FLOP`);
+console.log("[DISCONNECT] P3 (Charlie) disconnects on FLOP");
 let p3ChipsBefore = gameEngine.tableStateRepository.getPlayer(player3.id).chips;
 
 gameEngine.playerDisconnect(player3.id);
@@ -210,11 +210,11 @@ gameEngine.tableStateRepository.getPlayer(player2.id).chips = 50;
 console.log(`[INFO] P2 chips set to: ${gameEngine.tableStateRepository.getPlayer(player2.id).chips}`);
 
 // Player1 raises big
-console.log(`[ACTION] P1 (Alice) -> RAISE to 100`);
+console.log("[ACTION] P1 (Alice) -> RAISE to 100");
 gameEngine.playerAction(player1.id, GAME_ACTIONS.RAISE, 90);
 
 // Player2 calls (should go all-in)
-console.log(`[ACTION] P2 (Bob) -> CALL (all-in)`);
+console.log("[ACTION] P2 (Bob) -> CALL (all-in)");
 gameEngine.playerAction(player2.id, GAME_ACTIONS.CALL);
 
 let player2State = gameEngine.tableStateRepository.getPlayer(player2.id);
@@ -222,7 +222,7 @@ console.log(`[INFO] P2 isAllIn: ${player2State.isAllIn}, chips: ${player2State.c
 assert.strictEqual(player2State.isAllIn, true, "Player2 should be all-in");
 
 // Player3 calls
-console.log(`[ACTION] P3 (Charlie) -> CALL`);
+console.log("[ACTION] P3 (Charlie) -> CALL");
 gameEngine.playerAction(player3.id, GAME_ACTIONS.CALL);
 
 currentStreet = gameEngine.tableStateRepository.getCurrentStreet();
@@ -230,7 +230,7 @@ console.log(`[STREET] After pre-flop, street=${currentStreet}`);
 assert.strictEqual(currentStreet, PokerStreets.FLOP, "Should advance to FLOP");
 
 // Player2 disconnects while all-in
-console.log(`[DISCONNECT] P2 (Bob) disconnects while all-in`);
+console.log("[DISCONNECT] P2 (Bob) disconnects while all-in");
 gameEngine.playerDisconnect(player2.id);
 
 // Player2 should still be marked as all-in and left
@@ -257,7 +257,7 @@ gameEngine = new GameEngineService(players);
 
 let fakePlayer = new Player("FakePlayer");
 
-console.log(`[DISCONNECT] Attempting to disconnect non-existent player`);
+console.log("[DISCONNECT] Attempting to disconnect non-existent player");
 
 let errorThrown = false;
 try {

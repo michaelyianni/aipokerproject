@@ -64,7 +64,7 @@ export default class GameEngineService {
             throw new Error('Game is not in progress');
         }
 
-        //Validate action
+        // Validate action
         if (!ActionChecker.isValidAction(playerId, action, amount, this.tableStateRepository)) {
             throw new Error('Invalid action');
         }
@@ -451,7 +451,7 @@ export default class GameEngineService {
         for (const pot of pots) {
             const eligibleIds = pot.eligiblePlayerIds;
 
-            // If everyone eligible folded somehow (shouldn't happen if you maintain activeIds properly)
+            // If everyone eligible folded somehow (shouldn't happen)
             if (!eligibleIds || eligibleIds.length === 0) continue;
 
             // Build FullHands for eligible players only
@@ -461,7 +461,7 @@ export default class GameEngineService {
             });
 
             // Determine best among this eligible set
-            const bestHands = compareHands(hands); // should return array of FullHands (tie -> multiple)
+            const bestHands = compareHands(hands); // returns array of FullHands (tie -> multiple)
 
             const winnerIds = bestHands.map(h => h.player.id);
 
@@ -475,8 +475,7 @@ export default class GameEngineService {
             }
 
             // Distribute remainder chips (house rule / poker room rule)
-            // Common: give odd chips to winners in seat order starting left of dealer.
-            // Minimal deterministic approach: use your playerOrder rotation from dealer.
+            // Give odd chips to winners in seat order starting left of dealer.
             if (remainder > 0) {
                 const orderedWinners = this.orderBySeatFromDealer(winnerIds);
                 for (let i = 0; i < remainder; i++) {

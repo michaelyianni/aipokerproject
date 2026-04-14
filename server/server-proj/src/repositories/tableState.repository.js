@@ -28,7 +28,6 @@ export default class TableStateRepository {
         this.communityCards = new CommunityCards();
         this.deck = new Deck();
         this.pots = [];
-        // this.pot = new Pot();
 
         this.currentStreetIndex = 0;
         this.currentBet = 0;
@@ -74,13 +73,8 @@ export default class TableStateRepository {
         this.handHistory.smallBlindAmount = this.smallBlindAmount;
         this.handHistory.bigBlindAmount = this.bigBlindAmount;
 
-        for (let playerId in this.players) {
+        for (let playerId of this.activePlayerIds) {
             let player = this.getPlayer(playerId);
-
-            // Don't include inactive players in hand history player info
-            if (!this.activePlayerIds.includes(playerId)) {
-                continue;
-            }
 
             let holeCards = player.hand.convertToStringArray();
             let stackSize = player.chips;
@@ -127,7 +121,7 @@ export default class TableStateRepository {
 
         // Everything between UTG and CO
         // For 6-max, this will produce MP1 for relativeIndex=4
-        return "MP"; // + (relativeIndex - 3); // MP1, MP2, ...
+        return "MP"; 
     }
 
     getBlindPosition(playerId) {
@@ -448,7 +442,6 @@ export default class TableStateRepository {
 
 
     #resetActivePlayers() {
-        // this.activePlayerIds = this.playerOrder;
 
         // Add players with chips > 0 to active players list in seating order
         this.activePlayerIds = [];

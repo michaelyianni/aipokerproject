@@ -49,7 +49,7 @@ function waitForEventMatching(socket, event, predicate, timeoutMs = 2000) {
 }
 
 /**
- * Emit an event with Socket.IO ack. Optionally wait for a confirming event on the SAME socket.
+ * Emit an event with Socket.IO ack. Optionally wait for a confirming event on the same socket.
  * - If confirmEvent is provided, resolves { ack, confirm }
  * - Otherwise resolves ack
  */
@@ -57,7 +57,6 @@ function emitAck(socket, event, payload = {}, opts = {}) {
   const { confirmEvent = null, confirmPredicate = null, timeoutMs = 2000 } = opts;
 
   return new Promise((resolve, reject) => {
-    // Attach confirm listener BEFORE emitting so we can't miss it
     const confirmPromise = confirmEvent
       ? waitForEventMatching(socket, confirmEvent, confirmPredicate, timeoutMs)
       : Promise.resolve(null);
@@ -81,11 +80,7 @@ function emitAck(socket, event, payload = {}, opts = {}) {
   });
 }
 
-/**
- * Common pattern for broadcasts:
- * - one socket emits (emitSocket)
- * - a different socket observes the broadcast (observeSocket)
- */
+// One socket emits, another socket observes
 async function emitAckAndConfirmOn(observeSocket, emitSocket, event, payload, opts = {}) {
   const { confirmEvent, confirmPredicate, timeoutMs = 2000 } = opts;
 
@@ -152,7 +147,6 @@ describe("Lobby Socket.IO (Mocha/Chai)", function () {
   });
 
   beforeEach(() => {
-    // Safe now because afterEach waits for disconnects from prior test
     srv.lobbyRepository.reset();
   });
 
@@ -298,7 +292,7 @@ describe("Lobby Socket.IO (Mocha/Chai)", function () {
   it("lobby caps at 6 players; 7th join is rejected", async () => {
     const sockets = [];
 
-    // P1 is our observer socket
+    // P1 is the observer socket
     const p1 = await connectTracked();
     sockets.push(p1);
 
@@ -307,7 +301,7 @@ describe("Lobby Socket.IO (Mocha/Chai)", function () {
       confirmPredicate: (u) => lobbySizeFromMap(u.lobby) === 1,
     });
 
-    // Join P2..P6, confirm P1 sees lobby size increment each time
+    // Join P2-P6, confirm P1 sees lobby size increment each time
     for (let i = 2; i <= 6; i++) {
       const s = await connectTracked();
       sockets.push(s);
@@ -357,7 +351,7 @@ describe("Lobby Socket.IO (Mocha/Chai)", function () {
 
     expect(srv.lobbyRepository.getLobbySize()).to.equal(2);
 
-    // Now wait specifically for Alice to observe size 1 AFTER Bob disconnects
+    // Wait for Alice to observe size 1 after Bob disconnects
     const sizeOnePromise = waitForEventMatching(
       alice,
       "lobby:update",

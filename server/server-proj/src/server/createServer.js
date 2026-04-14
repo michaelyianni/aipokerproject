@@ -18,7 +18,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
     });
 
     // Middleware for parsing JSON
-    app.use(express.json({ limit: '10mb' })); // Increase limit for large hand histories
+    app.use(express.json()); 
 
     // Dependencies
     const lobbyRepository = new LobbyRepository();
@@ -73,9 +73,9 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
         }
     });
 
-    // ============================================
+    // =============================================
     // Socket.io Helper Functions
-    // ============================================ 
+    // ============================================= 
 
     function emitLobbyState() {
         io.to(LOBBY_ROOM).emit("lobby:update", {
@@ -91,7 +91,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
 
         try {
             const gameState = gameEngineService.getGameState();
-            console.log("[DEBUG] Game state retrieved:", gameState ? "✓" : "✗");
+            console.log("[DEBUG] Game state retrieved:", gameState ? "SUCCESS" : "FAILURE");
 
 
             console.log("[DEBUG] Current street:", gameState?.currentStreet);
@@ -131,7 +131,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
 
         try {
             const gameState = gameEngineService.getGameState();
-            console.log("[DEBUG] Game state retrieved:", gameState ? "✓" : "✗");
+            console.log("[DEBUG] Game state retrieved:", gameState ? "SUCCESS" : "FAILURE");
 
 
             console.log("[DEBUG] Current street:", gameState?.currentStreet);
@@ -147,7 +147,7 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
 
         try {
             const handHistory = gameEngineService.tableStateRepository.handHistory;
-            console.log("[DEBUG] Hand history retrieved:", handHistory ? "✓" : "✗");
+            console.log("[DEBUG] Hand history retrieved:", handHistory ? "SUCCESS" : "FAILURE");
             console.log("[DEBUG] Entire hand history object:", JSON.stringify(handHistory, null, 2));
 
             io.to(LOBBY_ROOM).emit("game:hand_history", handHistory);
@@ -203,12 +203,12 @@ export function createServer({ corsOrigin = "*", testingMode = false } = {}) {
                 gameEngineService = new GameEngineService(
                     lobbyPlayers,
                     () => emitHandResults(), // callback to emit hand results on updates
-                    testingMode // pass testingMode flag to game engine
+                    testingMode // Testing mode includes no delays for hand history results emission
                 );
                 playerActionController = new PlayerActionController(lobbyRepository, gameEngineService);
 
-                console.log("[DEBUG] Game engine created:", gameEngineService ? "✓" : "✗");
-                console.log("[DEBUG] Player controller created:", playerActionController ? "✓" : "✗");
+                console.log("[DEBUG] Game engine created:", gameEngineService ? "SUCCESS" : "FAILURE");
+                console.log("[DEBUG] Player controller created:", playerActionController ? "SUCCESS" : "FAILURE");
 
                 // Send acknowledgment
                 ack?.({ ok: true });

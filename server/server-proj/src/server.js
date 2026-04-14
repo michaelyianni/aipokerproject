@@ -1,4 +1,3 @@
-// ./src/server.js (ESM)
 import { createServer } from "./server/createServer.js";
 
 async function main() {

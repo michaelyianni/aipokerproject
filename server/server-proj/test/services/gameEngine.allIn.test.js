@@ -34,7 +34,7 @@ console.log(`[INFO] P3 chips=${gameEngine.tableStateRepository.getPlayer(player3
 assert.strictEqual(gameEngine.tableStateRepository.getCurrentStreet(), PokerStreets.PRE_FLOP, "Should start PRE_FLOP");
 
 // ---------- Preflop Action: Create all-in and side pot ----------
-// Turn should be player1 (dealer) in your engine
+// Turn should be player1 (dealer)
 let turnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(turnId, player1.id, "Preflop first action should be player1 (dealer)");
 
@@ -45,9 +45,7 @@ assert.strictEqual(turnId, player1.id, "Preflop first action should be player1 (
 //
 // Expected:
 // - P2 is all-in
-// - Pots contain at least 2 pots (main + side), or 1 pot with merged eligibility depending on your merge logic.
-//   The important invariant: total pot == sum of all totalBetThisHand (and/or pot totals).
-//
+// - Pots contain at least 2 pots (main + side)
 
 // P1 raise to 200 total: currentBet starts at BB (10), so raise amount = 190
 console.log(`[ACTION] P1 (Alice) -> RAISE to 200`);
@@ -75,7 +73,7 @@ assert.ok(gameEngine.tableStateRepository.pots && gameEngine.tableStateRepositor
 // Log pots
 console.log("[POTS] After preflop:", gameEngine.tableStateRepository.pots);
 
-// Total pot invariant: sum pots == sum totalBetThisHand (for all players)
+// sum pots == sum totalBetThisHand (for all players)
 const p1Total = gameEngine.tableStateRepository.getPlayer(player1.id).totalBetThisHand ?? 0;
 const p2Total = gameEngine.tableStateRepository.getPlayer(player2.id).totalBetThisHand ?? 0;
 const p3Total = gameEngine.tableStateRepository.getPlayer(player3.id).totalBetThisHand ?? 0;
@@ -83,19 +81,14 @@ const p3Total = gameEngine.tableStateRepository.getPlayer(player3.id).totalBetTh
 const sumTotalBetThisHand = p1Total + p2Total + p3Total;
 
 const sumPots = gameEngine.tableStateRepository.pots.reduce((acc, pot) => {
-  // Support either pot.amount or pot.total or getTotal()
-  if (typeof pot.getTotal === "function") return acc + pot.getTotal();
   if (typeof pot.amount === "number") return acc + pot.amount;
-  if (typeof pot.total === "number") return acc + pot.total;
   return acc;
 }, 0);
 
 console.log(`[CHECK] totalBetThisHand sum=${sumTotalBetThisHand}, pots sum=${sumPots}`);
 assert.strictEqual(sumPots, sumTotalBetThisHand, "Sum of pots should equal sum of totalBetThisHand");
 
-// Also ensure there are at least 2 eligibility layers OR a single merged pot.
-// For side pots, typical is >=2 pots here. But your merge can collapse some cases.
-// We’ll assert a weaker condition: at least one pot includes P2 eligibility and at least one excludes P2.
+// Also ensure there are at least 2 eligibility layers.
 const potEligLists = gameEngine.tableStateRepository.pots.map(p => p.eligiblePlayerIds ?? []);
 const someIncludeP2 = potEligLists.some(list => list.includes(player2.id));
 const someExcludeP2 = potEligLists.some(list => !list.includes(player2.id));
@@ -103,8 +96,6 @@ assert.strictEqual(someIncludeP2, true, "At least one pot should include player2
 assert.strictEqual(someExcludeP2, true, "At least one pot should exclude player2 eligibility (side pot)");
 
 // ---------- Run out remaining streets (all-in scenario) ----------
-// Since P2 is all-in, and you skip all-ins for action, you can just CHECK through for remaining actives,
-// OR just force runout by making remaining players check until your engine advances.
 console.log(`[ACTION] On FLOP: P3 CHECK, P1 CHECK (close street)`);
 gameEngine.playerAction(player3.id, GAME_ACTIONS.CHECK);
 gameEngine.playerAction(player1.id, GAME_ACTIONS.CHECK);
@@ -121,8 +112,6 @@ assert.strictEqual(street, PokerStreets.RIVER, "Should advance to RIVER after ch
 
 // Before final river actions, force showdown board + hands to ensure:
 // - P1 beats everyone overall (wins pots they are eligible for)
-// - P2 has a decent hand that could win main pot if P1 was not eligible (but P1 is eligible for all pots here)
-// The key is: P1 should win BOTH main pot + side pot in this constructed example.
 let testCommunity = new CommunityCards();
 testCommunity.addFlop(new Card("A", "Clubs"), new Card("K", "Diamonds"), new Card("2", "Hearts"));
 testCommunity.addTurn(new Card("3", "Spades"));
@@ -162,11 +151,7 @@ console.log(`[ACTION] On RIVER: P3 CHECK, P1 CHECK (Showdown)`);
 gameEngine.playerAction(player3.id, GAME_ACTIONS.CHECK);
 gameEngine.playerAction(player1.id, GAME_ACTIONS.CHECK);
 
-// After showdown and reset, the engine starts a new hand automatically.
-// So we must validate chips immediately after showdown. However, your engine likely
-// resetForNewHand() and startGame() already ran. That means currentStreet has reset.
-// We'll validate chips deltas nonetheless.
-
+// Validate player chips
 var p1ChipsAfter = gameEngine.tableStateRepository.getPlayer(player1.id).chips;
 var p2ChipsAfter = gameEngine.tableStateRepository.getPlayer(player2.id).chips;
 var p3ChipsAfter = gameEngine.tableStateRepository.getPlayer(player3.id).chips;
@@ -216,7 +201,6 @@ assert.strictEqual(newDealerId, player3.id, "Dealer should have rotated to playe
 
 
 // Reset GameEngine state for next test (new hand with all-in scenarios)
-// ---------- Setup ----------
 player1 = new Player("Alice");   // will lose
 player2 = new Player("Bob");     // may win short stack, all-in
 player3 = new Player("Charlie"); // will win side pot, may win main pot
@@ -305,4 +289,4 @@ assert.ok(p1ChipsAfter <= p1ChipsBefore, "Player1 should not have increased chip
 assert.ok(p3ChipsAfter > p3ChipsBefore, "Player3 should have increased after winning side pot");
 
 
-console.log("✅ ALL-IN + SIDE POTS system test passed.");
+console.log("ALL-IN + SIDE POTS system test passed.");

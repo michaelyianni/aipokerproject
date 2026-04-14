@@ -42,7 +42,7 @@ assert.strictEqual(player2Bet, gameEngine.tableStateRepository.smallBlindAmount,
 assert.strictEqual(player3Bet, gameEngine.tableStateRepository.bigBlindAmount, "Player 3 should have posted big blind");
 
 // Test player action in-turn - player 1 CALL
-console.log(`[ACTION] P1 (Alice) -> CALL`);
+console.log("[ACTION] P1 (Alice) -> CALL");
 gameEngine.playerAction(player1.id, GAME_ACTIONS.CALL);
 console.log(`[BET] After P1 CALL | Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P1 currentBet = ${gameEngine.tableStateRepository.getPlayer(player1.id).currentBet}`);
 
@@ -103,7 +103,7 @@ console.log(gameEngine.tableStateRepository.getActivePlayerIds());
 console.log("Current turn player ID:", gameEngine.tableStateRepository.getCurrentTurnPlayerId());
 
 // Test player action in-turn - player 2 FOLD
-console.log(`[ACTION] P2 (Bob) -> FOLD`);
+console.log("[ACTION] P2 (Bob) -> FOLD");
 gameEngine.playerAction(player2.id, GAME_ACTIONS.FOLD);
 
 let activePlayerIds = gameEngine.tableStateRepository.getActivePlayerIds();
@@ -112,7 +112,7 @@ activeTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(activeTurnId, player3.id, "Active turn should be player 3 after player 2 folds");
 
 // Test player action in-turn - player 3 CHECK
-console.log(`[ACTION] P3 (Charlie) -> CHECK`);
+console.log("[ACTION] P3 (Charlie) -> CHECK");
 gameEngine.playerAction(player3.id, GAME_ACTIONS.CHECK);
 
 activeTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
@@ -148,7 +148,7 @@ currentStreet = gameEngine.tableStateRepository.getCurrentStreet();
 assert.strictEqual(currentStreet, PokerStreets.FLOP, "Current street should still be FLOP after raises");
 
 // player 1 CALL
-console.log(`[ACTION] P1 (Alice) -> CALL`);
+console.log("[ACTION] P1 (Alice) -> CALL");
 gameEngine.playerAction(player1.id, GAME_ACTIONS.CALL);
 console.log(`[BET] After P1 CALL | Table currentBet = ${gameEngine.tableStateRepository.getCurrentBet()} | P1 currentBet = ${gameEngine.tableStateRepository.getPlayer(player1.id).currentBet}`);
 
@@ -176,14 +176,14 @@ activeTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(activeTurnId, player3.id, "Active turn should be player 3 on TURN");
 
 // player 3 CHECK
-console.log(`[ACTION] P3 (Charlie) -> CHECK`);
+console.log("[ACTION] P3 (Charlie) -> CHECK");
 gameEngine.playerAction(player3.id, GAME_ACTIONS.CHECK);
 
 activeTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(activeTurnId, player1.id, "Active turn should be player 1 after player 3 checks");
 
 // player 1 CHECK
-console.log(`[ACTION] P1 (Alice) -> CHECK`);
+console.log("[ACTION] P1 (Alice) -> CHECK");
 gameEngine.playerAction(player1.id, GAME_ACTIONS.CHECK);
 
 // Current street should now have advanced to RIVER
@@ -195,7 +195,7 @@ communityCards = gameEngine.tableStateRepository.getCommunityCards();
 assert.strictEqual(communityCards.getCards().length, 5, "There should be 5 community cards on the RIVER");
 
 // player 3 CHECK
-console.log(`[ACTION] P3 (Charlie) -> CHECK`);
+console.log("[ACTION] P3 (Charlie) -> CHECK");
 gameEngine.playerAction(player3.id, GAME_ACTIONS.CHECK);
 
 activeTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
@@ -225,7 +225,7 @@ let player1CurrentChips = gameEngine.tableStateRepository.getPlayer(player1.id).
 let player3CurrentChips = gameEngine.tableStateRepository.getPlayer(player3.id).chips;
 let potFinalAmount = gameEngine.tableStateRepository.pots[0].getTotal();
 // player 1 CHECK
-console.log(`[ACTION] P1 (Alice) -> CHECK (Showdown)`);
+console.log("[ACTION] P1 (Alice) -> CHECK (Showdown)");
 console.log(`[INFO]  | Pot = ${gameEngine.tableStateRepository.pots[0].getTotal()}`);
 gameEngine.playerAction(player1.id, GAME_ACTIONS.CHECK);
 console.log(`[STREET] ${gameEngine.tableStateRepository.getCurrentStreet()}`);
@@ -251,7 +251,7 @@ currentStreet = gameEngine.tableStateRepository.getCurrentStreet();
 console.log(`[STREET] After showdown, street=${currentStreet}`);
 assert.strictEqual(currentStreet, PokerStreets.HAND_COMPLETE, "Current street should be HAND_COMPLETE after showdown and pot award");
 
-// Manually start next hand since we're in testing mode
+// Manually start next hand since in testing mode
 gameEngine.startNextHand();
 
 
