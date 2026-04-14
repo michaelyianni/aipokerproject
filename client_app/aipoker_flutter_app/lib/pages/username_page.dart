@@ -6,14 +6,14 @@ import 'package:aipoker_flutter_app/providers/user_model.dart';
 
 import 'package:aipoker_flutter_app/widgets/general/menu_button.dart';
 
-class UsernamePage extends ConsumerStatefulWidget {  // Changed to ConsumerStatefulWidget
+class UsernamePage extends ConsumerStatefulWidget {  
   const UsernamePage({super.key});
 
   @override
-  ConsumerState<UsernamePage> createState() => _UsernamePageState();  // Changed to ConsumerState
+  ConsumerState<UsernamePage> createState() => _UsernamePageState();  
 }
 
-class _UsernamePageState extends ConsumerState<UsernamePage> {  // Changed to ConsumerState
+class _UsernamePageState extends ConsumerState<UsernamePage> { 
   final TextEditingController _usernameController = TextEditingController();
 
   @override
@@ -79,7 +79,6 @@ class _UsernamePageState extends ConsumerState<UsernamePage> {  // Changed to Co
       debugPrint('Username submitted: $username');
     }
 
-    // Use ref.read to access the provider - no context needed!
     ref.read(userProvider.notifier).setUsername(username);
     GoRouter.of(context).go('/main-menu');
   }

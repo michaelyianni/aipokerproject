@@ -88,7 +88,6 @@ class LobbyViewModel extends ChangeNotifier {
 
       _userNotifier.setPlayerId(_currentPlayerId!);
 
-      // _isHost = result.isHost; // Host status will be determined when we receive the lobby state update
       _isLoading = false;
       notifyListeners();
       return true;

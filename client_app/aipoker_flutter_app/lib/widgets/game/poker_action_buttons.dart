@@ -14,10 +14,6 @@ class PokerActionButtons extends StatelessWidget {
   final int maxBet;
   final int currentChips;
 
-  // Optional: Custom button labels
-  final String? checkCallLabel;
-  final String? betRaiseLabel;
-
   const PokerActionButtons({
     super.key,
     required this.onFold,
@@ -28,8 +24,6 @@ class PokerActionButtons extends StatelessWidget {
     required this.minBet,
     required this.maxBet,
     required this.currentChips,
-    this.checkCallLabel,
-    this.betRaiseLabel,
   });
 
   @override
@@ -51,7 +45,7 @@ class PokerActionButtons extends StatelessWidget {
             SizedBox(width: 5),
             Expanded(
               child: _buildActionButton(
-                label: checkCallLabel ?? 'Check/Call',
+                label: 'Check/Call',
                 color: Color.fromARGB(255, 0, 128, 239), // Blue
                 onPressed: isTurn ? onCheckCall : null,
                 isEnabled: isTurn,
@@ -65,7 +59,7 @@ class PokerActionButtons extends StatelessWidget {
           children: [
             Expanded(
               child: _buildActionButton(
-                label: betRaiseLabel ?? 'Bet/Raise',
+                label: 'Bet/Raise',
                 color: Color.fromARGB(255, 33, 167, 37), // Green
                 onPressed: isTurn && maxBet > minBet && currentChips > minBet ? () => _showBetRaiseDialog(context) : null,
                 isEnabled: isTurn && maxBet > minBet && currentChips > minBet, // Enable only if betting is possible

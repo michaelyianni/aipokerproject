@@ -34,7 +34,7 @@ class _AIFeedbackPageState extends ConsumerState<AIFeedbackPage> {
 
      debugPrint('[AIFeedbackPage] ViewModel initialized with ServerService and UserModel');
 
-    // Write to file after first frame
+    // Write to file after first frame (only works on desktop during development, ignored in production)
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await _writeRoundHistoriesToFile();
     });

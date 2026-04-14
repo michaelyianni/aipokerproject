@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:aipoker_flutter_app/models/hand_history/hand_history.dart'; // Import RoundHistory model
+import 'package:aipoker_flutter_app/models/hand_history/hand_history.dart';
 import 'dart:convert'; // For JSON encoding
 
 class UserModel {
   String? username;
   String? playerId;
-  List<HandHistory> handHistories = []; // Add handHistories to UserModel
+  List<HandHistory> handHistories = []; 
   bool hasReceivedNewHandHistory = false; // Flag to track if a new hand history has been added
-  String feedback = 'No feedback available - play some rounds to get feedback!'; // Add feedback field to UserModel
+  String feedback = 'No feedback available - play some rounds to get feedback!';
 
   UserModel({this.username, String? playerId}) : playerId = playerId ?? 'unknown_player_id';
 
@@ -31,7 +31,7 @@ class UserModel {
   }
 }
 
-// Create the Riverpod provider
+// Riverpod provider
 class UserNotifier extends Notifier<UserModel> {
   @override
   UserModel build() {

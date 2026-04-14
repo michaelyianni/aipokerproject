@@ -1,7 +1,5 @@
-import 'package:flutter/widgets.dart';
-
 class LobbyState {
-  final Map<String, Player> players; // Server sends object/map, not array
+  final Map<String, Player> players;
   final String? hostPlayerId;
   final bool isGameStarted;
 

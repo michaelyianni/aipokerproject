@@ -10,16 +10,14 @@ import '../models/lobby_state.dart';
 import 'dart:async';
 
 class LobbyPage extends ConsumerStatefulWidget {
-  // Changed to ConsumerStatefulWidget
 
   const LobbyPage({super.key});
 
   @override
-  ConsumerState<LobbyPage> createState() => _LobbyPageState(); // Changed to ConsumerState
+  ConsumerState<LobbyPage> createState() => _LobbyPageState();
 }
 
 class _LobbyPageState extends ConsumerState<LobbyPage> {
-  // Changed to ConsumerState
   late LobbyViewModel _viewModel;
   StreamSubscription? _gameStartedSubscription;
 
@@ -30,7 +28,7 @@ class _LobbyPageState extends ConsumerState<LobbyPage> {
   void initState() {
     super.initState();
 
-    // Initialize ViewModel with service - we'll inject UserModel in didChangeDependencies
+    // Initialize ViewModel inject service and user notifier
 
 
     final serverService = ref.read(serverServiceProvider);
@@ -41,7 +39,6 @@ class _LobbyPageState extends ConsumerState<LobbyPage> {
      debugPrint('[LobbyPage] ViewModel initialized with ServerService and UserModel');
 
      // Listen for game start events to navigate to game page
-     
 
     _gameStartedSubscription = _viewModel.gameStartedStream.listen((_) {
       if (mounted) {
@@ -60,7 +57,6 @@ class _LobbyPageState extends ConsumerState<LobbyPage> {
         'Player${DateTime.now().millisecondsSinceEpoch}';
     _viewModel.username = username;
 
-    // Now we can safely access ref
     _connectToLobby();
   }
 
@@ -229,8 +225,6 @@ class _LobbyPageState extends ConsumerState<LobbyPage> {
             player.username + (isHost ? ' (Host)' : ''),
             style: TextStyle(fontSize: 18, color: Colors.black),
           ),
-          // if (player.isReady)
-          //   Icon(Icons.check_circle, color: Colors.green),
         ],
       ),
     );

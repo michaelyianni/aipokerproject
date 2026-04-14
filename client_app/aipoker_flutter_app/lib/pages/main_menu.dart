@@ -5,14 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:aipoker_flutter_app/providers/user_model.dart';
 
-class MainMenu extends ConsumerStatefulWidget {  // Changed to ConsumerStatefulWidget
+class MainMenu extends ConsumerStatefulWidget {  
   const MainMenu({super.key});
 
   @override
-  ConsumerState<MainMenu> createState() => _MainMenuState();  // Changed to ConsumerState
+  ConsumerState<MainMenu> createState() => _MainMenuState(); 
 }
 
-class _MainMenuState extends ConsumerState<MainMenu> {  // Changed to ConsumerState
+class _MainMenuState extends ConsumerState<MainMenu> {
 
   @override
   void initState() {

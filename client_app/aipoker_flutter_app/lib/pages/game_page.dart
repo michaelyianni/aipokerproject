@@ -161,25 +161,87 @@ class _GamePageState extends ConsumerState<GamePage> {
                       // Player Status section
                       Column(
                         children: [
-                          // Turn status label
-                          if (_viewModel.gameState?.currentTurnPlayerId ==
-                              _viewModel.gameState?.thisPlayer.playerId)
-                            Text(
-                              "Your Turn",
-                              style: TextStyle(
-                                color: Colors.yellow,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
+                          Row(
+                            children: [
+                              // Dealer Button
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child:
+                                      _viewModel
+                                              .gameState
+                                              ?.thisPlayer
+                                              .playerId ==
+                                          _viewModel.gameState?.dealerId
+                                      ? Image.asset(
+                                          'assets/icons/dealer-coin.png',
+                                          width: 28,
+                                          height: 28,
+                                        )
+                                      : const SizedBox(width: 28, height: 28),
+                                ),
                               ),
-                            )
-                          else
-                            Text(
-                              "Waiting for other players...",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
+
+                              // Turn status label 
+                              Expanded(
+                                flex: 2,
+                                child: Center(
+                                  child:
+                                      _viewModel
+                                              .gameState
+                                              ?.currentTurnPlayerId ==
+                                          _viewModel
+                                              .gameState
+                                              ?.thisPlayer
+                                              .playerId
+                                      ? const Text(
+                                          "Your Turn",
+                                          style: TextStyle(
+                                            color: Colors.yellow,
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        )
+                                      : const Text(
+                                          "Waiting for other players...",
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                ),
                               ),
-                            ),
+
+                              // SB/BB Button
+                              Expanded(
+                                flex: 1,
+                                child: Center(
+                                  child:
+                                      _viewModel
+                                              .gameState
+                                              ?.thisPlayer
+                                              .playerId ==
+                                          _viewModel.gameState?.smallBlindId
+                                      ? Image.asset(
+                                          'assets/icons/sb-coin.png',
+                                          width: 28,
+                                          height: 28,
+                                        )
+                                      : _viewModel
+                                                .gameState
+                                                ?.thisPlayer
+                                                .playerId ==
+                                            _viewModel.gameState?.bigBlindId
+                                      ? Image.asset(
+                                          'assets/icons/bb-coin.png',
+                                          width: 28,
+                                          height: 28,
+                                        )
+                                      : const SizedBox(width: 28, height: 28),
+                                ),
+                              ),
+                            ],
+                          ),
 
                           // Total chips, cards, and current bet
                           Row(
@@ -223,7 +285,8 @@ class _GamePageState extends ConsumerState<GamePage> {
                         onAllIn: _onAllIn,
                         isTurn:
                             (_viewModel.gameState?.currentTurnPlayerId ==
-                            _viewModel.gameState?.thisPlayer.playerId) && _viewModel.isDisplayingHandResults == false,
+                                _viewModel.gameState?.thisPlayer.playerId) &&
+                            _viewModel.isDisplayingHandResults == false,
                         minBet: _viewModel.gameState?.minimumRaise ?? 0,
                         maxBet: calculateMaxRaise(),
                         currentChips:
@@ -245,10 +308,9 @@ class _GamePageState extends ConsumerState<GamePage> {
     final handResults = gameState?.handResults;
     final isDisplaying = _viewModel.isDisplayingHandResults;
 
-    // ✅ Now check the captured values
     if (isDisplaying == true && gameState != null && handResults != null) {
-
-      _viewModel.isDisplayingHandResults = false; // Set the flag to true to prevent multiple dialogs
+      _viewModel.isDisplayingHandResults =
+          false; // Reset the flag so that the dialog can be shown again for future hands
 
       showDialog(
         context: context,

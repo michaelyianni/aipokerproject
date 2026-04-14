@@ -1,4 +1,3 @@
-// test/server/game.system.test.js
 import { expect } from "chai";
 import { io as ioClient } from "socket.io-client";
 import { createServer } from "../../src/server/createServer.js";

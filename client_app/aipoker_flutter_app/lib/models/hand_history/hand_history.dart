@@ -27,12 +27,6 @@ class HandHistory {
     Map<String, dynamic> json,
     String thisPlayerId,
   ) {
-    /*
-
-    Example server JSON format for HandHistory:
-
-
-    */
 
     final smallBlindAmount = json['smallBlindAmount'] ?? 0;
     final bigBlindAmount = json['bigBlindAmount'] ?? 0;
@@ -217,7 +211,6 @@ class HandHistory {
       'shownHoleCards': shownHoleCards,
     };
 
-    // Pretty-printed for readability in prompts (still valid JSON)
     return jsonMap;
   }
 }

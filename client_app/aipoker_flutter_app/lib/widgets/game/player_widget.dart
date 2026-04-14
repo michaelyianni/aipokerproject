@@ -110,7 +110,6 @@ class PlayerWidget extends StatelessWidget {
           ),
           SizedBox(height: 8),
 
-          // Status indicators (Dealer, Small Blind, Big Blind, Folded/All-In)
           Row(
             mainAxisSize: MainAxisSize.max,
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,

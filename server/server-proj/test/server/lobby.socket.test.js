@@ -1,4 +1,3 @@
-// test/server/lobby.socket.mocha.test.js
 import { expect } from "chai";
 import { io as ioClient } from "socket.io-client";
 import { createServer } from "../../src/server/createServer.js";
@@ -48,11 +47,9 @@ function waitForEventMatching(socket, event, predicate, timeoutMs = 2000) {
   });
 }
 
-/**
- * Emit an event with Socket.IO ack. Optionally wait for a confirming event on the same socket.
- * - If confirmEvent is provided, resolves { ack, confirm }
- * - Otherwise resolves ack
- */
+
+ // Emit an event with Socket.IO ack. Optionally wait for a confirming event on the same socket.
+ // If confirmEvent is provided, resolves { ack, confirm }, otherwise resolves ack
 function emitAck(socket, event, payload = {}, opts = {}) {
   const { confirmEvent = null, confirmPredicate = null, timeoutMs = 2000 } = opts;
 

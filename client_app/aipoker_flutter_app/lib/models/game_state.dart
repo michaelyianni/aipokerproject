@@ -6,31 +6,18 @@ import 'game_models/hand_results_model.dart';
 import 'game_models/winner_model.dart';
 
 class GameState {
-  // Community cards
   final CommunityCards communityCards;
-  // Players
-  final Map<String, Player> players; // Server sends object/map, not array
-  // thisPlayer
+  final Map<String, Player> players;
   final Player thisPlayer; // The player object for the current user
-  // seatAssignments
   final Map<int, String> seatAssignments; // Array of player IDs in seating order
-  // currentTurnPlayerId
   final String currentTurnPlayerId;
-  // pots
   final List<Pot> pots;
-  // currentBet
   final int currentBet;
-  // minimumRaise
   final int minimumRaise;
-  // currentStreet
   final String currentStreet;
-  // smallBlindId
   final String smallBlindId;
-  // bigBlindId
   final String bigBlindId;
-  // dealerId
   final String dealerId;
-  // handResults (nullable)
   final HandResults? handResults;
 
   const GameState({

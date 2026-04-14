@@ -13,13 +13,9 @@ import 'dart:convert';
 
 class ServerConfig {
   static String get serverUrl {
-    // Check for environment variable first (for custom configs)
-    const envUrl = String.fromEnvironment('SERVER_URL');
-    if (envUrl.isNotEmpty) {
-      return envUrl;
-    }
 
-    // Auto-detect based on platform
+
+    // Auto-detect URL based on platform
     if (kIsWeb) {
       return 'http://localhost:3000';
     } else if (Platform.isAndroid) {
@@ -33,7 +29,7 @@ class ServerConfig {
 class ServerService {
   final String serverUrl = ServerConfig.serverUrl;
 
-  final Ref _ref; // Add Ref to access providers if needed
+  final Ref _ref;
 
   IO.Socket? _socket;
   StreamController<LobbyState>? _lobbyStateController;
@@ -136,7 +132,7 @@ class ServerService {
         serverUrl,
         IO.OptionBuilder()
             .setTransports(['websocket']) // Use WebSocket transport
-            .disableAutoConnect() // We'll connect manually
+            .disableAutoConnect() // Connect manually
             .build(),
       );
 
@@ -277,11 +273,10 @@ class ServerService {
       _safeAddGameStarted();
     });
 
-    // You can add more event listeners here for game events later
     _socket!.on('game:state', (data) {
       debugPrint('[ServerService] Received game state update');
 
-      // Use mock data for now
+      // Mock data
       // Map<String, dynamic> mockGameState = MockGameData.getFlopScenario();
       // final updatedState = GameState.fromJson(mockGameState, MockGameData.getTestPlayerIdFlop());
 
@@ -306,8 +301,6 @@ class ServerService {
       _ref.read(userProvider.notifier).addHandHistory(handHistory);
       debugPrint('[ServerService] Hand history added to user model');
 
-      // For now, just print the hand history to verify it's being received correctly
-      debugPrint('[ServerService] Hand History: $data');
     });
   }
 
@@ -386,11 +379,8 @@ class ServerService {
     }
   }
 
-  // Add this method to your ServerService class
-
-  /// Send a game action to the server
-  ///
-  /// Actions: 'fold', 'check', 'call', 'bet', 'raise', 'all-in'
+  // Send a game action to the server
+  // Actions: 'fold', 'check', 'call', 'bet', 'raise', 'all-in'
   Future<bool> sendGameAction(
     String action, {
     Map<String, dynamic>? data,
@@ -454,8 +444,8 @@ class ServerService {
     }
   }
 
-  /// Send hand history to server and get AI feedback via HTTP
-  /// Returns the AI feedback string or null if failed
+  // Send hand history to server and get AI feedback via HTTP
+  // Returns the AI feedback string or null if failed
   Future<String?> getAIFeedback(String handHistoryJson) async {
     try {
       final url = Uri.parse('$serverUrl/api/ai-feedback');

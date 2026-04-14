@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../services/server_service.dart';
 import 'dart:async';
 import 'package:go_router/go_router.dart';
-import '../models/game_state.dart';  // You'll need to create this
+import '../models/game_state.dart';
 
 class GameViewModel extends ChangeNotifier {
   final ServerService _serverService;
@@ -133,7 +133,6 @@ Future<void> betRaise(int amount) async {
     _gameStateSubscription?.cancel();
     _handResultsSubscription?.cancel();
     _errorSubscription?.cancel();
-    // Don't dispose the service - it's shared!
     super.dispose();
   }
 }

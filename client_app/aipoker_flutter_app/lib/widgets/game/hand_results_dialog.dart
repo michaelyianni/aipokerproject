@@ -103,7 +103,7 @@ class HandResultsDialog extends StatelessWidget {
     return Column(
       children: [
         Text(
-          didIWin ? '🎉 You Won! 🎉' : 'Hand Complete',
+          didIWin ? 'You Won!' : 'Hand Complete',
           style: TextStyle(
             fontSize: didIWin ? 32 : 28,
             fontWeight: FontWeight.bold,
