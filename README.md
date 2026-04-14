@@ -14,6 +14,8 @@ This repository contains a poker playing and coaching application with:
 
 The app is designed to showcase poker playing between devices, and integrated hand history collection to generate beginner-friendly feedback based on play.
 
+![Apoki app interfaces](images/UI-screenshots.png)
+
 ---
 
 ## 2. System Requirements
