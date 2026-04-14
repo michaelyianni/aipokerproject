@@ -542,7 +542,6 @@ export default class GameEngineService {
             this.tableStateRepository.handHistory.setShownHoleCards(playerId, player.getHand().convertToStringArray());
         }
 
-        // Optional: log payouts for debugging
         console.log("Showdown payouts:", payouts);
     }
 

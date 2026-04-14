@@ -325,7 +325,7 @@ class _BetRaiseDialogState extends State<_BetRaiseDialog> {
 
             SizedBox(height: 16),
 
-            // ✅ Minimum bet indicator
+            // Minimum bet indicator
             Container(
               padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
               decoration: BoxDecoration(

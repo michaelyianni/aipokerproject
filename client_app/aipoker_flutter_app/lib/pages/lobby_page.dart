@@ -33,8 +33,10 @@ class _LobbyPageState extends ConsumerState<LobbyPage> {
     // Initialize ViewModel with service - we'll inject UserModel in didChangeDependencies
 
 
-     final serverService = ref.read(serverServiceProvider);
-    _viewModel = LobbyViewModel(serverService, ref);
+    final serverService = ref.read(serverServiceProvider);
+    final userNotifier = ref.read(userProvider.notifier);
+
+    _viewModel = LobbyViewModel(serverService, userNotifier);
 
      debugPrint('[LobbyPage] ViewModel initialized with ServerService and UserModel');
 
@@ -134,7 +136,7 @@ class _LobbyPageState extends ConsumerState<LobbyPage> {
                         ),
                         SizedBox(height: 40),
 
-                        // Player list - now using real data from ViewModel
+                        // Player list
                         Expanded(
                           child: Container(
                             padding: EdgeInsets.all(8),
@@ -237,9 +239,6 @@ class _LobbyPageState extends ConsumerState<LobbyPage> {
   void _onStartGamePressed() {
     _viewModel.startGame();
 
-    // Navigate to game when lobby status changes to 'starting'
-    // You might want to listen to lobbyState.status changes instead
-    // GoRouter.of(context).go('/game');
   }
 
   void _onBackPressed() {

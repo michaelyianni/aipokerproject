@@ -5,7 +5,7 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:flutter/foundation.dart';
 import '../models/lobby_state.dart';
 // import '../mocks/mock_game_data.dart'; // For testing without server
-import '../models/hand_history/hand_history.dart'; // Import HandHistory model
+import '../models/hand_history/hand_history.dart';
 import 'package:aipoker_flutter_app/providers/user_model.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
@@ -18,15 +18,12 @@ class ServerConfig {
     if (envUrl.isNotEmpty) {
       return envUrl;
     }
-    
+
     // Auto-detect based on platform
     if (kIsWeb) {
       return 'http://localhost:3000';
     } else if (Platform.isAndroid) {
-      // Check if running on physical device vs emulator
-      // For physical device, you'd use your computer's local IP
       return 'http://10.0.2.2:3000'; // Emulator
-      // return 'http://192.168.1.100:3000'; // Physical device (use your IP)
     } else {
       return 'http://localhost:3000'; // Desktop
     }
@@ -34,7 +31,6 @@ class ServerConfig {
 }
 
 class ServerService {
-
   final String serverUrl = ServerConfig.serverUrl;
 
   final Ref _ref; // Add Ref to access providers if needed
@@ -72,11 +68,13 @@ class ServerService {
     _gameStartedController = StreamController<void>.broadcast();
     _gameStateController = StreamController<GameState>.broadcast();
     _handResultsController = StreamController<GameState>.broadcast();
-    _isDisposed = false; 
+    _isDisposed = false;
   }
 
   void _safeAddError(String error) {
-    if (!_isDisposed && _errorController != null && !_errorController!.isClosed) {
+    if (!_isDisposed &&
+        _errorController != null &&
+        !_errorController!.isClosed) {
       _errorController!.add(error);
     } else {
       debugPrint('[ServerService] Skipped adding error (disposed): $error');
@@ -84,7 +82,9 @@ class ServerService {
   }
 
   void _safeAddLobbyState(LobbyState state) {
-    if (!_isDisposed && _lobbyStateController != null && !_lobbyStateController!.isClosed) {
+    if (!_isDisposed &&
+        _lobbyStateController != null &&
+        !_lobbyStateController!.isClosed) {
       _lobbyStateController!.add(state);
     } else {
       debugPrint('[ServerService] Skipped adding lobby state (disposed)');
@@ -92,7 +92,9 @@ class ServerService {
   }
 
   void _safeAddGameStarted() {
-    if (!_isDisposed && _gameStartedController != null && !_gameStartedController!.isClosed) {
+    if (!_isDisposed &&
+        _gameStartedController != null &&
+        !_gameStartedController!.isClosed) {
       _gameStartedController!.add(null);
     } else {
       debugPrint('[ServerService] Skipped adding game started (disposed)');
@@ -100,7 +102,9 @@ class ServerService {
   }
 
   void _safeAddGameState(GameState state) {
-    if (!_isDisposed && _gameStateController != null && !_gameStateController!.isClosed) {
+    if (!_isDisposed &&
+        _gameStateController != null &&
+        !_gameStateController!.isClosed) {
       _gameStateController!.add(state);
     } else {
       debugPrint('[ServerService] Skipped adding game state (disposed)');
@@ -108,7 +112,9 @@ class ServerService {
   }
 
   void _safeAddHandResults(GameState state) {
-    if (!_isDisposed && _handResultsController != null && !_handResultsController!.isClosed) {
+    if (!_isDisposed &&
+        _handResultsController != null &&
+        !_handResultsController!.isClosed) {
       _handResultsController!.add(state);
     } else {
       debugPrint('[ServerService] Skipped adding hand results (disposed)');
@@ -168,7 +174,9 @@ class ServerService {
       final result = await _joinLobby(username);
 
       if (result.success) {
-        debugPrint('[ServerService] Successfully joined lobby. Result: Player ID: ${result.playerId}, Host: ${result.isHost}, Initial Players: ${result.initialState?.playerCount ?? 0}');
+        debugPrint(
+          '[ServerService] Successfully joined lobby. Result: Player ID: ${result.playerId}, Host: ${result.isHost}, Initial Players: ${result.initialState?.playerCount ?? 0}',
+        );
         return result;
       } else {
         throw Exception(result.error ?? 'Failed to join lobby');
@@ -237,17 +245,17 @@ class ServerService {
 
     _socket!.onDisconnect((_) {
       debugPrint('[ServerService] Socket.IO disconnected');
-      _safeAddError('Disconnected from server'); 
+      _safeAddError('Disconnected from server');
     });
 
     _socket!.onConnectError((error) {
       debugPrint('[ServerService] Socket.IO connect error: $error');
-      _safeAddError('Connection error: $error'); 
+      _safeAddError('Connection error: $error');
     });
 
     _socket!.onError((error) {
       debugPrint('[ServerService] Socket.IO error: $error');
-      _safeAddError('Socket error: $error'); 
+      _safeAddError('Socket error: $error');
     });
 
     // Lobby state updates
@@ -256,10 +264,10 @@ class ServerService {
         debugPrint('[ServerService] Received lobby:update');
         final lobbyData = data['lobby'];
         final updatedState = LobbyState.fromJson(lobbyData);
-        _safeAddLobbyState(updatedState); 
+        _safeAddLobbyState(updatedState);
       } catch (e) {
         debugPrint('[ServerService] Error parsing lobby update: $e');
-        _safeAddError('Error parsing lobby update: $e'); 
+        _safeAddError('Error parsing lobby update: $e');
       }
     });
 
@@ -273,35 +281,34 @@ class ServerService {
     _socket!.on('game:state', (data) {
       debugPrint('[ServerService] Received game state update');
 
-    // Use mock data for now
+      // Use mock data for now
       // Map<String, dynamic> mockGameState = MockGameData.getFlopScenario();
       // final updatedState = GameState.fromJson(mockGameState, MockGameData.getTestPlayerIdFlop());
 
       final updatedState = GameState.fromJson(data, _currentPlayerId!);
-      _safeAddGameState(updatedState); 
+      _safeAddGameState(updatedState);
     });
 
     _socket!.on('game:hand_results', (data) {
       debugPrint('[ServerService] Received hand results update');
 
       final updatedState = GameState.fromJson(data, _currentPlayerId!);
-      _safeAddHandResults(updatedState); 
+      _safeAddHandResults(updatedState);
     });
 
     _socket!.on('game:hand_history', (data) {
       debugPrint('[ServerService] Received hand history update');
-      
+
       final handHistory = HandHistory.fromJson(data, _currentPlayerId!);
 
       handHistory.postProcessAfterDataCollection(_currentPlayerId!);
 
       _ref.read(userProvider.notifier).addHandHistory(handHistory);
-          debugPrint('[ServerService] Hand history added to user model');
-      
+      debugPrint('[ServerService] Hand history added to user model');
+
       // For now, just print the hand history to verify it's being received correctly
       debugPrint('[ServerService] Hand History: $data');
     });
-
   }
 
   // Send start game command (host only)
@@ -334,7 +341,7 @@ class ServerService {
       return await completer.future.timeout(
         Duration(seconds: 5),
         onTimeout: () {
-          _safeAddError('Start game timeout'); 
+          _safeAddError('Start game timeout');
           return false;
         },
       );
@@ -381,97 +388,103 @@ class ServerService {
 
   // Add this method to your ServerService class
 
-/// Send a game action to the server
-/// 
-/// Actions: 'fold', 'check', 'call', 'bet', 'raise', 'all-in'
-Future<bool> sendGameAction(String action, {Map<String, dynamic>? data}) async {
-  if (_socket == null || !_socket!.connected) {
-    debugPrint('[ServerService] Cannot send action - not connected');
-    return false;
-  }
+  /// Send a game action to the server
+  ///
+  /// Actions: 'fold', 'check', 'call', 'bet', 'raise', 'all-in'
+  Future<bool> sendGameAction(
+    String action, {
+    Map<String, dynamic>? data,
+  }) async {
+    if (_socket == null || !_socket!.connected) {
+      debugPrint('[ServerService] Cannot send action - not connected');
+      return false;
+    }
 
-  try {
-    debugPrint('[ServerService] Sending action: $action with data: $data');
-    
-    final completer = Completer<bool>();
+    try {
+      debugPrint('[ServerService] Sending action: $action with data: $data');
 
-    // Prepare the payload
-    final payload = {
-      'playerId': _currentPlayerId,
-      'action': action,
-      if (data != null) ...data,
-    };
+      final completer = Completer<bool>();
 
-    _socket!.emitWithAck(
-      'game:action',
-      payload,
-      ack: (response) {
-        try {
-          debugPrint('[ServerService] Action response: $response');
-          
-          if (response['ok'] == true) {
-            debugPrint('[ServerService] Action "$action" acknowledged successfully');
-            completer.complete(true);
-          } else {
-            debugPrint('[ServerService] Action "$action" failed: ${response['error']}');
-            _safeAddError(response['error'] ?? 'Action failed');
+      // Prepare the payload
+      final payload = {
+        'playerId': _currentPlayerId,
+        'action': action,
+        if (data != null) ...data,
+      };
+
+      _socket!.emitWithAck(
+        'game:action',
+        payload,
+        ack: (response) {
+          try {
+            debugPrint('[ServerService] Action response: $response');
+
+            if (response['ok'] == true) {
+              debugPrint(
+                '[ServerService] Action "$action" acknowledged successfully',
+              );
+              completer.complete(true);
+            } else {
+              debugPrint(
+                '[ServerService] Action "$action" failed: ${response['error']}',
+              );
+              _safeAddError(response['error'] ?? 'Action failed');
+              completer.complete(false);
+            }
+          } catch (e) {
+            debugPrint('[ServerService] Error parsing action response: $e');
+            _safeAddError('Error processing action response');
             completer.complete(false);
           }
-        } catch (e) {
-          debugPrint('[ServerService] Error parsing action response: $e');
-          _safeAddError('Error processing action response');
-          completer.complete(false);
-        }
-      },
-    );
-
-    return await completer.future.timeout(
-      Duration(seconds: 5),
-      onTimeout: () {
-        debugPrint('[ServerService] Action "$action" timeout');
-        _safeAddError('Action timeout');
-        return false;
-      },
-    );
-  } catch (e) {
-    debugPrint('[ServerService] Error sending action: $e');
-    _safeAddError('Error sending action: $e');
-    return false;
-  }
-}
-
- /// Send hand history to server and get AI feedback via HTTP
-  /// Returns the AI feedback string or null if failed
-  Future<String?> getAIFeedback(String handHistoryJson) async {
-    try {
-      
-      final url = Uri.parse('$serverUrl/api/ai-feedback');
-
-      debugPrint('[ServerService] Requesting AI feedback via HTTP... URL: $url');
-
-      final handHistoryData = jsonDecode(handHistoryJson);
-    
-    // Wrap it as the server expects
-    final payload = {
-      'handHistory': handHistoryData,
-    };
-      
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode(payload), // Send as JSON object
-      ).timeout(
-        Duration(seconds: 30), // LLM responses can take time
-        onTimeout: () {
-          throw TimeoutException('AI feedback request timeout');
         },
       );
 
+      return await completer.future.timeout(
+        Duration(seconds: 5),
+        onTimeout: () {
+          debugPrint('[ServerService] Action "$action" timeout');
+          _safeAddError('Action timeout');
+          return false;
+        },
+      );
+    } catch (e) {
+      debugPrint('[ServerService] Error sending action: $e');
+      _safeAddError('Error sending action: $e');
+      return false;
+    }
+  }
+
+  /// Send hand history to server and get AI feedback via HTTP
+  /// Returns the AI feedback string or null if failed
+  Future<String?> getAIFeedback(String handHistoryJson) async {
+    try {
+      final url = Uri.parse('$serverUrl/api/ai-feedback');
+
+      debugPrint(
+        '[ServerService] Requesting AI feedback via HTTP... URL: $url',
+      );
+
+      final handHistoryData = jsonDecode(handHistoryJson);
+
+      // Wrap it as the server expects
+      final payload = {'handHistory': handHistoryData};
+
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(payload), // Send as JSON object
+          )
+          .timeout(
+            Duration(seconds: 30), // LLM responses can take time
+            onTimeout: () {
+              throw TimeoutException('AI feedback request timeout');
+            },
+          );
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        
+
         if (data['ok'] == true) {
           debugPrint('[ServerService] AI feedback received successfully');
           return data['feedback'] as String?;
@@ -480,7 +493,9 @@ Future<bool> sendGameAction(String action, {Map<String, dynamic>? data}) async {
           return null;
         }
       } else {
-        debugPrint('[ServerService] AI feedback HTTP error: ${response.statusCode}');
+        debugPrint(
+          '[ServerService] AI feedback HTTP error: ${response.statusCode}',
+        );
         return null;
       }
     } catch (e) {
@@ -489,11 +504,10 @@ Future<bool> sendGameAction(String action, {Map<String, dynamic>? data}) async {
     }
   }
 
-
-void _cleanupSocket() {
-  debugPrint('[ServerService] Cleaning up socket...');
-  _socket?.clearListeners();
-  _socket?.disconnect();
+  void _cleanupSocket() {
+    debugPrint('[ServerService] Cleaning up socket...');
+    _socket?.clearListeners();
+    _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
     _currentPlayerId = null;

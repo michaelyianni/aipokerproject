@@ -27,11 +27,12 @@ class _AIFeedbackPageState extends ConsumerState<AIFeedbackPage> {
     super.initState();
 
     final serverService = ref.read(serverServiceProvider);
-    _viewModel = AIFeedbackViewmodel(serverService, ref);
+    final userModel = ref.read(userProvider); 
+    final userNotifier = ref.read(userProvider.notifier);
 
-    debugPrint(
-      '[LobbyPage] ViewModel initialized with ServerService and UserModel',
-    );
+     _viewModel = AIFeedbackViewmodel(serverService, userModel, userNotifier);
+
+     debugPrint('[AIFeedbackPage] ViewModel initialized with ServerService and UserModel');
 
     // Write to file after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -41,7 +42,7 @@ class _AIFeedbackPageState extends ConsumerState<AIFeedbackPage> {
 
   Future<void> _writeRoundHistoriesToFile() async {
     try {
-      // ✅ Write to project root (works on desktop during development)
+      // Write to project root (works on desktop during development)
       final file = File('debug/round_histories.txt'); // Writes to project root
 
       // Get round histories
@@ -51,11 +52,11 @@ class _AIFeedbackPageState extends ConsumerState<AIFeedbackPage> {
       await file.writeAsString(roundHistories);
 
       if (kDebugMode) {
-        debugPrint('✅ Round histories written to: ${file.absolute.path}');
+        debugPrint('Success - Round histories written to: ${file.absolute.path}');
       }
     } catch (e) {
       if (kDebugMode) {
-        debugPrint('❌ Error writing round histories: $e');
+        debugPrint('Error writing round histories: $e');
       }
     }
   }
@@ -114,22 +115,21 @@ class _AIFeedbackPageState extends ConsumerState<AIFeedbackPage> {
 
               SizedBox(height: 20),
 
-              // ✅ White background container with Expanded
               Expanded(
                 child: Container(
                   margin: EdgeInsets.symmetric(
                     horizontal: 16.0,
-                  ), // ✅ Optional: margin around the white box
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white, // ✅ White background
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(
                       12,
-                    ), // ✅ Optional: rounded corners
+                    ), 
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(
                           0.5,
-                        ), // ✅ Optional: subtle shadow
+                        ), 
                         blurRadius: 8,
                         offset: Offset(0, 2),
                       ),

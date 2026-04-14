@@ -13,8 +13,6 @@ export default class Deck {
         const suits = CardRules.suits;
 
 
-        // TODO - Implement Fisher-Yates shuffle algorithm
-
         for (let rank of ranks) {
             for (let suit of suits) {
                 this.cards.push(new Card(rank, suit));

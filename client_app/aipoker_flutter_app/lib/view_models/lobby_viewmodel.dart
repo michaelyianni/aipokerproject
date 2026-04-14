@@ -8,7 +8,7 @@ import '../providers/user_model.dart';
 
 class LobbyViewModel extends ChangeNotifier {
   final ServerService _lobbyService;
-  final WidgetRef _ref;
+  final UserNotifier _userNotifier;
   
   LobbyState? _lobbyState;
   String? _currentPlayerId;
@@ -40,7 +40,7 @@ class LobbyViewModel extends ChangeNotifier {
   Stream<void> get gameStartedStream => _lobbyService.gameStartedStream;
   
 
-  LobbyViewModel(this._lobbyService, this._ref) {
+  LobbyViewModel(this._lobbyService, this._userNotifier) {
     _listenToServiceStreams();
   }
 
@@ -86,7 +86,7 @@ class LobbyViewModel extends ChangeNotifier {
 
       _currentPlayerId = result.playerId;
 
-      _ref.read(userProvider.notifier).setPlayerId(_currentPlayerId!);
+      _userNotifier.setPlayerId(_currentPlayerId!);
 
       // _isHost = result.isHost; // Host status will be determined when we receive the lobby state update
       _isLoading = false;

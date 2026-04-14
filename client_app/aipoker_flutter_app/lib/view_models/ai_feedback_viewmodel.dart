@@ -9,7 +9,8 @@ import '../providers/user_model.dart';
 class AIFeedbackViewmodel extends ChangeNotifier{
 
   final ServerService _serverService;
-  final WidgetRef _ref;
+  final UserModel _userModel;
+  final UserNotifier _userNotifier;
 
   String? _feedback; 
   String? _errorMessage;
@@ -26,18 +27,18 @@ class AIFeedbackViewmodel extends ChangeNotifier{
     _username = value;
   }
 
-  AIFeedbackViewmodel(this._serverService, this._ref) {
+  AIFeedbackViewmodel(this._serverService, this._userModel, this._userNotifier) {
     // Initialize any necessary streams or data here
     debugPrint('[AIFeedbackViewmodel] Initialized with ServerService and UserModel');
 
-    if (_ref.read(userProvider).hasReceivedNewHandHistory) {
+    if (_userModel.hasReceivedNewHandHistory) {
       debugPrint('[AIFeedbackViewmodel] Detected new hand history on initialization, fetching AI feedback');
       fetchAIFeedback();
     }
     else {
       debugPrint('[AIFeedbackViewmodel] No new hand history detected on initialization, displaying previous feedback.');
 
-      _feedback = _ref.read(userProvider).feedback; // Load existing feedback from UserModel
+      _feedback = _userModel.feedback; // Load existing feedback from UserModel
       notifyListeners(); // Notify listeners to update UI with existing feedback
     }
 
@@ -45,7 +46,7 @@ class AIFeedbackViewmodel extends ChangeNotifier{
 
 
   void fetchAIFeedback() {
-    final handHistoryJson = _ref.read(userProvider).getHandHistories();
+    final handHistoryJson = _userModel.getHandHistories();
 
     _feedback = null; // Clear previous feedback
     _isLoading = true; // Set loading state
@@ -62,7 +63,7 @@ class AIFeedbackViewmodel extends ChangeNotifier{
 
       if (feedback != null) {
         _feedback = feedback;
-        _ref.read(userProvider.notifier).setFeedback( feedback );
+        _userNotifier.setFeedback(feedback);
       }
 
       notifyListeners(); // Notify listeners to update UI with new feedback

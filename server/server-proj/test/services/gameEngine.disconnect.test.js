@@ -60,7 +60,7 @@ let currentStreet = gameEngine.tableStateRepository.getCurrentStreet();
 console.log(`[STREET] After pre-flop, street=${currentStreet}`);
 assert.strictEqual(currentStreet, PokerStreets.FLOP, "Should advance to FLOP with 2 remaining players");
 
-console.log("✅ Test 1 passed: Player disconnect (not their turn) handled correctly");
+console.log("Test 1 passed: Player disconnect (not their turn) handled correctly");
 
 
 // ---------- Test 2: Player disconnects during their turn ----------
@@ -99,7 +99,7 @@ let p1ChipsAfter = gameEngine.tableStateRepository.getPlayer(player1.id).chips;
 console.log(`[INFO] P1 chips before disconnect: ${p1ChipsBefore}, after: ${p1ChipsAfter}`);
 assert.ok(p1ChipsAfter <= p1ChipsBefore, "Player1 should not gain chips after disconnect");
 
-console.log("✅ Test 2 passed: Player disconnect on their turn handled correctly");
+console.log("Test 2 passed: Player disconnect on their turn handled correctly");
 
 
 // ---------- Test 3: Player disconnects, leaving only 1 player ----------
@@ -141,7 +141,7 @@ assert.strictEqual(street, PokerStreets.HAND_COMPLETE, "Game should be in HAND_C
 // Game should be marked as not in progress since hand is complete and only 1 player left
 assert.strictEqual(gameEngine.gameInProgress, false, "Game should not be in progress after hand complete with 1 player left");
 
-console.log("✅ Test 3 passed: Multiple disconnects leaving 1 player handled correctly");
+console.log("Test 3 passed: Multiple disconnects leaving 1 player handled correctly");
 
 
 // ---------- Test 4: Player disconnects mid-hand (on FLOP) ----------
@@ -191,7 +191,7 @@ assert.strictEqual(activePlayerIds.length, 2, "Should have 2 active players rema
 currentTurnId = gameEngine.tableStateRepository.getCurrentTurnPlayerId();
 assert.strictEqual(currentTurnId, player1.id, "Turn should be player1 after player3 disconnect");
 
-console.log("✅ Test 4 passed: Mid-hand disconnect on FLOP handled correctly");
+console.log("Test 4 passed: Mid-hand disconnect on FLOP handled correctly");
 
 
 // ---------- Test 5: Player disconnects after going all-in ----------
@@ -242,7 +242,7 @@ assert.strictEqual(player2State.hasLeft, true, "Player2 should be marked as left
 activePlayerIds = gameEngine.tableStateRepository.getActivePlayerIds();
 assert.strictEqual(activePlayerIds.includes(player2.id), false, "Player2 should not be active after disconnect");
 
-console.log("✅ Test 5 passed: All-in player disconnect handled correctly");
+console.log("Test 5 passed: All-in player disconnect handled correctly");
 
 
 // ---------- Test 6: Invalid disconnect (player not in game) ----------
@@ -270,7 +270,7 @@ try {
 
 assert.strictEqual(errorThrown, true, "Should throw error for non-existent player");
 
-console.log("✅ Test 6 passed: Invalid disconnect properly rejected");
+console.log("Test 6 passed: Invalid disconnect properly rejected");
 
 
-console.log("\n✅ ALL PLAYER DISCONNECT tests passed.");
+console.log("\nALL PLAYER DISCONNECT tests passed.");
